@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Mã OTP Đặt Lại Mật Khẩu</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { width: 90%; max-width: 600px; margin: 20px auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .header img { max-width: 150px; }
+        .content p { margin-bottom: 10px; }
+        .otp-code { font-size: 1.5em; font-weight: bold; color: #007bff; text-align: center; padding: 10px; background-color: #f0f8ff; border-radius: 4px; margin: 15px 0; }
+        .footer { margin-top: 20px; text-align: center; font-size: 0.9em; color: #777; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <img th:src="${logoImage}" alt="Logo Trường Học"/>
+        <h2>Yêu Cầu Đặt Lại Mật Khẩu</h2>
+    </div>
+    <div class="content">
+        <p>Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn.</p>
+        <p>Mã OTP của bạn là:</p>
+        <div class="otp-code" th:text="${otp}">[Mã OTP]</div>
+        <p>Mã OTP này có hiệu lực trong vòng <span th:text="${#strings.defaultString(otpExpiryMinutes, '10')}">10</span> phút. Vui lòng không chia sẻ mã này với bất kỳ ai.</p>
+        <p>Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.</p>
+        <p>Trân trọng,</p>
+        <p>Ban Quản trị Hệ thống</p>
+    </div>
+    <div class="footer">
+        <p>© <span th:text="${#dates.year(#dates.createNow())}">2024</span> Hệ thống Quản lý Sức khỏe Học đường</p>
+    </div>
+</div>
+</body>
+</html>

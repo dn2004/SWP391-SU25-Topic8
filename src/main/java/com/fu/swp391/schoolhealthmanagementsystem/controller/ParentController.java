@@ -1,0 +1,39 @@
+package com.fu.swp391.schoolhealthmanagementsystem.controller;
+
+import com.fu.swp391.schoolhealthmanagementsystem.dto.parent.LinkStudentRequestDto;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.ParentStudentLink;
+import com.fu.swp391.schoolhealthmanagementsystem.service.ParentStudentLinkService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/parent")
+@RequiredArgsConstructor
+@Tag(name = "Parent", description = "APIs cho Phụ huynh")
+@SecurityRequirement(name = "parent-api")
+@PreAuthorize("hasRole('Parent')") // Requires Parent role
+@Slf4j
+public class ParentController {
+
+    private final ParentStudentLinkService parentStudentLinkService;
+
+    @PostMapping("/link-student")
+    @Operation(summary = "Phụ huynh liên kết với học sinh bằng mã mời")
+    public ResponseEntity<String> linkStudent(@Valid @RequestBody LinkStudentRequestDto requestDto) {
+        log.info("API Phụ huynh: Yêu cầu liên kết với học sinh bằng mã mời: {}", requestDto.getInvitationCode());
+        parentStudentLinkService.linkParentToStudentByInvitation(requestDto);
+        return ResponseEntity.ok("Liên kết với học sinh thành công.");
+    }
+
+    // Other parent-specific endpoints
+}
