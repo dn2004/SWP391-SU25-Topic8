@@ -29,10 +29,10 @@ public class ParentController {
 
     @PostMapping("/link-student")
     @Operation(summary = "Phụ huynh liên kết với học sinh bằng mã mời")
-    public ResponseEntity<String> linkStudent(@Valid @RequestBody LinkStudentRequestDto requestDto) {
+    public ResponseEntity<Void> linkStudent(@Valid @RequestBody LinkStudentRequestDto requestDto) {
         log.info("API Phụ huynh: Yêu cầu liên kết với học sinh bằng mã mời: {}", requestDto.invitationCode());
         parentStudentLinkService.linkParentToStudentByInvitation(requestDto);
-        return ResponseEntity.ok("Liên kết với học sinh thành công.");
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/my-students")

@@ -36,7 +36,6 @@ public class StudentController {
         StudentDto studentDto = studentService.getStudentById(studentId);
         return ResponseEntity.ok(studentDto);
     }
-
     @GetMapping
     @Operation(summary = "Lấy danh sách học sinh (phân trang)")
     @PreAuthorize("hasAnyRole('SchoolAdmin', 'StaffManager', 'MedicalStaff')") // Chỉ cho phép các vai trò này
@@ -46,5 +45,4 @@ public class StudentController {
         Page<StudentDto> studentPage = studentService.getAllStudents(pageable);
         return ResponseEntity.ok(studentPage);
     }
-    // Các endpoints khác cho student (update, delete, get all phân trang)
 }
