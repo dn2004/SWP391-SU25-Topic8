@@ -59,7 +59,7 @@ public class UserService {
             throw new AppException(HttpStatus.BAD_REQUEST, "Chức năng này dành cho việc đặt mật khẩu lần đầu sau khi đăng nhập bằng tài khoản mạng xã hội.");
         }
 
-        user.setPassword(passwordEncoder.encode(requestDto.getNewPassword()));
+        user.setPassword(passwordEncoder.encode(requestDto.newPassword()));
         userRepository.save(user);
         log.info("Đã đặt mật khẩu mới thành công cho {}.", user.getEmail());
     }
@@ -74,16 +74,16 @@ public class UserService {
             throw new AppException(HttpStatus.BAD_REQUEST, "Bạn chưa đặt mật khẩu. Vui lòng sử dụng chức năng đặt mật khẩu mới.");
         }
 
-        if (!passwordEncoder.matches(requestDto.getOldPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(requestDto.oldPassword(), user.getPassword())) {
             log.warn("Người dùng {} nhập sai mật khẩu cũ.", user.getEmail());
             throw new AppException(HttpStatus.BAD_REQUEST, "Mật khẩu cũ không chính xác.");
         }
-        if (passwordEncoder.matches(requestDto.getNewPassword(), user.getPassword())) {
+        if (passwordEncoder.matches(requestDto.newPassword(), user.getPassword())) {
             log.warn("Người dùng {} cố gắng đặt mật khẩu mới trùng mật khẩu cũ.", user.getEmail());
             throw new AppException(HttpStatus.BAD_REQUEST, "Mật khẩu mới không được trùng với mật khẩu cũ.");
         }
 
-        user.setPassword(passwordEncoder.encode(requestDto.getNewPassword()));
+        user.setPassword(passwordEncoder.encode(requestDto.newPassword()));
         userRepository.save(user);
         log.info("Đã thay đổi mật khẩu thành công cho {}.", user.getEmail());
     }

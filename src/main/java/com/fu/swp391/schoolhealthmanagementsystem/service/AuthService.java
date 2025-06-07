@@ -51,17 +51,17 @@ public class AuthService {
 
     @Transactional
     public UserDto registerParent(RegisterParentRequestDto dto) {
-        log.info("Đăng ký tài khoản phụ huynh mới cho email: {}", dto.getEmail());
-        if (userRepository.existsByEmail(dto.getEmail())) {
-            log.warn("Email {} đã tồn tại.", dto.getEmail());
+        log.info("Đăng ký tài khoản phụ huynh mới cho email: {}", dto.email());
+        if (userRepository.existsByEmail(dto.email())) {
+            log.warn("Email {} đã tồn tại.", dto.email());
             throw new AppException(HttpStatus.BAD_REQUEST, "Email đã được sử dụng!");
         }
 
         User parent = User.builder()
-                .fullName(dto.getFullName())
-                .email(dto.getEmail())
-                .password(passwordEncoder.encode(dto.getPassword())) // Chỉ mã hóa password chính
-                .phoneNumber(dto.getPhoneNumber())
+                .fullName(dto.fullName())
+                .email(dto.email())
+                .password(passwordEncoder.encode(dto.password())) // Chỉ mã hóa password chính
+                .phoneNumber(dto.phoneNumber())
                 .role(UserRole.Parent)
                 // .isActive(true) // Đã có @Builder.Default
                 .build();
@@ -72,16 +72,16 @@ public class AuthService {
     }
 
     public LoginResponseDto login(LoginRequestDto dto) {
-        log.info("Xác thực người dùng: {}", dto.getEmail());
+        log.info("Xác thực người dùng: {}", dto.email());
         try {
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(dto.getEmail(), dto.getPassword())
+                    new UsernamePasswordAuthenticationToken(dto.email(), dto.password())
             );
         SecurityContextHolder.getContext().setAuthentication(authentication);
         User user = (User) authentication.getPrincipal();
 
             if (!user.isActive()) {
-                log.warn("Tài khoản {} chưa được kích hoạt hoặc đã bị vô hiệu hóa.", dto.getEmail());
+                log.warn("Tài khoản {} chưa được kích hoạt hoặc đã bị vô hiệu hóa.", dto.email());
                 // Ném AuthenticationException để GlobalExceptionHandler xử lý như một lỗi đăng nhập
                 throw new DisabledException("Tài khoản chưa được kích hoạt hoặc đã bị vô hiệu hóa.");
             }
@@ -92,7 +92,7 @@ public class AuthService {
 
         return new LoginResponseDto(jwt, userDto);
         } catch (AuthenticationException e) {
-            log.warn("Lỗi xác thực cho người dùng {}: {}", dto.getEmail(), e.getMessage());
+            log.warn("Lỗi xác thực cho người dùng {}: {}", dto.email(), e.getMessage());
             throw e; // Để GlobalExceptionHandler xử lý
         }
     }
@@ -222,15 +222,15 @@ public class AuthService {
     }
 
     public void forgotPassword(ForgotPasswordRequestDto dto) {
-        log.info("Yêu cầu quên mật khẩu cho email: {}", dto.getEmail());
-        otpService.generateAndSendOtp(dto.getEmail());
-        log.info("Đã gửi yêu cầu OTP cho {}", dto.getEmail());
+        log.info("Yêu cầu quên mật khẩu cho email: {}", dto.email());
+        otpService.generateAndSendOtp(dto.email());
+        log.info("Đã gửi yêu cầu OTP cho {}", dto.email());
     }
 
     @Transactional
     public void resetPassword(ResetPasswordRequestDto dto) {
-        log.info("Yêu cầu đặt lại mật khẩu cho email: {}", dto.getEmail());
-        otpService.resetPasswordWithOtp(dto.getEmail(), dto.getOtp(), dto.getNewPassword());
-        log.info("Mật khẩu đã được đặt lại thành công cho {}", dto.getEmail());
+        log.info("Yêu cầu đặt lại mật khẩu cho email: {}", dto.email());
+        otpService.resetPasswordWithOtp(dto.email(), dto.otp(), dto.newPassword());
+        log.info("Mật khẩu đã được đặt lại thành công cho {}", dto.email());
     }
 }

@@ -1,6 +1,7 @@
 package com.fu.swp391.schoolhealthmanagementsystem.security;
 
 import com.fu.swp391.schoolhealthmanagementsystem.entity.User;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.UserRole;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Hibernate;
@@ -29,7 +30,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 });
 
         // Khởi tạo childLinks một cách tường minh bên trong transaction
-        if (user.getRole() == com.fu.swp391.schoolhealthmanagementsystem.entity.enums.UserRole.Parent) {
+        if (user.getRole() == UserRole.Parent) {
             // Cách 1: "Chạm" vào collection
             // user.getChildLinks().size(); // Hoặc user.getChildLinks().isEmpty();
             // Cách 2: Dùng Hibernate.initialize (an toàn hơn và rõ ràng hơn)

@@ -32,10 +32,10 @@ public class StudentService {
 
     @Transactional
     public StudentDto createStudent(CreateStudentRequestDto dto) {
-        log.info("Yêu cầu tạo học sinh mới với mã: {}", dto.getStudentCode());
-        if (studentRepository.findByStudentCode(dto.getStudentCode()).isPresent()) {
-            log.warn("Mã học sinh {} đã tồn tại.", dto.getStudentCode());
-            throw new AppException(HttpStatus.BAD_REQUEST, "Mã học sinh đã tồn tại: " + dto.getStudentCode());
+        log.info("Yêu cầu tạo học sinh mới với mã: {}", dto.studentCode());
+        if (studentRepository.findByStudentCode(dto.studentCode()).isPresent()) {
+            log.warn("Mã học sinh {} đã tồn tại.", dto.studentCode());
+            throw new AppException(HttpStatus.BAD_REQUEST, "Mã học sinh đã tồn tại: " + dto.studentCode());
         }
 
         Student student = studentMapper.createStudentRequestDtoToStudent(dto);

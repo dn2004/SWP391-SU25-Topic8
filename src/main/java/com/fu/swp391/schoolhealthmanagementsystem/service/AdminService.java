@@ -42,28 +42,28 @@ public class AdminService {
 
     @Transactional
     public UserDto createStaffAccount(CreateStaffRequestDto dto) {
-        log.info("Admin tạo tài khoản nhân viên mới cho email: {}", dto.getEmail());
-        if (userRepository.existsByEmail(dto.getEmail())) {
-            log.warn("Email {} đã tồn tại khi admin cố tạo tài khoản.", dto.getEmail());
+        log.info("Admin tạo tài khoản nhân viên mới cho email: {}", dto.email());
+        if (userRepository.existsByEmail(dto.email())) {
+            log.warn("Email {} đã tồn tại khi admin cố tạo tài khoản.", dto.email());
             throw new AppException(HttpStatus.BAD_REQUEST, "Email đã được sử dụng!");
         }
-        if (dto.getRole() != UserRole.MedicalStaff && dto.getRole() != UserRole.StaffManager) {
-            log.warn("Admin cố gắng tạo tài khoản với vai trò không hợp lệ: {}", dto.getRole());
+        if (dto.role() != UserRole.MedicalStaff && dto.role() != UserRole.StaffManager) {
+            log.warn("Admin cố gắng tạo tài khoản với vai trò không hợp lệ: {}", dto.role());
             throw new AppException(HttpStatus.BAD_REQUEST, "Vai trò nhân viên không hợp lệ.");
         }
 
         User staff = new User();
-        staff.setFullName(dto.getFullName());
-        staff.setEmail(dto.getEmail());
-        staff.setPhoneNumber(dto.getPhoneNumber());
-        staff.setRole(dto.getRole());
+        staff.setFullName(dto.fullName());
+        staff.setEmail(dto.email());
+        staff.setPhoneNumber(dto.phoneNumber());
+        staff.setRole(dto.role());
         staff.setActive(true); // Kích hoạt ngay
 
         String randomPassword = generateRandomPassword();
         staff.setPassword(passwordEncoder.encode(randomPassword));
 
         User savedStaff = userRepository.save(staff);
-        log.info("Admin đã tạo tài khoản nhân viên {} thành công: {}", dto.getRole(), savedStaff.getEmail());
+        log.info("Admin đã tạo tài khoản nhân viên {} thành công: {}", dto.role(), savedStaff.getEmail());
 
         // Gửi email thông tin đăng nhập
         emailService.sendNewStaffCredentialsEmail(savedStaff, randomPassword);

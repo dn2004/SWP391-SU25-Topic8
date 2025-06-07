@@ -2,10 +2,7 @@ package com.fu.swp391.schoolhealthmanagementsystem.entity;
 
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.UserRole;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+
 import lombok.*; // Import chung cho các annotation của Lombok
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -35,27 +32,19 @@ public class User implements UserDetails {
     @Column(name = "UserID")
     private Long userId;
 
-    @Size(min = 6, max = 255) // Password có thể null nếu user đăng ký/đăng nhập qua Firebase
     @Column(name = "Password")
     private String password;
 
-    @NotBlank(message = "Họ và tên không được để trống") // Thêm message cho validation
-    @Size(max = 100)
     @Column(name = "FullName", nullable = false, length = 100)
     private String fullName;
 
-    @NotBlank(message = "Email không được để trống") // Thêm message
-    @Email(message = "Email không đúng định dạng")   // Thêm message
-    @Size(max = 100)
     @Column(name = "Email", unique = true, nullable = false, length = 100)
     private String email;
 
-    @Size(max = 20)
     @Column(name = "PhoneNumber", length = 20)
     private String phoneNumber;
 
 
-    @NotNull(message = "Vai trò không được để trống") // Thêm message
     @Enumerated(EnumType.STRING)
     @Column(name = "Role", nullable = false)
     private UserRole role;

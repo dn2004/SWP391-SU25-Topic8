@@ -38,7 +38,7 @@ public class AdminController {
     @PostMapping("/staff")
     @Operation(summary = "Tạo tài khoản nhân viên mới (MedicalStaff, StaffManager)")
     public ResponseEntity<UserDto> createStaffAccount(@Valid @RequestBody CreateStaffRequestDto requestDto) {
-        log.info("API Admin: Yêu cầu tạo tài khoản nhân viên - email: {}, role: {}", requestDto.getEmail(), requestDto.getRole());
+        log.info("API Admin: Yêu cầu tạo tài khoản nhân viên - email: {}, role: {}", requestDto.email(), requestDto.role());
         UserDto createdStaff = adminService.createStaffAccount(requestDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdStaff);
     }
@@ -48,8 +48,8 @@ public class AdminController {
     public ResponseEntity<UserDto> updateUserActivationStatus(
             @Parameter(description = "ID của người dùng cần cập nhật") @PathVariable Long userId,
             @Valid @RequestBody UserActivationRequestDto requestDto) {
-        log.info("API Admin: Yêu cầu cập nhật trạng thái kích hoạt cho user ID {} thành {}", userId, requestDto.getIsActive());
-        UserDto updatedUser = adminService.updateUserActivationStatus(userId, requestDto.getIsActive());
+        log.info("API Admin: Yêu cầu cập nhật trạng thái kích hoạt cho user ID {} thành {}", userId, requestDto.isActive());
+        UserDto updatedUser = adminService.updateUserActivationStatus(userId, requestDto.isActive());
         return ResponseEntity.ok(updatedUser);
     }
 
@@ -81,7 +81,7 @@ public class AdminController {
     @Operation(summary = "Admin tạo hồ sơ học sinh mới")
     // @PreAuthorize("hasRole('SchoolAdmin')") // Đã có ở class level
     public ResponseEntity<StudentDto> createStudentProfile(@Valid @RequestBody CreateStudentRequestDto requestDto) {
-        log.info("API Admin: Yêu cầu tạo hồ sơ học sinh với mã: {}", requestDto.getStudentCode());
+        log.info("API Admin: Yêu cầu tạo hồ sơ học sinh với mã: {}", requestDto.studentCode());
         StudentDto createdStudent = studentService.createStudent(requestDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdStudent);
     }

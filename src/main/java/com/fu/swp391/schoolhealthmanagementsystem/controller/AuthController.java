@@ -26,7 +26,7 @@ public class AuthController {
     @PostMapping("/register/parent")
     @Operation(summary = "Đăng ký tài khoản cho Phụ huynh")
     public ResponseEntity<UserDto> registerParent(@Valid @RequestBody RegisterParentRequestDto requestDto) {
-        log.info("API: Yêu cầu đăng ký phụ huynh - email: {}", requestDto.getEmail());
+        log.info("API: Yêu cầu đăng ký phụ huynh - email: {}", requestDto.email());
         UserDto registeredUser = authService.registerParent(requestDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(registeredUser);
     }
@@ -34,7 +34,7 @@ public class AuthController {
     @PostMapping("/login")
     @Operation(summary = "Đăng nhập bằng Email và Mật khẩu")
     public ResponseEntity<LoginResponseDto> login(@Valid @RequestBody LoginRequestDto requestDto) {
-        log.info("API: Yêu cầu đăng nhập - email: {}", requestDto.getEmail());
+        log.info("API: Yêu cầu đăng nhập - email: {}", requestDto.email());
         LoginResponseDto loginResponse = authService.login(requestDto);
         return ResponseEntity.ok(loginResponse);
     }
@@ -58,7 +58,7 @@ public class AuthController {
     @PostMapping("/forgot-password")
     @Operation(summary = "Yêu cầu OTP để đặt lại mật khẩu")
     public ResponseEntity<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequestDto requestDto) {
-        log.info("API: Yêu cầu quên mật khẩu - email: {}", requestDto.getEmail());
+        log.info("API: Yêu cầu quên mật khẩu - email: {}", requestDto.email());
         authService.forgotPassword(requestDto);
         // Return 200 OK even if email doesn't exist to prevent email enumeration
         return ResponseEntity.ok().build();
@@ -67,7 +67,7 @@ public class AuthController {
     @PostMapping("/reset-password")
     @Operation(summary = "Đặt lại mật khẩu bằng OTP")
     public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequestDto requestDto) {
-        log.info("API: Yêu cầu đặt lại mật khẩu - email: {}", requestDto.getEmail());
+        log.info("API: Yêu cầu đặt lại mật khẩu - email: {}", requestDto.email());
         authService.resetPassword(requestDto);
         return ResponseEntity.ok().build();
     }

@@ -1,10 +1,11 @@
 package com.fu.swp391.schoolhealthmanagementsystem.entity;
 
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.LinkStatus;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.RelationshipType;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -17,6 +18,8 @@ import java.time.LocalDateTime;
 )
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class ParentStudentLink {
 
     @Id
@@ -24,19 +27,17 @@ public class ParentStudentLink {
     @Column(name = "LinkID")
     private Long linkId;
 
-    @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ParentUserID", nullable = false)
     private User parent;
 
-    @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "StudentID", nullable = false)
     private Student student;
 
-    @NotBlank(message = "Relationship type is required")
+    @Enumerated(EnumType.STRING) // Lưu trữ dưới dạng STRING trong DB (ví dụ: "FATHER", "MOTHER")
     @Column(name = "RelationshipType", nullable = false, length = 50)
-    private String relationshipType;
+    private RelationshipType relationshipType;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "Status", nullable = false, length = 20)

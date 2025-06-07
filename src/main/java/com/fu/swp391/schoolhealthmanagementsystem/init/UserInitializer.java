@@ -23,13 +23,10 @@ public class UserInitializer implements CommandLineRunner {
     private PasswordEncoder passwordEncoder;
 
     // You can externalize these admin details to application.properties
-    @Value("${app.admin.username:admin}")
-    private String adminUsername;
-
-    @Value("${app.admin.email:admin@schoolhealth.com}")
+    @Value("${app.admin.email}")
     private String adminEmail;
 
-    @Value("${app.admin.password:Admin@123}")
+    @Value("${app.admin.password}")
     private String adminPassword;
 
     @Value("${app.admin.fullname:System Administrator}")
@@ -43,7 +40,7 @@ public class UserInitializer implements CommandLineRunner {
 
         // Check if the admin user already exists by email or username
         if (userRepository.existsByEmail(adminEmail)) {
-            log.info("Admin user with email {} or username {} already exists. Skipping creation.", adminEmail, adminUsername);
+            log.info("Admin user with email {} or already exists. Skipping creation.", adminEmail);
         } else {
             User adminUser = new User();
             adminUser.setEmail(adminEmail);

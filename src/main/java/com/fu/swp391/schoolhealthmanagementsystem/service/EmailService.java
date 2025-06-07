@@ -26,11 +26,17 @@ public class EmailService {
     @Value("${spring.mail.username}")
     private String senderEmail;
 
-    @Value("${application.base-url:http://localhost:8080}") // Add a base URL for links
+    @Value("${app.frontend.base-url}") // Add a base URL for links
     private String applicationBaseUrl;
 
-    @Value("${application.logo-image:static/images/logo.png}") // Default logo path
-    private String logoImage;
+    @Value("${app.email.logo.path}") // Default logo path
+    private String logoImagePath;
+
+    @Value("${app.email.logo.cid}") // CID for inline image
+    private String logoImageCid;
+
+    @Value("${app.frontend.login-path}")
+    private String loginPath;
 
     @Async // Gửi email bất đồng bộ
     public void sendNewStaffCredentialsEmail(User staff, String rawPassword) {
@@ -41,8 +47,8 @@ public class EmailService {
         thymeleafContext.setVariable("fullName", staff.getFullName());
         thymeleafContext.setVariable("email", staff.getEmail());
         thymeleafContext.setVariable("password", rawPassword);
-        thymeleafContext.setVariable("loginUrl", applicationBaseUrl + "/login"); // Hoặc trang đăng nhập cụ thể
-        thymeleafContext.setVariable("logoImage", "logoImage"); // CID for inline image
+        thymeleafContext.setVariable("loginUrl", applicationBaseUrl + loginPath); // Hoặc trang đăng nhập cụ thể
+        thymeleafContext.setVariable("logoImage", logoImageCid); // CID for inline image
 
         String htmlBody = thymeleafTemplateEngine.process("emails/new-staff-credentials-email", thymeleafContext);
 
@@ -63,7 +69,7 @@ public class EmailService {
 
         Context thymeleafContext = new Context();
         thymeleafContext.setVariable("otp", otp);
-        thymeleafContext.setVariable("logoImage", logoImage);
+        thymeleafContext.setVariable("logoImage", logoImageCid);
 
         String htmlBody = thymeleafTemplateEngine.process("emails/otp-email", thymeleafContext);
         try {
@@ -84,10 +90,9 @@ public class EmailService {
             helper.setSubject(subject);
             helper.setText(htmlBody, true); // true for HTML
 
-            // Add inline logo
-            ClassPathResource logoResource = new ClassPathResource("static/images/logo.png");
+            ClassPathResource logoResource = new ClassPathResource(logoImagePath);
             if (logoResource.exists()) {
-                helper.addInline("logoImage", logoResource, "image/png");
+                helper.addInline(logoImageCid, logoResource, "image/png");
             } else {
                 log.warn("Không tìm thấy file logo tại: static/images/logo.png");
             }
@@ -96,7 +101,6 @@ public class EmailService {
         } catch (MessagingException e) {
             log.error("Lỗi khi gửi email HTML tới {}: {}", to, e.getMessage());
             throw e;
-            // Consider re-throwing as a custom exception or handling more robustly
         }
     }
 }

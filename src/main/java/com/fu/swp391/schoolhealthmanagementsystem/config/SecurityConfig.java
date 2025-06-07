@@ -1,9 +1,7 @@
-package com.fu.swp391.schoolhealthmanagementsystem.config; // Your package
+package com.fu.swp391.schoolhealthmanagementsystem.config;
 
 import com.fu.swp391.schoolhealthmanagementsystem.security.FullNameConfirmationFilter;
 import com.fu.swp391.schoolhealthmanagementsystem.security.JwtAuthenticationFilter;
-// Import UserRole if you were to use it directly in requestMatchers, but we are using @PreAuthorize now
-// import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.UserRole;
 import com.fu.swp391.schoolhealthmanagementsystem.security.StudentLinkCheckFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -24,7 +22,7 @@ import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity() // Essential for @PreAuthorize to work
+@EnableMethodSecurity()
 public class SecurityConfig {
     private static final String[] PUBLIC_ENDPOINTS = {
             "/api/auth/**",
