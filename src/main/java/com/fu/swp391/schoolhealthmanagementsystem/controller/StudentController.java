@@ -46,6 +46,5 @@ public class StudentController {
         Page<StudentDto> studentPage = studentService.getAllStudents(pageable);
         return ResponseEntity.ok(studentPage);
     }
-
     // Các endpoints khác cho student (update, delete, get all phân trang)
 }

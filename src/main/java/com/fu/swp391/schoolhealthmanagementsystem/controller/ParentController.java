@@ -2,7 +2,6 @@ package com.fu.swp391.schoolhealthmanagementsystem.controller;
 
 import com.fu.swp391.schoolhealthmanagementsystem.dto.parent.LinkStudentRequestDto;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.student.StudentDto;
-import com.fu.swp391.schoolhealthmanagementsystem.entity.ParentStudentLink;
 import com.fu.swp391.schoolhealthmanagementsystem.service.ParentStudentLinkService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -39,7 +38,7 @@ public class ParentController {
     @GetMapping("/my-students")
     @Operation(summary = "Lấy danh sách các học sinh đã liên kết của phụ huynh hiện tại (phân trang)")
     public ResponseEntity<Page<StudentDto>> getMyLinkedStudents(
-            @PageableDefault(size = 5, sort = "fullName") Pageable pageable) {
+            @PageableDefault(size = 5, sort = "student.fullName") Pageable pageable) {
         log.info("API Phụ huynh: Yêu cầu lấy danh sách học sinh đã liên kết.");
         Page<StudentDto> linkedStudents = parentStudentLinkService.getMyLinkedStudents(pageable); // THAY ĐỔI Ở ĐÂY: Gọi từ parentService
         return ResponseEntity.ok(linkedStudents);
