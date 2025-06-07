@@ -28,7 +28,7 @@ public class Student {
     @Column(name = "StudentCode", unique = true, nullable = false, length = 50)
     private String studentCode;
 
-    @Column(name = "FullName", nullable = false, length = 100)
+    @Column(name = "FullName", nullable = false, length = 50, columnDefinition = "NVARCHAR(100)")
     private String fullName;
 
     @Column(name = "DateOfBirth", nullable = false)

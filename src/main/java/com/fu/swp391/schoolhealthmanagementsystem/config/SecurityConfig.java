@@ -1,6 +1,5 @@
 package com.fu.swp391.schoolhealthmanagementsystem.config;
 
-import com.fu.swp391.schoolhealthmanagementsystem.security.FullNameConfirmationFilter;
 import com.fu.swp391.schoolhealthmanagementsystem.security.JwtAuthenticationFilter;
 import com.fu.swp391.schoolhealthmanagementsystem.security.StudentLinkCheckFilter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,8 +34,6 @@ public class SecurityConfig {
     @Autowired
     private StudentLinkCheckFilter studentLinkCheckFilter;
 
-    @Autowired
-    private FullNameConfirmationFilter fullNameConfirmationFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -51,8 +48,7 @@ public class SecurityConfig {
                 )
 
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterAfter(fullNameConfirmationFilter, JwtAuthenticationFilter.class)
-                .addFilterAfter(studentLinkCheckFilter, FullNameConfirmationFilter.class);
+                .addFilterAfter(studentLinkCheckFilter, JwtAuthenticationFilter.class);
 
         return http.build();
     }

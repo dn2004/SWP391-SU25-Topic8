@@ -39,14 +39,6 @@ public class AuthController {
         return ResponseEntity.ok(loginResponse);
     }
 
-    @PostMapping("/login/firebase")
-    @Operation(summary = "Đăng nhập/Đăng ký bằng Firebase Google Sign-In")
-    public ResponseEntity<LoginResponseDto> loginWithFirebase(@Valid @RequestBody FirebaseLoginRequestDto requestDto) throws FirebaseAuthException {
-        log.info("API: Yêu cầu đăng nhập bằng Firebase");
-        LoginResponseDto loginResponse = authService.loginWithFirebase(requestDto);
-        return ResponseEntity.ok(loginResponse);
-    }
-
     @PostMapping("/logout")
     @Operation(summary = "Đăng xuất người dùng")
     public ResponseEntity<Void> logout(HttpServletRequest request) {

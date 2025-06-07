@@ -91,19 +91,18 @@ public class UserService {
     @Transactional
     public UserDto confirmOrUpdateFullName(ConfirmFullNameRequestDto dto) {
         User user = getCurrentAuthenticatedUser();
-        log.info("Người dùng {} đang xác nhận/cập nhật tên đầy đủ thành: {}", user.getEmail(), dto.getFullName());
+        log.info("Người dùng {} đang xác nhận/cập nhật tên đầy đủ thành: {}", user.getEmail(), dto.fullName());
 
         // Có thể thêm validation ở đây nếu cần, mặc dù DTO đã validate @NotBlank
-        if (dto.getFullName().trim().isEmpty()) { // Kiểm tra kỹ hơn
+        if (dto.fullName().trim().isEmpty()) { // Kiểm tra kỹ hơn
             throw new AppException(HttpStatus.BAD_REQUEST, "Họ và tên không hợp lệ.");
         }
 
-        user.setFullName(dto.getFullName().trim());
+        user.setFullName(dto.fullName().trim());
         user.setFullNameConfirmed(true);
         User savedUser = userRepository.save(user);
         log.info("Đã cập nhật và xác nhận tên đầy đủ cho {}", savedUser.getEmail());
         return userMapper.userToUserDto(savedUser); // Mapper cần trả về isFullNameConfirmed và suggestedFullName là null/empty
     }
-
     // Add other user profile update methods here
 }

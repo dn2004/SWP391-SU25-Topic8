@@ -97,66 +97,6 @@ public class AuthService {
         }
     }
 
-    @Transactional
-    public LoginResponseDto loginWithFirebase(FirebaseLoginRequestDto dto) throws FirebaseAuthException {
-        log.info("Xác thực người dùng bằng Firebase token.");
-        FirebaseToken decodedToken;
-        decodedToken = FirebaseAuth.getInstance().verifyIdToken(dto.getIdToken());
-
-        String email = decodedToken.getEmail();
-        String firebaseUid = decodedToken.getUid();
-        String fullName = decodedToken.getName() != null ? decodedToken.getName() : email.split("@")[0]; // Default name if not provided
-
-        Optional<User> existingUserOpt = userRepository.findByFirebaseUid(firebaseUid);
-        User user;
-
-        if (existingUserOpt.isPresent()) {
-            user = existingUserOpt.get();
-            log.info("Người dùng Firebase UID {} đã tồn tại: {}", firebaseUid, user.getEmail());
-
-            if(!email.equals(user.getEmail())){
-                if(userRepository.existsByEmailAndFirebaseUidNot(email, firebaseUid) || userRepository.existsByEmailAndFirebaseUidIsNull(email)){
-                    log.warn("Email mới {} từ Firebase token đã được sử dụng bởi tài khoản khác.", email);
-                    throw new AppException(HttpStatus.CONFLICT, "Email " + email + " từ tài khoản Google đã được sử dụng bởi một người dùng khác trong hệ thống.");
-                }
-                user.setEmail(email); // Update email if changed and available
-            }
-
-        } else {
-            // Check if email exists (user might have registered with email/password first)
-            Optional<User> userByEmailOpt = userRepository.findByEmail(email);
-            if (userByEmailOpt.isPresent()) {
-                user = userByEmailOpt.get();
-                // Check if this email account is already linked to a DIFFERENT firebase UID
-                if (user.getFirebaseUid() != null && !user.getFirebaseUid().equals(firebaseUid)) {
-                    log.warn("Email {} đã được liên kết với một tài khoản Firebase khác.", email);
-                    throw new AppException(HttpStatus.CONFLICT, "Email này đã được liên kết với một tài khoản Google khác.");
-                }
-                log.info("Liên kết tài khoản email {} với Firebase UID: {}", email, firebaseUid);
-            } else {
-                // New user via Firebase
-                log.info("Tạo người dùng mới từ Firebase: Email {}, UID {}", email, firebaseUid);
-                user = new User();
-                user.setEmail(email);
-                user.setFirebaseUid(firebaseUid);
-                user.setFullName(fullName); // Can get from Firebase token
-                user.setRole(UserRole.Parent); // Default to Parent for new Firebase sign-ups
-                user.setActive(true);
-                user.setFullNameConfirmed(false);
-                // Password can be null for Firebase-only users
-            }
-        }
-        user.setActive(true); // Ensure user is active
-        User savedUser = userRepository.save(user);
-
-        // Generate JWT for our system
-        String jwt = jwtService.generateToken(savedUser);
-        log.info("Đăng nhập Firebase thành công cho: {}", savedUser.getEmail());
-        UserDto userDto = userMapper.userToUserDto(savedUser);
-
-        return new LoginResponseDto(jwt, userDto);
-    }
-
 
     public void logout(HttpServletRequest request) {
         final String authHeader = request.getHeader("Authorization");
