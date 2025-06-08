@@ -23,7 +23,7 @@
         <p>Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn.</p>
         <p>Mã OTP của bạn là:</p>
         <div class="otp-code" th:text="${otp}">[Mã OTP]</div>
-        <p>Mã OTP này có hiệu lực trong vòng <span th:text="${#strings.defaultString(otpExpiryMinutes, '10')}">10</span> phút. Vui lòng không chia sẻ mã này với bất kỳ ai.</p>
+        <p>Mã OTP này có hiệu lực trong vòng <span th:text="${otpExpiryMinutes}">10</span> phút. Vui lòng không chia sẻ mã này với bất kỳ ai.</p>
         <p>Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.</p>
         <p>Trân trọng,</p>
         <p>Ban Quản trị Hệ thống</p>

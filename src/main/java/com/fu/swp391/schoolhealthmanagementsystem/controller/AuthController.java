@@ -3,7 +3,6 @@ package com.fu.swp391.schoolhealthmanagementsystem.controller;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.auth.*;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.user.UserDto;
 import com.fu.swp391.schoolhealthmanagementsystem.service.AuthService;
-import com.google.firebase.auth.FirebaseAuthException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;

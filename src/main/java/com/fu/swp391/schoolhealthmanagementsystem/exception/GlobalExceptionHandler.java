@@ -1,7 +1,6 @@
 package com.fu.swp391.schoolhealthmanagementsystem.exception;
 
 import com.fu.swp391.schoolhealthmanagementsystem.dto.ErrorResponseDto;
-import com.google.firebase.auth.FirebaseAuthException;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
@@ -101,23 +100,6 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
     }
 
-    // Xử lý Firebase Exception
-    @ExceptionHandler(FirebaseAuthException.class)
-    public ResponseEntity<ErrorResponseDto> handleFirebaseAuthException(com.google.firebase.auth.FirebaseAuthException ex, HttpServletRequest request) {
-        log.error("Lỗi Firebase Authentication: Mã lỗi '{}', Thông điệp: {}", ex.getErrorCode(), ex.getMessage(), ex);
-        String clientMessage = "Lỗi xác thực với Firebase. Vui lòng thử lại.";
-        if ("id-token-expired".equals(ex.getErrorCode())) {
-            clientMessage = "Phiên đăng nhập Firebase đã hết hạn. Vui lòng đăng nhập lại.";
-        } else if ("id-token-revoked".equals(ex.getErrorCode())) {
-            clientMessage = "Phiên đăng nhập Firebase đã bị thu hồi.";
-        }
-        ErrorResponseDto errorResponse = ErrorResponseDto.of(
-                HttpStatus.UNAUTHORIZED,
-                clientMessage,
-                request.getRequestURI()
-        );
-        return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
-    }
 
     // Xử lý lỗi gửi mail
     @ExceptionHandler(MessagingException.class)

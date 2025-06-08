@@ -38,6 +38,9 @@ public class EmailService {
     @Value("${app.frontend.login-path}")
     private String loginPath;
 
+    @Value("${otp.expiry.minutes}")
+    private int otpExpiryMinutes;
+
     @Async // Gửi email bất đồng bộ
     public void sendNewStaffCredentialsEmail(User staff, String rawPassword) {
         log.info("Chuẩn bị gửi email thông tin tài khoản cho nhân viên mới: {}", staff.getEmail());
@@ -49,6 +52,7 @@ public class EmailService {
         thymeleafContext.setVariable("password", rawPassword);
         thymeleafContext.setVariable("loginUrl", applicationBaseUrl + loginPath); // Hoặc trang đăng nhập cụ thể
         thymeleafContext.setVariable("logoImage", logoImageCid); // CID for inline image
+        thymeleafContext.setVariable("otpExpiryMinutes", otpExpiryMinutes);
 
         String htmlBody = thymeleafTemplateEngine.process("emails/new-staff-credentials-email", thymeleafContext);
 
@@ -70,6 +74,7 @@ public class EmailService {
         Context thymeleafContext = new Context();
         thymeleafContext.setVariable("otp", otp);
         thymeleafContext.setVariable("logoImage", logoImageCid);
+        thymeleafContext.setVariable("otpExpiryMinutes", otpExpiryMinutes);
 
         String htmlBody = thymeleafTemplateEngine.process("emails/otp-email", thymeleafContext);
         try {
