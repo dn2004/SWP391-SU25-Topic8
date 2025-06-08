@@ -1,0 +1,89 @@
+# docker-compose.yml
+services:
+  app:
+    image: dnh2004/schoolhealth-app:latest
+    ports:
+      - "${PORT:-8080}:${PORT:-8080}"
+    environment:
+      # Profile và Server Port (Spring Boot sẽ map chúng tới các thuộc tính tương ứng)
+      - PROFILE=${PROFILE}
+      - PORT=${PORT}
+
+      # Database Configuration (Spring Boot sẽ map chúng tới các thuộc tính spring.datasource.*)
+      - DB_URL=${DB_URL}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+
+
+      # JWT Configuration (Ứng dụng của bạn sẽ đọc các biến này trực tiếp)
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXP_MS=${JWT_EXP_MS}
+      - JWT_ISSUER=${JWT_ISSUER}
+
+      # Spring Mail Configuration (Spring Boot sẽ map chúng tới các thuộc tính spring.mail.*)
+      - MAIL_HOST=${MAIL_HOST}
+      - MAIL_PORT=${MAIL_PORT}
+      - MAIL_USER=${MAIL_USER}
+      - MAIL_PASS=${MAIL_PASS}
+
+
+
+      # Admin Account Configuration (Ứng dụng của bạn sẽ đọc các biến này trực tiếp)
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ADMIN_PASS=${ADMIN_PASS}
+      - ADMIN_NAME=${ADMIN_NAME}
+
+      # Redis Configuration (Spring Boot sẽ map chúng tới các thuộc tính spring.data.redis.*)
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_DB=${REDIS_DB}
+      - REDIS_PASS=${REDIS_PASS}
+
+      # Application Specific Configuration (Ứng dụng của bạn sẽ đọc các biến này trực tiếp)
+      - OTP_EXPIRY=${OTP_EXPIRY}
+      - APP_FRONTEND_URL=${APP_FRONTEND_URL}
+      - APP_LOGIN_PATH=${APP_LOGIN_PATH}
+
+
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "${REDIS_PORT:-6379}:${REDIS_PORT:-6379}"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes ${REDIS_PASS:+--requirepass ${REDIS_PASS}}
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mysql:
+    image: mysql:8.0
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD_SECRET}
+      MYSQL_DATABASE: ${MYSQL_DATABASE_NAME}
+      MYSQL_USER: ${MYSQL_USER_APP}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD_APP}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    command: --character-set-server=${MYSQL_CHARSET:-utf8mb4} --collation-server=${MYSQL_COLLATION:-utf8mb4_unicode_ci}
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-u${MYSQL_USER_APP}", "-p${MYSQL_PASSWORD_APP}"]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+
+volumes:
+  redis-data:
+  mysql-data:
