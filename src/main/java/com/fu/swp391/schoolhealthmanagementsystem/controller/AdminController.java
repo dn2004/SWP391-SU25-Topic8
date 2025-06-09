@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -55,7 +56,11 @@ public class AdminController {
 
     @GetMapping("/parents")
     @Operation(summary = "Lấy danh sách phụ huynh (phân trang)")
-    public ResponseEntity<Page<UserDto>> getParents(@PageableDefault(size = 10) Pageable pageable) {
+    public ResponseEntity<Page<UserDto>> getParents(
+            @ParameterObject
+            @PageableDefault(size = 10, page = 0, sort = "fullName")
+            Pageable pageable
+    ) {
         log.info("API Admin: Yêu cầu lấy danh sách phụ huynh - page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
         Page<UserDto> parents = adminService.getUsersByRole(UserRole.Parent, pageable);
         return ResponseEntity.ok(parents);
@@ -63,7 +68,11 @@ public class AdminController {
 
     @GetMapping("/medical-staff")
     @Operation(summary = "Lấy danh sách nhân viên y tế (phân trang)")
-    public ResponseEntity<Page<UserDto>> getMedicalStaff(@PageableDefault(size = 10) Pageable pageable) {
+    public ResponseEntity<Page<UserDto>> getMedicalStaff(
+            @ParameterObject
+            @PageableDefault(size = 10, page = 0, sort = "fullName")
+            Pageable pageable
+            ){
         log.info("API Admin: Yêu cầu lấy danh sách nhân viên y tế - page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
         Page<UserDto> medicalStaff = adminService.getUsersByRole(UserRole.MedicalStaff, pageable);
         return ResponseEntity.ok(medicalStaff);
@@ -71,7 +80,10 @@ public class AdminController {
 
     @GetMapping("/staff-managers")
     @Operation(summary = "Lấy danh sách quản lý y tế (phân trang)")
-    public ResponseEntity<Page<UserDto>> getStaffManagers(@PageableDefault(size = 10) Pageable pageable) {
+    public ResponseEntity<Page<UserDto>> getStaffManagers(
+            @ParameterObject
+            @PageableDefault(size = 10, page = 0, sort = "fullName")
+            Pageable pageable) {
         log.info("API Admin: Yêu cầu lấy danh sách quản lý y tế - page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
         Page<UserDto> staffManagers = adminService.getUsersByRole(UserRole.StaffManager, pageable);
         return ResponseEntity.ok(staffManagers);

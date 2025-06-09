@@ -13,10 +13,5 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
     boolean existsByEmail(String email);
-    Optional<User> findByFirebaseUid(String firebaseUid);
     Page<User> findAllByRole(UserRole role, Pageable pageable);
-
-    // For checking email uniqueness during Firebase login/linking
-    boolean existsByEmailAndFirebaseUidNot(String email, String firebaseUid);
-    boolean existsByEmailAndFirebaseUidIsNull(String email);
 }

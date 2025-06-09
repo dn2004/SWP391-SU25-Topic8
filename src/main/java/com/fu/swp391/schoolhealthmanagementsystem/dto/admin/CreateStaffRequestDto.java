@@ -30,5 +30,4 @@ public record CreateStaffRequestDto(
         @ValidStaffRole
         @Schema(description = "Vai trò của nhân viên", example = "MedicalStaff")
         UserRole role
-
 ) {}

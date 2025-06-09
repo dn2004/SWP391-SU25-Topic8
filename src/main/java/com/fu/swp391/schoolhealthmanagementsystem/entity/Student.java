@@ -1,5 +1,6 @@
 package com.fu.swp391.schoolhealthmanagementsystem.entity;
 
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.Gender;
 import jakarta.persistence.*;
 
 import lombok.Getter;
@@ -35,7 +36,7 @@ public class Student {
     private LocalDate dateOfBirth;
 
     @Column(name = "Gender", nullable = false, length = 10)
-    private String gender;
+    private Gender gender;
 
     @Column(name = "ClassName", nullable = false, length = 50)
     private String className;
@@ -59,4 +60,7 @@ public class Student {
 
     @Column(name = "InvitationCode", unique = true, length = 20)
     private String invitationCode;
+
+    @OneToMany(mappedBy = "student", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    List<StudentVaccination> vaccinations = new ArrayList<>();
 }

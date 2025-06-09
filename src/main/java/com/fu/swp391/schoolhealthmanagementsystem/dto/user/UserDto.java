@@ -23,9 +23,6 @@ public record UserDto(
         @Schema(description = "Trạng thái hoạt động", example = "true")
         boolean isActive,
 
-        @Schema(description = "UID từ Firebase (nếu có)", example = "firebaseUid123")
-        String firebaseUid,
-
         @Schema(description = "Phụ huynh đã liên kết với học sinh chưa?", example = "false")
         boolean linkedToStudent
 ) {}

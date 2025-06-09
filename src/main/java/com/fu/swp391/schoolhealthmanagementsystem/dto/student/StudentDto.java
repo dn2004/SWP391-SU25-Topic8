@@ -1,5 +1,6 @@
 package com.fu.swp391.schoolhealthmanagementsystem.dto.student;
 
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.Gender;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDate;
@@ -20,7 +21,7 @@ public record StudentDto(
         LocalDate dateOfBirth,
 
         @Schema(description = "Giới tính")
-        String gender,
+        Gender gender,
 
         @Schema(description = "Lớp học")
         String className,

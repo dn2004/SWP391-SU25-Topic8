@@ -43,7 +43,7 @@ public class StudentService {
         // Tạo invitation code duy nhất
         String invitationCode;
         do {
-            invitationCode = RandomStringUtils.randomAlphanumeric(10).toUpperCase();
+            invitationCode = RandomStringUtils.random(10, true, true).toUpperCase();
         } while (studentRepository.findByInvitationCode(invitationCode).isPresent());
         student.setInvitationCode(invitationCode);
         student.setActive(true); // Đảm bảo active khi tạo

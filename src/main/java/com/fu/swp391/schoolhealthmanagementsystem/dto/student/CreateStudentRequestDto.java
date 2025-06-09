@@ -1,5 +1,6 @@
 package com.fu.swp391.schoolhealthmanagementsystem.dto.student;
 
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.Gender;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -26,10 +27,9 @@ public record CreateStudentRequestDto(
         @Schema(description = "Ngày sinh của học sinh", example = "2015-08-20")
         LocalDate dateOfBirth,
 
-        @NotBlank(message = "Giới tính không được để trống")
-        @Size(max = 10, message = "Giới tính tối đa 10 ký tự")
-        @Schema(description = "Giới tính (ví dụ: Nam, Nữ, Khác)", example = "Nữ")
-        String gender,
+        @NotNull(message = "Giới tính không được để trống")
+        @Schema(description = "Giới tính dùng enum (NAM, NU)", example = "NAM")
+        Gender gender,
 
         @NotBlank(message = "Tên lớp không được để trống")
         @Size(max = 50, message = "Tên lớp tối đa 50 ký tự")

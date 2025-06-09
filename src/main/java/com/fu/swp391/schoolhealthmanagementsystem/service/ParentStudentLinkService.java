@@ -33,7 +33,7 @@ public class ParentStudentLinkService {
     private final StudentMapper studentMapper;
 
     @Transactional
-    public ParentStudentLink linkParentToStudentByInvitation(LinkStudentRequestDto dto) {
+    public void linkParentToStudentByInvitation(LinkStudentRequestDto dto) {
         String currentUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
         User parent = userRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new AppException(HttpStatus.UNAUTHORIZED, "Không tìm thấy thông tin phụ huynh hiện tại."));
@@ -50,20 +50,12 @@ public class ParentStudentLinkService {
         boolean alreadyLinked = parentStudentLinkRepository.existsByParentAndStudent(parent, student);
         if (alreadyLinked) {
             log.info("Phụ huynh {} đã liên kết với học sinh {} (Mã: {}) rồi.", parent.getEmail(), student.getFullName(), student.getStudentCode());
-            // You might want to return the existing link or throw an exception depending on desired behavior
-            // For now, let's throw an exception to prevent duplicate active links via invitation.
-            // If status could be PENDING/REJECTED and they retry, different logic might apply.
+
             ParentStudentLink existingLink = parentStudentLinkRepository.findByParentAndStudent(parent, student)
                     .orElseThrow(() -> new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "Liên kết tồn tại nhưng không thể truy xuất."));
             if(existingLink.getStatus() == LinkStatus.ACTIVE){
                 throw new AppException(HttpStatus.CONFLICT, "Bạn đã liên kết với học sinh này rồi.");
             }
-            // If existing link is PENDING/REJECTED, maybe allow update or new ACTIVE link
-            // For simplicity with invitation codes, we assume a new link means a fresh ACTIVE one.
-            // Or, update existing if PENDING:
-            // existingLink.setRelationshipType(dto.getRelationshipType());
-            // existingLink.setStatus(LinkStatus.ACTIVE);
-            // return parentStudentLinkRepository.save(existingLink);
         }
 
 
@@ -76,7 +68,6 @@ public class ParentStudentLinkService {
         ParentStudentLink savedLink = parentStudentLinkRepository.save(link);
         log.info("Phụ huynh {} đã liên kết thành công với học sinh {} (Mã: {}) với vai trò {}. Trạng thái: ACTIVE",
                 parent.getEmail(), student.getFullName(), student.getStudentCode(), dto.relationshipType());
-        return savedLink;
     }
 
     @Transactional(readOnly = true)

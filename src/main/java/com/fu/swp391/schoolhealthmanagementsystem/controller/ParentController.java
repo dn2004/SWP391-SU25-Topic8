@@ -4,11 +4,17 @@ import com.fu.swp391.schoolhealthmanagementsystem.dto.parent.LinkStudentRequestD
 import com.fu.swp391.schoolhealthmanagementsystem.dto.student.StudentDto;
 import com.fu.swp391.schoolhealthmanagementsystem.service.ParentStudentLinkService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -36,9 +42,18 @@ public class ParentController {
     }
 
     @GetMapping("/my-students")
-    @Operation(summary = "Lấy danh sách các học sinh đã liên kết của phụ huynh hiện tại (phân trang)")
+    @Operation(
+            summary = "Lấy danh sách các học sinh đã liên kết của phụ huynh hiện tại (phân trang)",
+            description = "Trả về một trang danh sách các học sinh đã được liên kết với tài khoản phụ huynh " +
+                    "đang đăng nhập. " + "Hỗ trợ phân trang và sắp xếp."
+    )
+    @ApiResponse(responseCode = "200", description = "Thành công",
+            content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = Page.class)))
     public ResponseEntity<Page<StudentDto>> getMyLinkedStudents(
-            @PageableDefault(size = 5, sort = "student.fullName") Pageable pageable) {
+            @ParameterObject
+            @PageableDefault(size = 5, sort = "student.fullName")
+            Pageable pageable) {
         log.info("API Phụ huynh: Yêu cầu lấy danh sách học sinh đã liên kết.");
         Page<StudentDto> linkedStudents = parentStudentLinkService.getMyLinkedStudents(pageable); // THAY ĐỔI Ở ĐÂY: Gọi từ parentService
         return ResponseEntity.ok(linkedStudents);

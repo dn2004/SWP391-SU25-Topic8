@@ -124,4 +124,27 @@ public class GlobalExceptionHandler {
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
+    @ExceptionHandler(FileStorageException.class)
+    public ResponseEntity<ErrorResponseDto> handleFileStorageException(FileStorageException ex, HttpServletRequest request) {
+        log.error("Lỗi xử lý file: {}", ex.getMessage(), ex);
+        ErrorResponseDto errorResponse = ErrorResponseDto.of(
+                HttpStatus.INTERNAL_SERVER_ERROR, // Hoặc BAD_REQUEST tùy ngữ cảnh
+                "Lỗi xử lý file: " + ex.getMessage(),
+                request.getRequestURI()
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponseDto> handleResourceNotFoundException(ResourceNotFoundException ex, HttpServletRequest request) {
+        log.warn("Không tìm thấy tài nguyên: {}", ex.getMessage());
+        ErrorResponseDto errorResponse = ErrorResponseDto.of(
+                HttpStatus.NOT_FOUND,
+                "Không tìm thấy tài nguyên: " + ex.getMessage(),
+                request.getRequestURI()
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+
 }

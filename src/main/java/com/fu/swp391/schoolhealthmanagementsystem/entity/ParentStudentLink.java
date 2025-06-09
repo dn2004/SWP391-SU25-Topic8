@@ -35,11 +35,9 @@ public class ParentStudentLink {
     @JoinColumn(name = "StudentID", nullable = false)
     private Student student;
 
-    @Enumerated(EnumType.STRING) // Lưu trữ dưới dạng STRING trong DB (ví dụ: "FATHER", "MOTHER")
     @Column(name = "RelationshipType", nullable = false, length = 50)
     private RelationshipType relationshipType;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "Status", nullable = false, length = 20)
     private LinkStatus status;
 

@@ -105,9 +105,9 @@
         </dependency>
         <!--Handle File-->
         <dependency>
-            <groupId>io.github.cdimascio</groupId>
-            <artifactId>dotenv-java</artifactId>
-            <version>3.2.0</version>
+            <groupId>com.cloudinary</groupId>
+            <artifactId>cloudinary-http45</artifactId>
+            <version>1.39.0</version>
         </dependency>
 
         <!--Handle Email-->

@@ -44,8 +44,6 @@ public class User implements UserDetails {
     @Column(name = "PhoneNumber", unique = true ,length = 20)
     private String phoneNumber;
 
-
-    @Enumerated(EnumType.STRING)
     @Column(name = "Role", nullable = false)
     private UserRole role;
 
@@ -58,14 +56,11 @@ public class User implements UserDetails {
     private LocalDateTime updatedAt;
 
     @Column(name = "IsActive", nullable = false)
-    @Builder.Default // Đặt giá trị mặc định khi sử dụng builder
+    @Builder.Default
     private boolean isActive = true;
 
-    @Column(name = "firebase_uid", unique = true) // Nullable ban đầu
-    private String firebaseUid;
-
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @Builder.Default // Khởi tạo danh sách rỗng khi dùng builder
+    @Builder.Default
     private List<ParentStudentLink> childLinks = new ArrayList<>();
 
     @Column(name = "IsFullNameConfirmed", nullable = false)
