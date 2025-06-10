@@ -1,4 +1,4 @@
-# Dockerfile (giữ nguyên như phiên bản đã tối ưu)
+    # Dockerfile (giữ nguyên như phiên bản đã tối ưu)
 
 # Build stage
 FROM maven:3.8.4-openjdk-17-slim AS build

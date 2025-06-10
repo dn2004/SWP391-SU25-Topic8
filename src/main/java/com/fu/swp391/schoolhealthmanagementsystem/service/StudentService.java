@@ -63,28 +63,24 @@ public class StudentService {
                 });
 
         // Kiểm tra quyền truy cập (ví dụ cho phụ huynh)
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.isAuthenticated()) {
-            Object principal = authentication.getPrincipal();
-            if (principal instanceof User) {
-                User currentUser = (User) principal;
-                // Nếu là Admin hoặc StaffManager, MedicalStaff (tùy theo quyền bạn muốn cấp) -> cho phép
-                if (currentUser.getRole() == UserRole.SchoolAdmin ||
-                        currentUser.getRole() == UserRole.StaffManager ||
-                        currentUser.getRole() == UserRole.MedicalStaff) {
-                    log.info("Admin/Nhân viên {} truy cập thông tin học sinh ID: {}", currentUser.getEmail(), studentId);
+        User currentParent = userService.getCurrentAuthenticatedUser();
+        if (currentParent != null) {
+            // Nếu là Admin hoặc StaffManager, MedicalStaff (tùy theo quyền bạn muốn cấp) -> cho phép
+            if (currentParent.getRole() == UserRole.SchoolAdmin ||
+                    currentParent.getRole() == UserRole.StaffManager ||
+                    currentParent.getRole() == UserRole.MedicalStaff) {
+                log.info("Admin/Nhân viên {} truy cập thông tin học sinh ID: {}", currentParent.getEmail(), studentId);
+                return studentMapper.studentToStudentDto(student);
+            }
+            // Nếu là Phụ huynh, kiểm tra xem có liên kết với học sinh này không
+            if (currentParent.getRole() == UserRole.Parent) {
+                boolean isLinked = parentStudentLinkRepository.existsByParentAndStudent(currentParent, student);
+                if (isLinked) {
+                    log.info("Phụ huynh {} truy cập thông tin học sinh ID: {} (đã liên kết)", currentParent.getEmail(), studentId);
                     return studentMapper.studentToStudentDto(student);
-                }
-                // Nếu là Phụ huynh, kiểm tra xem có liên kết với học sinh này không
-                if (currentUser.getRole() == UserRole.Parent) {
-                    boolean isLinked = parentStudentLinkRepository.existsByParentAndStudent(currentUser, student);
-                    if (isLinked) {
-                        log.info("Phụ huynh {} truy cập thông tin học sinh ID: {} (đã liên kết)", currentUser.getEmail(), studentId);
-                        return studentMapper.studentToStudentDto(student);
-                    } else {
-                        log.warn("Phụ huynh {} cố gắng truy cập thông tin học sinh ID: {} mà không có liên kết.", currentUser.getEmail(), studentId);
-                        throw new AppException(HttpStatus.FORBIDDEN, "Bạn không có quyền xem thông tin học sinh này.");
-                    }
+                } else {
+                    log.warn("Phụ huynh {} cố gắng truy cập thông tin học sinh ID: {} mà không có liên kết.", currentParent.getEmail(), studentId);
+                    throw new AppException(HttpStatus.FORBIDDEN, "Bạn không có quyền xem thông tin học sinh này.");
                 }
             }
         }

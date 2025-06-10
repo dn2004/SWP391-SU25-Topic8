@@ -63,10 +63,6 @@ public class User implements UserDetails {
     @Builder.Default
     private List<ParentStudentLink> childLinks = new ArrayList<>();
 
-    @Column(name = "IsFullNameConfirmed", nullable = false)
-    @Builder.Default
-    private boolean isFullNameConfirmed = true;
-
 
     // Helper method để kiểm tra phụ huynh đã liên kết chưa
     @Transient // Không được lưu vào DB, tính toán lúc runtime

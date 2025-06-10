@@ -3,58 +3,68 @@ package com.fu.swp391.schoolhealthmanagementsystem.mapper;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.cloudinary.CloudinaryUploadResponse;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.student.StudentVaccinationRequestDto;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.student.StudentVaccinationResponseDto;
-import com.fu.swp391.schoolhealthmanagementsystem.entity.Student;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.student.VaccinationStatusUpdateRequestDto;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.StudentVaccination;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.Named;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.User;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentVaccinationStatus;
+import org.mapstruct.*;
 
-@Mapper(componentModel = "spring") // componentModel = "spring" để tự động tạo Spring bean
+@Mapper(componentModel = "spring")
 public interface StudentVaccinationMapper {
-    @Mapping(source = "student", target = "studentId", qualifiedByName = "studentToStudentId")
 
+    @Mapping(source = "student.studentId", target = "studentId")
+    @Mapping(source = "student.fullName", target = "studentFullName")
+    @Mapping(source = "student.className", target = "studentClassName")
+    @Mapping(source = "approvedByUser.userId", target = "approvedByUserId")
+    @Mapping(source = "approvedByUser.fullName", target = "approvedByUserFullName")
+    @Mapping(target = "hasProofFile", ignore = true)
     StudentVaccinationResponseDto toDto(StudentVaccination entity);
 
-    @Named("studentToStudentId")
-    default Long studentToStudentId(Student student) {
-        return student != null ? student.getStudentId() : null;
-    }
 
     @Mapping(target = "studentVaccinationId", ignore = true)
     @Mapping(target = "student", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    // Ignore các trường file vì sẽ được cập nhật bởi phương thức khác
     @Mapping(target = "proofFileOriginalName", ignore = true)
-    @Mapping(target = "proofFileUrl", ignore = true)
     @Mapping(target = "proofFileType", ignore = true)
     @Mapping(target = "proofPublicId", ignore = true)
     @Mapping(target = "proofResourceType", ignore = true)
+    @Mapping(target = "status", ignore = true)
+    @Mapping(target = "approvedByUser", ignore = true)
+    @Mapping(target = "approvedAt", ignore = true)
+    @Mapping(target = "approverNotes", ignore = true)
     StudentVaccination requestDtoToEntity(StudentVaccinationRequestDto dto);
 
-    // Phương thức mới để cập nhật thông tin file từ CloudinaryUploadResponse vào Entity
-    // Nó sẽ chỉ cập nhật các trường file
+    @Mapping(target = "studentVaccinationId", ignore = true)
+    @Mapping(target = "student", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "proofFileOriginalName", ignore = true)
+    @Mapping(target = "proofFileType", ignore = true)
+    @Mapping(target = "proofPublicId", ignore = true)
+    @Mapping(target = "proofResourceType", ignore = true)
+    @Mapping(target = "status", ignore = true)
+    @Mapping(target = "approvedByUser", ignore = true)
+    @Mapping(target = "approvedAt", ignore = true)
+    @Mapping(target = "approverNotes", ignore = true)
+    void updateEntityFromRequestDto(StudentVaccinationRequestDto dto, @MappingTarget StudentVaccination targetEntity);
+
     @Mapping(source = "originalFilename", target = "proofFileOriginalName")
-    @Mapping(source = "url", target = "proofFileUrl")
-    @Mapping(source = "contentType", target = "proofFileType") // Sử dụng contentType từ uploadResult
+    @Mapping(target = "proofFileType", ignore = true)
     @Mapping(source = "publicId", target = "proofPublicId")
     @Mapping(source = "resourceType", target = "proofResourceType")
     void updateProofFileDetailsFromUploadResult(CloudinaryUploadResponse uploadResult, @MappingTarget StudentVaccination targetEntity);
 
+    default void clearProofFileDetails(@MappingTarget StudentVaccination entity) {
+        entity.setProofFileOriginalName(null);
+        entity.setProofFileType(null);
+        entity.setProofPublicId(null);
+        entity.setProofResourceType(null);
+    }
 
-    // Phương thức update chính có thể gọi updateProofFileDetailsFromUploadResult
-    @Mapping(target = "studentVaccinationId", ignore = true)
-    @Mapping(target = "student", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    // Ignore các trường file vì sẽ được cập nhật riêng nếu có file mới
-    @Mapping(target = "proofFileOriginalName", ignore = true)
-    @Mapping(target = "proofFileUrl", ignore = true)
-    @Mapping(target = "proofFileType", ignore = true)
-    @Mapping(target = "proofPublicId", ignore = true)
-    @Mapping(target = "proofResourceType", ignore = true)
-    void updateEntityFromRequestDto(StudentVaccinationRequestDto dto, @MappingTarget StudentVaccination targetEntity);
-
-
+    default void clearApprovedByUser(@MappingTarget StudentVaccination entity) {
+        entity.setApprovedByUser(null);
+        entity.setApprovedAt(null);
+        entity.setApproverNotes(null);
+    }
 }

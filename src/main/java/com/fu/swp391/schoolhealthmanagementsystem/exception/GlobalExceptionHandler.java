@@ -129,7 +129,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponseDto> handleFileStorageException(FileStorageException ex, HttpServletRequest request) {
         log.error("Lỗi xử lý file: {}", ex.getMessage(), ex);
         ErrorResponseDto errorResponse = ErrorResponseDto.of(
-                HttpStatus.INTERNAL_SERVER_ERROR, // Hoặc BAD_REQUEST tùy ngữ cảnh
+                HttpStatus.INTERNAL_SERVER_ERROR,
                 "Lỗi xử lý file: " + ex.getMessage(),
                 request.getRequestURI()
         );
@@ -145,6 +145,17 @@ public class GlobalExceptionHandler {
                 request.getRequestURI()
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponseDto> handleIllegalArgumentException(IllegalArgumentException ex, HttpServletRequest request) {
+        log.warn("Đối số không hợp lệ (IllegalArgumentException): {} tại {}", ex.getMessage(), request.getRequestURI());
+        ErrorResponseDto errorResponse = ErrorResponseDto.of(
+                HttpStatus.BAD_REQUEST,
+                "Yêu cầu không hợp lệ: " + ex.getMessage(),
+                request.getRequestURI()
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
 }

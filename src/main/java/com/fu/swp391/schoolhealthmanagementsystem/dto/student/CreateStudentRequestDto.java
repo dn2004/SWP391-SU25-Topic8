@@ -28,7 +28,7 @@ public record CreateStudentRequestDto(
         LocalDate dateOfBirth,
 
         @NotNull(message = "Giới tính không được để trống")
-        @Schema(description = "Giới tính dùng enum (NAM, NU)", example = "NAM")
+        @Schema(description = "Giới tính dùng enum (MALE, FEMALE)", example = "MALE")
         Gender gender,
 
         @NotBlank(message = "Tên lớp không được để trống")

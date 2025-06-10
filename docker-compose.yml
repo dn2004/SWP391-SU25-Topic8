@@ -44,6 +44,16 @@ services:
       - APP_FRONTEND_URL=${APP_FRONTEND_URL}
       - APP_LOGIN_PATH=${APP_LOGIN_PATH}
 
+      # Cloudinary
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
+      - CLOUDINARY_BASE_FOLDER=${CLOUDINARY_BASE_FOLDER}
+
+      # FILE_ALLOWED_TYPES
+      - FILE_ALLOWED_TYPES=${FILE_ALLOWED_TYPES}
+      - FILE_MAX_PROOF_SIZE_BYTES=${FILE_MAX_PROOF_SIZE_BYTES}
+
 
     depends_on:
       mysql:
@@ -61,7 +71,7 @@ services:
     command: redis-server --appendonly yes ${REDIS_PASS:+--requirepass ${REDIS_PASS}}
     restart: always
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -79,7 +89,7 @@ services:
       - mysql-data:/var/lib/mysql
     command: --character-set-server=${MYSQL_CHARSET:-utf8mb4} --collation-server=${MYSQL_COLLATION:-utf8mb4_unicode_ci}
     healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-u${MYSQL_USER_APP}", "-p${MYSQL_PASSWORD_APP}"]
+      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost", "-u${MYSQL_USER_APP}", "-p${MYSQL_PASSWORD_APP}" ]
       interval: 20s
       timeout: 10s
       retries: 10

@@ -6,5 +6,5 @@ import org.springframework.web.multipart.MultipartFile;
 public interface FileStorageService {
     CloudinaryUploadResponse uploadFile(MultipartFile file, String subFolder, String publicIdPrefix);
     void deleteFile(String publicId, String resourceType);
-    // Không cần loadAsResource với Cloudinary vì client sẽ dùng URL trực tiếp
+    String generateSignedUrl(String publicId, String resourceType, int durationInSeconds);
 }

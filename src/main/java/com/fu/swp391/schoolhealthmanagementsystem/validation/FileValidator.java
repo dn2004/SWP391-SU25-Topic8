@@ -1,7 +1,7 @@
 package com.fu.swp391.schoolhealthmanagementsystem.validation;
 
 
-import com.fu.swp391.schoolhealthmanagementsystem.config.FileStorageProperties;
+import com.fu.swp391.schoolhealthmanagementsystem.prop.FileStorageProperties;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.springframework.beans.factory.annotation.Autowired;

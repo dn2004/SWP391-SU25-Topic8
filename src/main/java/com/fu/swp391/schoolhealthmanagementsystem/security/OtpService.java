@@ -72,10 +72,6 @@ public class OtpService {
                 });
 
         user.setPassword(passwordEncoder.encode(newPassword));
-        if (user.getFirebaseUid() == null) { // If only password based, ensure it's not "temporary"
-            // If you had a concept of temporary password that needed changing, you'd set it here.
-            // But requirement 7.5 removed forced password change.
-        }
         userRepository.save(user);
 
         redisTemplate.delete(redisKey);

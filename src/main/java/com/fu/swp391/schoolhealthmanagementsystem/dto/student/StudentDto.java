@@ -21,7 +21,7 @@ public record StudentDto(
         LocalDate dateOfBirth,
 
         @Schema(description = "Giới tính")
-        Gender gender,
+        String gender,
 
         @Schema(description = "Lớp học")
         String className,
