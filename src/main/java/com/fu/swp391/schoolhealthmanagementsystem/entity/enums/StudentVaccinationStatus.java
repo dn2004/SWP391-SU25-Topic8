@@ -43,7 +43,4 @@ public enum StudentVaccinationStatus {
         throw new IllegalArgumentException("Không tìm thấy trạng thái của thông tin này: " + text);
     }
 
-    public String getVietnameseName() {
-        return vietnameseName;
-    }
 }

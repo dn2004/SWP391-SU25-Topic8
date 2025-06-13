@@ -39,54 +39,27 @@ public class StudentVaccinationService {
     private final FileStorageService fileStorageService;
     private final StudentRepository studentRepository;
     private final StudentVaccinationMapper vaccinationMapper;
-    private final UserRepository userRepository; // Giữ lại nếu cần trong getCurrentUserAndValidate
-    private final ParentStudentLinkRepository parentStudentLinkRepository;
-    private final UserService userService;
-
-    // --- Private Helper Methods for Permission Checks ---
-
-    private void authorizeParentAction(User parent, Student student, String action) {
-        log.info("Kiểm tra quyền của Phụ huynh {} cho hành động '{}' với học sinh ID {}", parent.getEmail(), action, student.getStudentId());
-        boolean isLinked = parentStudentLinkRepository.existsByParentAndStudentAndStatus(parent, student, LinkStatus.ACTIVE);
-        if (!isLinked) {
-            log.error("Phụ huynh {} không có quyền thực hiện '{}' cho học sinh ID {}.",
-                    parent.getEmail(), action, student.getStudentId());
-            throw new AccessDeniedException("Bạn không có quyền thực hiện hành động này cho học sinh được chỉ định.");
-        }
-        log.info("Phụ huynh {} được xác nhận có liên kết với học sinh ID {}.", parent.getEmail(), student.getStudentId());
-    }
-
-    private User getCurrentUserAndValidate() {
-        User currentUser = userService.getCurrentAuthenticatedUser();
-        if (currentUser == null) {
-            log.error("Không thể xác định người dùng hiện tại.");
-            throw new AccessDeniedException("Không thể xác thực người dùng hiện tại.");
-        }
-        log.debug("Người dùng hiện tại: {} (ID: {}, Role: {})", currentUser.getEmail(), currentUser.getUserId(), currentUser.getRole());
-        return currentUser;
-    }
-
-    // --- Public Service Methods ---
+    private final AuthorizationService authorizationService;
 
     // Phương thức này vẫn giữ studentId vì nó tạo mới cho một student cụ thể
     @Transactional
     public StudentVaccinationResponseDto addVaccination(Long studentId, StudentVaccinationRequestDto dto) {
         log.info("Bắt đầu thêm thông tin tiêm chủng cho học sinh ID: {}", studentId);
-        User currentUser = getCurrentUserAndValidate();
+        User currentUser = authorizationService.getCurrentUserAndValidate();
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy học sinh với ID: " + studentId));
 
+        StudentVaccinationStatus vaccinationStatus = StudentVaccinationStatus.PENDING;
+
         if (currentUser.getRole() == UserRole.Parent) {
-            authorizeParentAction(currentUser, student, "thêm thông tin tiêm chủng");
-        } else if (!(currentUser.getRole() == UserRole.MedicalStaff ||
-                currentUser.getRole() == UserRole.StaffManager ||
-                currentUser.getRole() == UserRole.SchoolAdmin)) {
-            throw new AccessDeniedException("Vai trò của bạn không được phép thêm thông tin tiêm chủng.");
+            authorizationService.authorizeParentAction(currentUser, student, "thêm thông tin tiêm chủng");
+        } else {
+            vaccinationStatus = StudentVaccinationStatus.APPROVE;
         }
 
         StudentVaccination vaccinationEntity = vaccinationMapper.requestDtoToEntity(dto);
         vaccinationEntity.setStudent(student);
-        vaccinationEntity.setStatus(StudentVaccinationStatus.PENDING);
+        vaccinationEntity.setStatus(vaccinationStatus);
         log.info("Gán trạng thái mặc định PENDING cho bản ghi tiêm chủng mới của học sinh ID: {}", studentId);
 
         MultipartFile proofFile = dto.proofFile();
@@ -100,20 +73,15 @@ public class StudentVaccinationService {
         return vaccinationMapper.toDto(savedEntity);
     }
 
-    // Phương thức này vẫn giữ studentId vì nó lấy danh sách cho một student cụ thể
     @Transactional(readOnly = true)
     public Page<StudentVaccinationResponseDto> getAllVaccinationsByStudentIdPage(Long studentId, Pageable pageable) {
         log.info("Lấy danh sách tiêm chủng phân trang cho học sinh ID: {}. Trang: {}", studentId, pageable.getPageNumber());
-        User currentUser = getCurrentUserAndValidate();
+        User currentUser = authorizationService.getCurrentUserAndValidate();
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy học sinh với ID: " + studentId));
 
         if (currentUser.getRole() == UserRole.Parent) {
-            authorizeParentAction(currentUser, student, "xem danh sách tiêm chủng");
-        } else if (!(currentUser.getRole() == UserRole.MedicalStaff ||
-                currentUser.getRole() == UserRole.StaffManager ||
-                currentUser.getRole() == UserRole.SchoolAdmin)) {
-            throw new AccessDeniedException("Bạn không có quyền xem danh sách tiêm chủng này.");
+            authorizationService.authorizeParentAction(currentUser, student, "xem danh sách tiêm chủng");
         }
 
         Page<StudentVaccination> vaccinationsEntityPage = vaccinationRepository.findByStudent_StudentId(studentId, pageable);
@@ -121,13 +89,55 @@ public class StudentVaccinationService {
         return vaccinationsEntityPage.map(vaccinationMapper::toDto);
     }
 
+    @Transactional(readOnly = true)
+    public Page<StudentVaccinationResponseDto> getAllVaccinationsByStatus(StudentVaccinationStatus status, Pageable pageable) {
+        log.info("Lấy danh sách tiêm chủng theo trạng thái: {} cho trang: {}. Kích thước trang: {}", status, pageable.getPageNumber(), pageable.getPageSize());
+
+        if (status == null) {
+            throw new IllegalArgumentException("Trạng thái (status) không được để trống khi tìm kiếm.");
+        }
+
+        Page<StudentVaccination> vaccinationsEntityPage = vaccinationRepository.findByStatus(status, pageable);
+        log.info("Tìm thấy {} bản ghi tiêm chủng với trạng thái {} trên trang {}.",
+                vaccinationsEntityPage.getNumberOfElements(), status, pageable.getPageNumber());
+
+        return vaccinationsEntityPage.map(vaccinationMapper::toDto);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<StudentVaccinationResponseDto> getVaccinationsByStudentIdAndStatus(
+            Long studentId, StudentVaccinationStatus status, Pageable pageable) {
+
+        log.info("Lấy danh sách tiêm chủng cho học sinh ID: {} theo trạng thái: {}. Trang: {}, Kích thước: {}",
+                studentId, status, pageable.getPageNumber(), pageable.getPageSize());
+
+        User currentUser = authorizationService.getCurrentUserAndValidate();
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy học sinh với ID: " + studentId));
+
+        if (currentUser.getRole() == UserRole.Parent) {
+            authorizationService.authorizeParentAction(currentUser, student, "xem thông tin tiêm chủng theo trạng thái");
+        }
+
+        if (status == null) {
+            throw new IllegalArgumentException("Trạng thái (status) không được để trống khi tìm kiếm.");
+        }
+
+        Page<StudentVaccination> vaccinationsEntityPage =
+                vaccinationRepository.findByStudent_StudentIdAndStatus(studentId, status, pageable);
+
+        log.info("Tìm thấy {} bản ghi tiêm chủng cho học sinh ID {} với trạng thái {} trên trang {}.",
+                vaccinationsEntityPage.getNumberOfElements(), studentId, status, pageable.getPageNumber());
+
+        return vaccinationsEntityPage.map(vaccinationMapper::toDto);
+    }
 
     // ---- Các phương thức mới/cập nhật cho API /vaccinations/{vaccinationId} ----
 
     @Transactional(readOnly = true)
     public StudentVaccinationResponseDto getVaccinationResponseByIdForCurrentUser(Long vaccinationId) {
         log.info("Đang lấy thông tin bản ghi tiêm chủng ID: {} cho người dùng hiện tại.", vaccinationId);
-        User currentUser = getCurrentUserAndValidate();
+        User currentUser = authorizationService.getCurrentUserAndValidate();
         StudentVaccination entity = vaccinationRepository.findById(vaccinationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bản ghi tiêm chủng với ID: " + vaccinationId));
 
@@ -137,11 +147,7 @@ public class StudentVaccinationService {
         }
 
         if (currentUser.getRole() == UserRole.Parent) {
-            authorizeParentAction(currentUser, studentOfRecord, "xem thông tin tiêm chủng");
-        } else if (!(currentUser.getRole() == UserRole.MedicalStaff ||
-                currentUser.getRole() == UserRole.StaffManager ||
-                currentUser.getRole() == UserRole.SchoolAdmin)) {
-            throw new AccessDeniedException("Bạn không có quyền xem thông tin tiêm chủng này.");
+            authorizationService.authorizeParentAction(currentUser, studentOfRecord, "xem thông tin tiêm chủng");
         }
         return vaccinationMapper.toDto(entity);
     }
@@ -149,7 +155,7 @@ public class StudentVaccinationService {
     @Transactional
     public StudentVaccinationResponseDto updateVaccinationForCurrentUser(Long vaccinationId, StudentVaccinationRequestDto dto) {
         log.info("Bắt đầu cập nhật bản ghi tiêm chủng ID: {} bởi người dùng hiện tại.", vaccinationId);
-        User currentUser = getCurrentUserAndValidate();
+        User currentUser = authorizationService.getCurrentUserAndValidate();
         StudentVaccination existingVaccination = vaccinationRepository.findById(vaccinationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Bản ghi tiêm chủng không tồn tại với ID: " + vaccinationId));
 
@@ -161,14 +167,10 @@ public class StudentVaccinationService {
 
         // Kiểm tra quyền cập nhật
         if (currentUser.getRole() == UserRole.Parent) {
-            authorizeParentAction(currentUser, studentOfRecord, "cập nhật thông tin tiêm chủng");
+            authorizationService.authorizeParentAction(currentUser, studentOfRecord, "cập nhật thông tin tiêm chủng");
             if (existingVaccination.getStatus() != StudentVaccinationStatus.PENDING) {
                 throw new AccessDeniedException("Bạn chỉ có thể cập nhật thông tin tiêm chủng khi đang ở trạng thái 'Chờ xử lý'.");
             }
-        } else if (!(currentUser.getRole() == UserRole.MedicalStaff ||
-                currentUser.getRole() == UserRole.StaffManager ||
-                currentUser.getRole() == UserRole.SchoolAdmin)) {
-            throw new AccessDeniedException("Bạn không có quyền cập nhật thông tin tiêm chủng này.");
         }
 
         StudentVaccinationStatus currentStatusBeforeUpdate = existingVaccination.getStatus();
@@ -204,13 +206,7 @@ public class StudentVaccinationService {
     @Transactional
     public StudentVaccinationResponseDto mediateVaccinationStatusForCurrentUser(Long vaccinationId, VaccinationStatusUpdateRequestDto statusUpdateRequestDto) {
         log.info("Bắt đầu duyệt bản ghi tiêm chủng ID: {} bởi người dùng hiện tại.", vaccinationId);
-        User currentUser = getCurrentUserAndValidate();
-
-        if (!(currentUser.getRole() == UserRole.MedicalStaff ||
-                currentUser.getRole() == UserRole.StaffManager ||
-                currentUser.getRole() == UserRole.SchoolAdmin)) {
-            throw new AccessDeniedException("Bạn không có quyền thực hiện hành động duyệt này.");
-        }
+        User currentUser = authorizationService.getCurrentUserAndValidate();
 
         StudentVaccination vaccination = vaccinationRepository.findById(vaccinationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Bản ghi tiêm chủng không tồn tại với ID: " + vaccinationId));
@@ -240,7 +236,7 @@ public class StudentVaccinationService {
     @Transactional
     public void deleteVaccinationForCurrentUser(Long vaccinationId) {
         log.info("Bắt đầu yêu cầu xóa bản ghi tiêm chủng ID: {} bởi người dùng hiện tại.", vaccinationId);
-        User currentUser = getCurrentUserAndValidate();
+        User currentUser = authorizationService.getCurrentUserAndValidate();
         StudentVaccination vaccination = vaccinationRepository.findById(vaccinationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Bản ghi tiêm chủng không tồn tại với ID: " + vaccinationId));
 
@@ -249,26 +245,16 @@ public class StudentVaccinationService {
             throw new IllegalStateException("Bản ghi tiêm chủng không liên kết với học sinh.");
         }
 
-        boolean canDelete = false;
         String denialReason = "Bạn không có quyền xóa bản ghi này hoặc bản ghi không ở trạng thái cho phép xóa.";
         UserRole currentUserRole = currentUser.getRole();
 
         if (currentUserRole == UserRole.Parent) {
-            authorizeParentAction(currentUser, studentOfRecord, "xóa thông tin tiêm chủng");
+            authorizationService.authorizeParentAction(currentUser, studentOfRecord, "xóa thông tin tiêm chủng");
             if (vaccination.getStatus() == StudentVaccinationStatus.PENDING) {
-                canDelete = true;
             } else {
                 denialReason = "Phụ huynh chỉ có thể xóa thông tin tiêm chủng đang ở trạng thái 'Chờ xử lý'.";
+                throw new AccessDeniedException(denialReason);
             }
-        } else if (currentUserRole == UserRole.SchoolAdmin) {
-            canDelete = true;
-        } else {
-            denialReason = "Bạn không có quyền thực hiện hành động xóa này.";
-        }
-
-        if (!canDelete) {
-            log.warn("Từ chối xóa bản ghi tiêm chủng ID {} bởi {}. Lý do: {}", vaccinationId, currentUser.getEmail(), denialReason);
-            throw new AccessDeniedException(denialReason);
         }
 
         if (vaccination.getProofPublicId() != null && !vaccination.getProofPublicId().isEmpty()) {
@@ -284,7 +270,7 @@ public class StudentVaccinationService {
     @Transactional(readOnly = true) // Chỉ đọc dữ liệu, không thay đổi
     public String getSignedUrlForProofFile(Long vaccinationId) {
         log.info("Yêu cầu tạo signed URL cho file bằng chứng của bản ghi tiêm chủng ID: {}", vaccinationId);
-        User currentUser = getCurrentUserAndValidate();
+        User currentUser = authorizationService.getCurrentUserAndValidate();
         StudentVaccination entity = vaccinationRepository.findById(vaccinationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bản ghi tiêm chủng với ID: " + vaccinationId));
 
@@ -295,31 +281,23 @@ public class StudentVaccinationService {
 
         // Kiểm tra quyền của người dùng hiện tại đối với việc xem file của học sinh này
         if (currentUser.getRole() == UserRole.Parent) {
-            authorizeParentAction(currentUser, studentOfRecord, "truy cập file bằng chứng");
-        } else if (!(currentUser.getRole() == UserRole.MedicalStaff ||
-                currentUser.getRole() == UserRole.StaffManager ||
-                currentUser.getRole() == UserRole.SchoolAdmin)) {
-            log.warn("Người dùng {} (Role: {}) không có quyền truy cập file bằng chứng cho bản ghi ID: {}",
-                    currentUser.getEmail(), currentUser.getRole(), vaccinationId);
-            throw new AccessDeniedException("Bạn không có quyền truy cập file bằng chứng này.");
+            authorizationService.authorizeParentAction(currentUser, studentOfRecord, "truy cập file bằng chứng");
         }
 
         if (entity.getProofPublicId() == null || entity.getProofPublicId().isEmpty()) {
             log.warn("Bản ghi tiêm chủng ID: {} không có thông tin file bằng chứng (publicId rỗng).", vaccinationId);
-            return null; // Hoặc ném ResourceNotFoundException cho file
+            return null;
         }
 
-        // Thời gian hết hạn cho URL, ví dụ 5 phút (300 giây). Có thể cấu hình giá trị này.
         int urlDurationSeconds = 300;
         String signedUrl = fileStorageService.generateSignedUrl(
                 entity.getProofPublicId(),
-                entity.getProofResourceType(), // Quan trọng: Lấy resource type đã lưu
+                entity.getProofResourceType(),
                 urlDurationSeconds
         );
 
         if (signedUrl == null) {
             log.error("Không thể tạo signed URL cho public_id: {} của bản ghi ID: {}", entity.getProofPublicId(), vaccinationId);
-            // Có thể ném một exception ở đây để báo lỗi cho client
             throw new FileStorageException("Lỗi khi tạo URL truy cập file. Vui lòng thử lại sau.");
         }
 

@@ -88,7 +88,7 @@ public class AdminService {
         //         throw new AppException(HttpStatus.BAD_REQUEST, "Bạn không thể tự vô hiệu hóa tài khoản của mình.");
         //     }
         // }
-        // if (user.getRole() == UserRole.SchoolAdmin && !isActive) {
+        // if (user.getRole() == UserRole.SchoolAdmin && !active) {
         //      throw new AppException(HttpStatus.BAD_REQUEST, "Không thể vô hiệu hóa tài khoản SchoolAdmin khác.");
         // }
 

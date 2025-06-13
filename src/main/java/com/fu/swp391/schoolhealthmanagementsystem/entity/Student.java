@@ -3,6 +3,7 @@ package com.fu.swp391.schoolhealthmanagementsystem.entity;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.Gender;
 import jakarta.persistence.*;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
@@ -44,8 +45,8 @@ public class Student {
     @Column(name = "Address", length = 255)
     private String address;
 
-    @Column(name = "IsActive", nullable = false)
-    private boolean isActive = true;
+    @Column(name = "Active", nullable = false)
+    private boolean active = true;
 
     @CreationTimestamp
     @Column(name = "CreatedAt", nullable = false, updatable = false)
@@ -63,4 +64,7 @@ public class Student {
 
     @OneToMany(mappedBy = "student", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     List<StudentVaccination> vaccinations = new ArrayList<>();
+
+    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<HealthIncident> healthIncidents = new ArrayList<>();
 }

@@ -60,7 +60,7 @@ public class AuthService {
                 .password(passwordEncoder.encode(dto.password())) // Chỉ mã hóa password chính
                 .phoneNumber(dto.phoneNumber())
                 .role(UserRole.Parent)
-                // .isActive(true) // Đã có @Builder.Default
+                // .active(true) // Đã có @Builder.Default
                 .build();
 
         User savedParent = userRepository.save(parent);

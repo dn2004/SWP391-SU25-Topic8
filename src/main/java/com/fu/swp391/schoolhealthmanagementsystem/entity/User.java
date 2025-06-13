@@ -55,9 +55,9 @@ public class User implements UserDetails {
     @Column(name = "UpdatedAt")
     private LocalDateTime updatedAt;
 
-    @Column(name = "IsActive", nullable = false)
+    @Column(name = "Active", nullable = false)
     @Builder.Default
-    private boolean isActive = true;
+    private boolean active = true;
 
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
@@ -96,12 +96,12 @@ public class User implements UserDetails {
 
     @Override
     public boolean isAccountNonExpired() {
-        return true; // Tài khoản không bao giờ hết hạn theo logic hiện tại
+        return true;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return isActive; // Tài khoản bị khóa nếu không active
+        return active; // Tài khoản bị khóa nếu không active
     }
 
     @Override
@@ -111,6 +111,6 @@ public class User implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return isActive; // Tài khoản được kích hoạt nếu active
+        return active; // Tài khoản được kích hoạt nếu active
     }
 }

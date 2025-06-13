@@ -10,6 +10,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments; // Import mới
 import org.springframework.boot.ApplicationRunner;   // Import mới
+import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
+@Order(1)
 public class UserInitializer implements ApplicationRunner { // Thay đổi ở đây
 
     UserRepository userRepository; // Dùng final và constructor injection
@@ -39,7 +41,7 @@ public class UserInitializer implements ApplicationRunner { // Thay đổi ở �
                     .password(passwordEncoder.encode(adminProperties.password()))
                     .fullName(adminProperties.fullName())
                     .role(UserRole.SchoolAdmin) // Đảm bảo UserRole có SchoolAdmin
-                    .isActive(true)
+                    .active(true)
                     .build();
 
             userRepository.save(adminUser);

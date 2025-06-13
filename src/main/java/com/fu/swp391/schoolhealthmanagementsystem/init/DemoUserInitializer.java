@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +25,8 @@ import java.time.LocalDate;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-public class DataInitializer implements ApplicationRunner {
+@Order(2)
+public class DemoUserInitializer implements ApplicationRunner {
 
     private final UserRepository userRepository;
     private final StudentRepository studentRepository;
@@ -46,7 +48,7 @@ public class DataInitializer implements ApplicationRunner {
                     .fullName("John Parent")
                     .phoneNumber("0123456789")
                     .role(UserRole.Parent)
-                    .isActive(true)
+                    .active(true)
                     .build();
             parent1 = userRepository.save(parent1);
             log.info("Đã tạo tài khoản Phụ huynh: {}", parent1.getEmail());
@@ -98,7 +100,7 @@ public class DataInitializer implements ApplicationRunner {
                     .fullName("Mary Nurse")
                     .phoneNumber("0900112233")
                     .role(UserRole.MedicalStaff)
-                    .isActive(true)
+                    .active(true)
                     .build();
             userRepository.save(schoolNurse);
             log.info("Đã tạo tài khoản School Nurse: {}", schoolNurse.getEmail());
@@ -115,7 +117,7 @@ public class DataInitializer implements ApplicationRunner {
                     .fullName("Susan Manager")
                     .phoneNumber("0900445566")
                     .role(UserRole.StaffManager)
-                    .isActive(true)
+                    .active(true)
                     .build();
             userRepository.save(nurseManager);
             log.info("Đã tạo tài khoản Nurse Manager: {}", nurseManager.getEmail());

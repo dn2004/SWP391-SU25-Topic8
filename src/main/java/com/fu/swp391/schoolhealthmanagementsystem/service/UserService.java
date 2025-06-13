@@ -29,9 +29,6 @@ public class UserService {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> {
                     log.error("Không thể tìm thấy người dùng đã xác thực với email: {}", email);
-                    // UsernameNotFoundException thường được xử lý bởi AuthenticationEntryPoint của Spring Security
-                    // nếu nó xảy ra trong quá trình loadUserByUsername.
-                    // Ở đây, nếu user đã auth mà không tìm thấy -> lỗi nghiêm trọng hơn.
                     return new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "Không tìm thấy thông tin người dùng đã xác thực.");
                 });
     }

@@ -9,7 +9,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 
 @Mapper(componentModel = "spring")
-public interface StudentMapper {
+public interface    StudentMapper {
 
     @Mapping(target = "studentId", ignore = true) // Sẽ được tự sinh
     @Mapping(target = "active", constant = "true") // Mặc định là active khi tạo mới

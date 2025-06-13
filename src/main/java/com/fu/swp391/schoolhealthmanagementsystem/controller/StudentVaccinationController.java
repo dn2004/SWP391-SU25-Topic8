@@ -4,6 +4,7 @@ import com.fu.swp391.schoolhealthmanagementsystem.dto.ErrorResponseDto; // Giả
 import com.fu.swp391.schoolhealthmanagementsystem.dto.student.StudentVaccinationRequestDto;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.student.StudentVaccinationResponseDto;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.student.VaccinationStatusUpdateRequestDto;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentVaccinationStatus;
 import com.fu.swp391.schoolhealthmanagementsystem.service.StudentVaccinationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -162,6 +163,61 @@ public class StudentVaccinationController {
         return ResponseEntity.ok(vaccinationsPage);
     }
 
+    @Operation(summary = "Lấy danh sách thông tin tiêm chủng theo trạng thái (phân trang)",
+            description = "Chỉ dành cho Quản trị viên, Nhân viên y tế, hoặc Quản lý nhân viên. " +
+                    "Trả về đối tượng Page chứa danh sách các bản ghi tiêm chủng theo trạng thái được chỉ định. " +
+                    "Hỗ trợ các tham số query: `page`, `size`, `sort`.")
+    @ApiResponse(responseCode = "200", description = "Thành công",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = Page.class))) // Response là một Page của StudentVaccinationResponseDto
+    @ApiResponse(responseCode = "400", description = "Trạng thái không hợp lệ",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDto.class)))
+    @ApiResponse(responseCode = "403", description = "Không có quyền thực hiện hành động này",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDto.class)))
+    @PreAuthorize("hasAnyRole('SchoolAdmin', 'MedicalStaff', 'StaffManager')")
+    @GetMapping("/vaccinations/status") // Consider a more descriptive path if needed, e.g., /vaccinations/filter-by-status
+    public ResponseEntity<Page<StudentVaccinationResponseDto>> getVaccinationsByStatus(
+            @Parameter(description = "Trạng thái tiêm chủng để lọc (PENDING, APPROVE, REJECTED)", required = true,
+                    schema = @Schema(implementation = StudentVaccinationStatus.class))
+            @RequestParam("status") StudentVaccinationStatus status,
+            @ParameterObject
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) // Default sort by creation time
+            Pageable pageable) {
+        log.info("API GET /api/vaccinations/status được gọi với status: {} và pageable: {}", status, pageable);
+        Page<StudentVaccinationResponseDto> vaccinationsPage =
+                vaccinationService.getAllVaccinationsByStatus(status, pageable);
+        return ResponseEntity.ok(vaccinationsPage);
+    }
+
+    @Operation(summary = "Lấy danh sách thông tin tiêm chủng của học sinh theo trạng thái cụ thể (phân trang)",
+            description = "Phụ huynh có thể xem hồ sơ của con mình. Nhân viên được ủy quyền có thể xem hồ sơ của bất kỳ học sinh nào. " +
+                    "Ví dụ: Phụ huynh xem các bản ghi 'REJECTED' của con mình. Nhân viên xem các bản ghi 'APPROVED' của một học sinh. " +
+                    "Hỗ trợ các tham số query: `page`, `size`, `sort`.")
+    @ApiResponse(responseCode = "200", description = "Thành công",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = Page.class))) // Response là một Page của StudentVaccinationResponseDto
+    @ApiResponse(responseCode = "400", description = "Trạng thái hoặc ID học sinh không hợp lệ",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDto.class)))
+    @ApiResponse(responseCode = "403", description = "Không có quyền thực hiện hành động này",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDto.class)))
+    @ApiResponse(responseCode = "404", description = "Học sinh không tìm thấy",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDto.class)))
+    @PreAuthorize("isAuthenticated()") // Service layer will do more fine-grained checks
+    @GetMapping("/students/{studentId}/vaccinations/status")
+    public ResponseEntity<Page<StudentVaccinationResponseDto>> getStudentVaccinationsByStatus(
+            @Parameter(description = "ID của học sinh") @PathVariable Long studentId,
+            @Parameter(description = "Trạng thái tiêm chủng để lọc (PENDING, APPROVE, REJECTED)", required = true,
+                    schema = @Schema(implementation = StudentVaccinationStatus.class))
+            @RequestParam("status") StudentVaccinationStatus status,
+            @ParameterObject
+            @PageableDefault(size = 10, sort = "vaccinationDate", direction = Sort.Direction.DESC)
+            Pageable pageable) {
+        log.info("API GET /api/students/{}/vaccinations/status được gọi với status: {} và pageable: {}", studentId, status, pageable);
+        Page<StudentVaccinationResponseDto> vaccinationsPage =
+                vaccinationService.getVaccinationsByStudentIdAndStatus(studentId, status, pageable);
+        return ResponseEntity.ok(vaccinationsPage);
+    }
+
     @Operation(summary = "Lấy URL truy cập (đã ký) cho file bằng chứng của một bản ghi tiêm chủng",
             description = "Người dùng đã xác thực và có quyền sẽ nhận được một URL tạm thời để truy cập file.")
     @ApiResponse(responseCode = "200", description = "Thành công, trả về URL đã ký trong một đối tượng JSON вида {'url': 'SIGNED_URL'}",
@@ -181,9 +237,6 @@ public class StudentVaccinationController {
         String signedUrl = vaccinationService.getSignedUrlForProofFile(vaccinationId);
 
         if (signedUrl == null) {
-            // Service có thể đã ném ResourceNotFoundException nếu không có publicId,
-            // hoặc FileStorageException nếu tạo URL lỗi.
-            // Nếu service trả về null (ví dụ không có file), thì trả về 404.
             log.warn("Không thể tạo signed URL hoặc không có file cho vaccinationId: {}", vaccinationId);
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", "Không tìm thấy file bằng chứng hoặc lỗi tạo URL."));
