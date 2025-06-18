@@ -9,7 +9,7 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 public record AdminProperties(
         @NotBlank String
-        fullName, // Các trường sẽ tự động là final và có getter
+        fullName,
         @NotBlank String
         password,
         @NotBlank @Email

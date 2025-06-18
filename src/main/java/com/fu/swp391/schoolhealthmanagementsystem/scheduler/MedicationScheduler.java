@@ -1,0 +1,39 @@
+package com.fu.swp391.schoolhealthmanagementsystem.scheduler;
+
+import com.fu.swp391.schoolhealthmanagementsystem.service.ScheduledTaskCleanupService;
+import com.fu.swp391.schoolhealthmanagementsystem.service.ScheduledTaskGenerationService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+@Component
+@RequiredArgsConstructor
+@Slf4j
+public class MedicationScheduler {
+
+    private final ScheduledTaskGenerationService taskGenerationService;
+    private final ScheduledTaskCleanupService taskCleanupService;
+
+    @Scheduled(cron = "0 8 14 * * ?")
+    public void generateDailyMedicationTasks() {
+        log.info("Scheduler: Running daily medication task generation job.");
+        try {
+            taskGenerationService.generateScheduledTasks(null);
+        } catch (Exception e) {
+            log.error("Scheduler: Error during daily medication task generation job", e);
+        }
+        log.info("Scheduler: Finished daily medication task generation job.");
+    }
+
+    @Scheduled(cron = "0 0 2 * * ?")
+    public void cleanupOverdueMedicationTasks() {
+        log.info("Scheduler: Running job to cleanup overdue medication tasks.");
+        try {
+            taskCleanupService.markOverdueTasksAsSkipped();
+        } catch (Exception e) {
+            log.error("Scheduler: Error during overdue medication tasks cleanup job", e);
+        }
+        log.info("Scheduler: Finished overdue medication tasks cleanup job.");
+    }
+}

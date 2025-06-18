@@ -15,6 +15,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,10 +40,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponseDto> handleValidationExceptions(MethodArgumentNotValidException ex, HttpServletRequest request) {
         Map<String, List<String>> errors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach(error -> {
-            String fieldName = ((FieldError) error).getField();
+
+        // Xử lý lỗi cấp độ field
+        ex.getBindingResult().getFieldErrors().forEach(error -> {
+            String fieldName = error.getField();
             String errorMessage = error.getDefaultMessage();
             errors.computeIfAbsent(fieldName, k -> new ArrayList<>()).add(errorMessage);
+        });
+        // Xử lý lỗi cấp độ class/object
+        ex.getBindingResult().getGlobalErrors().forEach(error -> {
+            String objectName = "dto"; // hoặc có thể dùng error.getObjectName()
+            String errorMessage = error.getDefaultMessage();
+            errors.computeIfAbsent(objectName, k -> new ArrayList<>()).add(errorMessage);
         });
         log.warn("Lỗi xác thực đầu vào (MethodArgumentNotValidException): {}", errors);
         ErrorResponseDto errorResponse = ErrorResponseDto.of(
@@ -70,6 +79,26 @@ public class GlobalExceptionHandler {
                 "Dữ liệu đầu vào không hợp lệ",
                 request.getRequestURI(),
                 errors
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponseDto> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex, HttpServletRequest request) {
+        log.warn("Lỗi phân tích cú pháp yêu cầu " +
+                "(HttpMessageNotReadableException): {}", ex.getMessage());
+        // Cung cấp thông báo lỗi thân thiện hơn cho người dùng
+        String errorMessage = "Yêu cầu không hợp lệ. Vui lòng kiểm tra lại định dạng dữ liệu, đặc biệt là các giá trị của enum.";
+
+        // Có thể phân tích sâu hơn `ex.getMessage()` để cung cấp thông báo cụ thể hơn nếu cần
+        if (ex.getCause() instanceof com.fasterxml.jackson.databind.exc.InvalidFormatException) {
+            errorMessage = "Một trong các giá trị bạn cung cấp không hợp lệ. Vui lòng kiểm tra lại, đặc biệt là các giá trị của enum.";
+        }
+
+        ErrorResponseDto errorResponse = ErrorResponseDto.of(
+                HttpStatus.BAD_REQUEST,
+                errorMessage,
+                request.getRequestURI()
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
