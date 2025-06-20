@@ -97,11 +97,16 @@ public class ScheduledTaskGenerationService {
 
         List<ScheduledMedicationTask> newTasks = new ArrayList<>();
         int currentRemainingDoses = medication.getRemainingDoses();
+        int predictDoes;
         List<MedicationTimeSlot> timeSlots = medication.getMedicationTimeSlots();
 
         // Với mỗi cữ uống được định nghĩa cho medication này
         for (MedicationTimeSlot slot : timeSlots) {
-
+            predictDoes = currentRemainingDoses - 1;
+            if (predictDoes < 0) {
+                log.warn("No more doses left for StudentMedication ID {}. Skipping task generation for time slot: {}", medication.getStudentMedicationId(), slot.getTimeExpression());
+                continue; // Không tạo task nếu không còn liều
+            }
 
             // Kiểm tra xem task cho ngày này, thời điểm này đã tồn tại chưa
             if (!scheduledTaskRepository.existsByStudentMedicationAndScheduledDateAndScheduledTimeText(
@@ -125,9 +130,6 @@ public class ScheduledTaskGenerationService {
             log.info("Generated {} new scheduled tasks for StudentMedication ID {}.", newTasks.size(), medication.getStudentMedicationId());
         }
 
-        // [SỬA 3] Cập nhật số liều cuối cùng và trạng thái cho đối tượng medication
-        // Thao tác này rất quan trọng để hàm gọi bên ngoài có thể save trạng thái đúng
-        medication.setRemainingDoses(currentRemainingDoses);
         if (currentRemainingDoses <= 0) {
             medication.setStatus(MedicationStatus.OUT_OF_DOSES);
             log.info("StudentMedication ID {} status will be updated to OUT_OF_DOSES. Final remaining doses: {}.",

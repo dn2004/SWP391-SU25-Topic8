@@ -17,7 +17,6 @@ public record ScheduledMedicationTaskResponseDto(
         LocalDateTime administeredAt,
         Long administeredByStaffId,
         String administeredByStaffName,
-        String proofFileUrl,
         String staffNotes,
         LocalDateTime requestedAt
 ) {}

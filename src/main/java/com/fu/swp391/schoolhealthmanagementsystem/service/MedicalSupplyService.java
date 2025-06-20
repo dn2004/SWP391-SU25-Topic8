@@ -1,9 +1,10 @@
- package com.fu.swp391.schoolhealthmanagementsystem.service;
+package com.fu.swp391.schoolhealthmanagementsystem.service;
 
 import com.fu.swp391.schoolhealthmanagementsystem.dto.supply.MedicalSupplyRequestDto;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.supply.MedicalSupplyResponseDto;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.supply.MedicalSupplyStockAdjustmentDto;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.supply.MedicalSupplyUpdateDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.supply.SupplyTransactionResponseDto;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.HealthIncident; // Thêm import nếu chưa có
 import com.fu.swp391.schoolhealthmanagementsystem.entity.MedicalSupply;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.SupplyTransaction;
@@ -12,6 +13,7 @@ import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.SupplyTransaction
 // import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.UserRole; // Không cần nữa nếu không check role ở đây
 import com.fu.swp391.schoolhealthmanagementsystem.exception.ResourceNotFoundException;
 import com.fu.swp391.schoolhealthmanagementsystem.mapper.MedicalSupplyMapper;
+import com.fu.swp391.schoolhealthmanagementsystem.mapper.SupplyTransactionMapper;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.MedicalSupplyRepository;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.SupplyTransactionRepository;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +34,7 @@ public class MedicalSupplyService {
     private final MedicalSupplyRepository medicalSupplyRepository;
     private final SupplyTransactionRepository supplyTransactionRepository;
     private final MedicalSupplyMapper medicalSupplyMapper;
+    private final SupplyTransactionMapper supplyTransactionMapper;
     private final AuthorizationService authorizationService; // Vẫn cần để lấy currentUser
 
     @Transactional
@@ -59,6 +62,19 @@ public class MedicalSupplyService {
 
         log.info("Đã tạo vật tư y tế ID: {} với tên: {}", savedSupply.getSupplyId(), savedSupply.getName());
         return medicalSupplyMapper.entityToResponseDto(savedSupply);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<SupplyTransactionResponseDto> getTransactionsForSupply(Long supplyId, Pageable pageable) {
+        User currentUser = authorizationService.getCurrentUserAndValidate();
+        log.info("Người dùng {} đang lấy lịch sử giao dịch cho vật tư y tế ID: {}", currentUser.getEmail(), supplyId);
+
+        MedicalSupply medicalSupply = medicalSupplyRepository.findById(supplyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy vật tư y tế với ID: " + supplyId));
+
+        Page<SupplyTransaction> transactions = supplyTransactionRepository.findByMedicalSupply(medicalSupply, pageable);
+
+        return transactions.map(supplyTransactionMapper::toDto);
     }
 
     @Transactional(readOnly = true)

@@ -69,6 +69,24 @@ public class StudentMedicationController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "Lấy lịch sử giao dịch của một đơn thuốc",
+            description = "Lấy danh sách (phân trang) các giao dịch liên quan đến một đơn thuốc cụ thể (nhập, dùng, hủy, hết hạn, v.v.). Phụ huynh chỉ xem được của con mình. NVYT, Quản lý NVYT, Admin trường có thể xem bất kỳ.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lấy lịch sử giao dịch thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực"),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập"),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy đơn thuốc")
+    })
+    @GetMapping("/{studentMedicationId}/transactions")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Page<StudentMedicationTransactionResponseDto>> getTransactionsForStudentMedication(
+            @Parameter(description = "ID của đơn thuốc cần xem lịch sử") @PathVariable Long studentMedicationId,
+            @ParameterObject @PageableDefault(size = 10, sort = "transactionDateTime", direction = Sort.Direction.DESC) Pageable pageable) {
+        Page<StudentMedicationTransactionResponseDto> response = studentMedicationService.getTransactionsForStudentMedication(studentMedicationId, pageable);
+        return ResponseEntity.ok(response);
+    }
+
     @Operation(summary = "NVYT cập nhật thông tin cơ bản của thuốc học sinh",
             description = "Cập nhật các thông tin mô tả như tên thuốc, liều dùng (text), ngày hết hạn, ghi chú, hướng dẫn sử dụng. Không dùng để cập nhật số liều hoặc lịch trình. Yêu cầu vai trò MedicalStaff hoặc StaffManager.")
     @ApiResponses(value = { /* ... (Tương tự các API khác) ... */})
@@ -170,4 +188,6 @@ public class StudentMedicationController {
         Page<StudentMedicationResponseDto> response = studentMedicationService.getAllStudentMedications(status, startDate, endDate, pageable);
         return ResponseEntity.ok(response);
     }
+
+
 }

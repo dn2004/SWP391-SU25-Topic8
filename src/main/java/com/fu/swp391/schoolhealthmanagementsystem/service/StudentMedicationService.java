@@ -10,6 +10,7 @@ import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.UserRole;
 import com.fu.swp391.schoolhealthmanagementsystem.exception.ResourceNotFoundException;
 import com.fu.swp391.schoolhealthmanagementsystem.mapper.MedicationTimeSlotMapper; // Mapper mới
 import com.fu.swp391.schoolhealthmanagementsystem.mapper.StudentMedicationMapper;
+import com.fu.swp391.schoolhealthmanagementsystem.mapper.StudentMedicationTransactionMapper;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -34,9 +36,11 @@ public class StudentMedicationService {
     private final StudentMedicationTransactionRepository transactionRepository;
     private final ScheduledMedicationTaskRepository scheduledTaskRepository; // Thêm
     private final StudentMedicationMapper studentMedicationMapper;
+    private final StudentMedicationTransactionMapper studentMedicationTransactionMapper;
     private final MedicationTimeSlotMapper medicationTimeSlotMapper; // Mapper mới
     private final AuthorizationService authorizationService;
     private final ParentStudentLinkRepository parentStudentLinkRepository;
+
     private final ScheduledTaskGenerationService scheduledTaskGenerationService; // Inject để trigger tạo task
 
     /**
@@ -158,7 +162,7 @@ public class StudentMedicationService {
         }
 
         // 1. Hủy các ScheduledMedicationTask trong tương lai (status SCHEDULED) dựa trên lịch cũ
-        cancelFutureScheduledTasks(medication, currentStaff, "Lịch trình thuốc được cập nhật bởi NVYT");
+        cancelFutureScheduledTasks(medication, currentStaff, "Lịch trình thuốc được cập nhật bởi NVYT", ScheduledMedicationTaskStatus.UPDATED_TO_ANOTHER_RECORD);
 
         // 2. Cập nhật thông tin lịch trình trên StudentMedication
         // Xử lý medicationTimeSlots: xóa cũ, thêm mới từ DTO
@@ -193,6 +197,26 @@ public class StudentMedicationService {
             }
         }
         return studentMedicationMapper.entityToResponseDto(updatedMedication);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<StudentMedicationTransactionResponseDto> getTransactionsForStudentMedication(Long studentMedicationId, Pageable pageable) {
+        User currentUser = authorizationService.getCurrentUserAndValidate();
+        log.info("User {} is requesting transaction history for StudentMedication ID: {}", currentUser.getEmail(), studentMedicationId);
+
+        StudentMedication medication = studentMedicationRepository.findById(studentMedicationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thông tin thuốc của học sinh với ID: " + studentMedicationId));
+
+        // Authorization check
+        if (currentUser.getRole() == UserRole.Parent) {
+            authorizationService.authorizeParentAction(currentUser, medication.getStudent(), "xem lịch sử thuốc của con");
+        }
+        // MedicalStaff, StaffManager, and SchoolAdmin are allowed by default (or checked at controller level)
+
+        Page<StudentMedicationTransaction> transactions = transactionRepository.findByStudentMedication(medication, pageable);
+
+        log.info("Found {} transactions for StudentMedication ID: {}", transactions.getTotalElements(), studentMedicationId);
+        return transactions.map(studentMedicationTransactionMapper::toDto);
     }
 
     @Transactional
@@ -279,7 +303,7 @@ public class StudentMedicationService {
         }
 
         // Hủy các task tương lai
-        cancelFutureScheduledTasks(updatedMedication, currentStaff, "Thuốc đã được báo cáo thất lạc");
+        cancelFutureScheduledTasks(updatedMedication, currentStaff, "Thuốc đã được báo cáo thất lạc", ScheduledMedicationTaskStatus.SKIPPED_SUPPLY_ISSUE);
 
         log.info("StudentMedication ID {} reported as LOST by {}. Remaining doses set to 0. Future tasks cancelled.",
                 updatedMedication.getStudentMedicationId(), currentStaff.getEmail());
@@ -330,7 +354,7 @@ public class StudentMedicationService {
         }
 
         // Hủy các task tương lai
-        cancelFutureScheduledTasks(updatedMedication, currentStaff, "Thuốc đã được trả lại phụ huynh");
+        cancelFutureScheduledTasks(updatedMedication, currentStaff, "Thuốc đã được trả lại phụ huynh", ScheduledMedicationTaskStatus.SKIPPED_SUPPLY_ISSUE);
 
         log.info("StudentMedication ID {} marked as RETURNED_TO_PARENT by {}. Remaining doses set to 0. Future tasks cancelled.",
                 updatedMedication.getStudentMedicationId(), currentStaff.getEmail());
@@ -387,6 +411,9 @@ public class StudentMedicationService {
         medication.setNotes(medication.getNotes() != null ? medication.getNotes() + "\n" + cancellationNote : cancellationNote);
 
         StudentMedication cancelledMedication = studentMedicationRepository.save(medication);
+
+        // Hủy các task tương lai
+        cancelFutureScheduledTasks(cancelledMedication, currentStaff, "Hủy thuốc. Lý do: " + requestDto.cancellationReason(), ScheduledMedicationTaskStatus.SKIPPED_MEDICATION_CANCELED);
 
         // Tạo transaction ghi nhận việc hủy thuốc
         if (dosingCancelled > 0) {
@@ -535,6 +562,60 @@ public class StudentMedicationService {
         return medicationsPage.map(studentMedicationMapper::entityToResponseDto);
     }
 
+    /**
+     * NVYT xử lý thuốc hết hạn: cập nhật trạng thái thuốc thành EXPIRED và hủy các tác vụ đã lên lịch trong tương lai.
+     * Phương thức này được gọi bởi job định kỳ.
+     */
+    @Transactional
+    public void processExpiredMedications() {
+        log.info("SCHEDULER: Checking for expired medications...");
+        LocalDate today = LocalDate.now();
+
+        // Fetch all available medications and filter in memory.
+        Page<StudentMedication> availableMedicationsPage = studentMedicationRepository.findByStatus(MedicationStatus.AVAILABLE, Pageable.unpaged());
+        List<StudentMedication> availableMedications = availableMedicationsPage.getContent();
+
+        List<StudentMedication> medicationsToExpire = availableMedications.stream()
+                .filter(m -> m.getExpiryDate() != null && m.getExpiryDate().isBefore(today))
+                .collect(Collectors.toList());
+
+        if (medicationsToExpire.isEmpty()) {
+            log.info("SCHEDULER: No expired medications found to process.");
+            return;
+        }
+
+        log.info("SCHEDULER: Found {} medications to expire.", medicationsToExpire.size());
+
+        for (StudentMedication medication : medicationsToExpire) {
+            log.warn("SCHEDULER: Medication ID {} has expired on {}. Updating status to EXPIRED.",
+                    medication.getStudentMedicationId(), medication.getExpiryDate());
+
+            int remainingDoses = medication.getRemainingDoses() != null ? medication.getRemainingDoses() : 0;
+
+            medication.setStatus(MedicationStatus.EXPIRED);
+            medication.setUpdatedByUser(null); // System action
+
+            String expirationNote = "Thuốc đã hết hạn vào ngày " + medication.getExpiryDate() + ". Trạng thái được tự động cập nhật bởi hệ thống.";
+            medication.setNotes(medication.getNotes() != null ? medication.getNotes() + "\n" + expirationNote : expirationNote);
+
+            if (remainingDoses > 0) {
+                createMedicationAdjustmentTransaction(
+                        medication,
+                        StudentMedicationTransactionType.EXPIRED_REMOVAL,
+                        remainingDoses,
+                        null, // System action
+                        "Thuốc hết hạn"
+                );
+            }
+
+            // Cancel future scheduled tasks.
+            cancelFutureScheduledTasks(medication, null, "Thuốc đã hết hạn", ScheduledMedicationTaskStatus.SKIPPED_SUPPLY_ISSUE);
+
+            studentMedicationRepository.save(medication); // Save changes
+        }
+        log.info("SCHEDULER: Finished processing {} expired medications.", medicationsToExpire.size());
+    }
+
     // Helper method để tạo transaction điều chỉnh (LOST, RETURNED_TO_PARENT, EXPIRED_REMOVAL, etc.)
     private void createMedicationAdjustmentTransaction(StudentMedication medication,
                                                        StudentMedicationTransactionType type,
@@ -572,7 +653,7 @@ public class StudentMedicationService {
         log.info("INITIAL_STOCK transaction created for StudentMedication ID {} with {} doses.", medication.getStudentMedicationId(), totalDoses);
     }
 
-    private void cancelFutureScheduledTasks(StudentMedication medication, User staff, String reason) {
+    private void cancelFutureScheduledTasks(StudentMedication medication, User staff, String reason, ScheduledMedicationTaskStatus newStatus) {
         List<ScheduledMedicationTask> futureTasks = scheduledTaskRepository
                 .findByStudentMedicationAndScheduledDateGreaterThanEqualAndStatus(
                         medication,
@@ -582,14 +663,14 @@ public class StudentMedicationService {
 
         if (!futureTasks.isEmpty()) {
             for (ScheduledMedicationTask task : futureTasks) {
-                task.setStatus(ScheduledMedicationTaskStatus.UPDATED_TO_ANOTHER_RECORD); // Hoặc một status mới
+                task.setStatus(newStatus); // Hoặc một status mới
                 task.setStaffNotes((task.getStaffNotes() == null ? "" : task.getStaffNotes() + "\n") +
-                        "Hủy tự động do lịch gốc thay đổi. Lý do: " + reason + ". Bởi: " + staff.getFullName() + " lúc " + LocalDate.now());
+                        "Tác vụ bị hủy tự động. Lý do: " + reason + ". Bởi: " + staff.getFullName() + " lúc " + LocalDate.now());
                 task.setAdministeredByStaff(staff);
             }
             scheduledTaskRepository.saveAll(futureTasks);
-            log.info("Cancelled {} future scheduled tasks for StudentMedication ID {} due to schedule update.",
-                    futureTasks.size(), medication.getStudentMedicationId());
+            log.info("Cancelled {} future scheduled tasks for StudentMedication ID {}. New status: {}",
+                    futureTasks.size(), medication.getStudentMedicationId(), newStatus);
         }
     }
 

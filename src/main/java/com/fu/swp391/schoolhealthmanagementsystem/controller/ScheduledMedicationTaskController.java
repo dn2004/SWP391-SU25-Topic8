@@ -30,6 +30,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -38,6 +39,23 @@ import java.util.Optional;
 @Tag(name = "Quản lý Thực Hiện Lịch Uống Thuốc", description = "API cho NVYT ghi nhận việc cho học sinh uống thuốc")
 public class ScheduledMedicationTaskController {
     private final ScheduledMedicationTaskService taskService;
+
+    @Operation(summary = "Lấy URL truy cập tạm thời cho file bằng chứng của một task",
+            description = "Trả về một URL có thời hạn để truy cập file bằng chứng (ảnh/video) đã được upload. Phụ huynh chỉ xem được của con mình. Các vai trò khác có quyền có thể xem.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lấy URL thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(type = "object", example = "{\"url\": \"https://...\"}"))),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực"),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập"),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy task hoặc không có file bằng chứng")
+    })
+    @GetMapping("/{taskId}/proof-url")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Map<String, String>> getTaskProofAccessUrl(
+            @Parameter(description = "ID của task cần lấy URL bằng chứng") @PathVariable Long taskId) {
+        String url = taskService.getTaskProofAccessUrl(taskId);
+        return ResponseEntity.ok(Map.of("url", url));
+    }
 
     @Operation(summary = "NVYT xác nhận đã cho học sinh uống thuốc theo lịch",
             description = "Cập nhật trạng thái của một ScheduledMedicationTask thành ADMINISTERED, ghi nhận thông tin, và upload file bằng chứng (nếu có). Yêu cầu vai trò MedicalStaff hoặc StaffManager.")

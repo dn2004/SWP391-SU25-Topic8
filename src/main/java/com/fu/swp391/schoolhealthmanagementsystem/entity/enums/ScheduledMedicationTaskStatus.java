@@ -13,6 +13,7 @@ public enum ScheduledMedicationTaskStatus {
     SKIPPED_STUDENT_REFUSED("Bỏ qua - Học sinh từ chối"),
     UPDATED_TO_ANOTHER_RECORD("Đã cập nhật lịch trình khác"), // Khi lịch trình này được cập nhật sang một lịch trình khác
     SKIPPED_SYSTEM_OVERDUE("Bỏ qua - Quá hạn xử lý"),
+    SKIPPED_MEDICATION_CANCELED("Bỏ qua - Thuốc đã hủy"),
     NOT_ADMINISTERED_OTHER("Không cho uống - Lý do khác"); // Ghi rõ trong notes
 
     private final String displayName;

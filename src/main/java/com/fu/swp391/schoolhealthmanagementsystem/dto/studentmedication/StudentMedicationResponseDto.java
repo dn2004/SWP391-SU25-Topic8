@@ -23,7 +23,6 @@ public record StudentMedicationResponseDto(
         MedicationStatus status,
         String notes,
         String usageInstruction,
-        String rejectionReason,
         LocalDateTime createdAt,
         Long createdByUserId,
         String createdByUserName,

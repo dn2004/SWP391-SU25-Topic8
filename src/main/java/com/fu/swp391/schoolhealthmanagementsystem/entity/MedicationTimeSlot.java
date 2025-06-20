@@ -36,5 +36,5 @@ public class MedicationTimeSlot {
     private SchoolSession schoolSessionHint;
 
     @Column(name = "SpecificNotes", length = 200, columnDefinition = "NVARCHAR(200)")
-    private String specificNotes; // Ghi chú riêng cho cữ uống này
+    private String specificNotes;
 }

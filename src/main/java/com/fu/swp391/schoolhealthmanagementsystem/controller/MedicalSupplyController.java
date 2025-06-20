@@ -4,6 +4,7 @@ import com.fu.swp391.schoolhealthmanagementsystem.dto.supply.MedicalSupplyReques
 import com.fu.swp391.schoolhealthmanagementsystem.dto.supply.MedicalSupplyResponseDto;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.supply.MedicalSupplyStockAdjustmentDto;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.supply.MedicalSupplyUpdateDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.supply.SupplyTransactionResponseDto;
 import com.fu.swp391.schoolhealthmanagementsystem.service.MedicalSupplyService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -15,6 +16,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -68,8 +70,27 @@ public class MedicalSupplyController {
         return ResponseEntity.ok(supply);
     }
 
+    @Operation(summary = "Lấy lịch sử giao dịch của một vật tư y tế (phân trang)",
+            description = "Trả về danh sách các giao dịch (nhập, xuất, điều chỉnh) của một vật tư y tế cụ thể dựa trên ID. Yêu cầu vai trò SchoolAdmin, StaffManager, hoặc MedicalStaff.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lấy danh sách giao dịch thành công",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Page.class))),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực"),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập"),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy vật tư y tế")
+    })
+    @GetMapping("/{supplyId}/transactions")
+    @PreAuthorize("hasAnyRole('SchoolAdmin', 'StaffManager', 'MedicalStaff')")
+    public ResponseEntity<Page<SupplyTransactionResponseDto>> getTransactionsForSupply(
+            @Parameter(description = "ID của vật tư y tế cần xem lịch sử") @PathVariable Long supplyId,
+            @ParameterObject Pageable pageable) {
+        Page<SupplyTransactionResponseDto> transactions = medicalSupplyService.getTransactionsForSupply(supplyId, pageable);
+        return ResponseEntity.ok(transactions);
+    }
+
     @Operation(summary = "Lấy danh sách tất cả vật tư y tế (phân trang)",
-            description = "Lấy danh sách vật tư y tế có phân trang. Có thể lọc theo trạng thái hoạt động (active). Yêu cầu vai trò SchoolAdmin, StaffManager, hoặc MedicalStaff.")
+            description = "Trả về một trang danh sách các vật tư y tế trong hệ thống. Có thể lọc theo trạng thái hoạt động (active). Yêu cầu vai trò SchoolAdmin, StaffManager, hoặc MedicalStaff.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lấy danh sách vật tư y tế thành công",
                     content = @Content(mediaType = "application/json",

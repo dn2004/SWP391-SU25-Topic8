@@ -15,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -91,6 +90,43 @@ public class ScheduledMedicationTaskService {
                 tasksPage.getNumberOfElements(), studentMedicationId, pageable.getPageNumber());
 
         return tasksPage.map(taskMapper::toDto);
+    }
+
+    @Transactional(readOnly = true)
+    public String getTaskProofAccessUrl(Long taskId) {
+        User currentUser = authorizationService.getCurrentUserAndValidate();
+        log.info("User {} is requesting proof access URL for ScheduledTask ID: {}", currentUser.getEmail(), taskId);
+
+        ScheduledMedicationTask task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy lịch uống thuốc với ID: " + taskId));
+
+        // Authorization Check
+        StudentMedication studentMedication = task.getStudentMedication();
+        if (studentMedication == null) {
+            throw new IllegalStateException("Task with ID " + taskId + " is not linked to any medication.");
+        }
+        UserRole currentUserRole = currentUser.getRole();
+        if (currentUserRole == UserRole.Parent) {
+            authorizationService.authorizeParentAction(currentUser, studentMedication.getStudent(), "xem bằng chứng uống thuốc của con");
+        } else if (!(currentUserRole == UserRole.MedicalStaff ||
+                currentUserRole == UserRole.StaffManager ||
+                currentUserRole == UserRole.SchoolAdmin)) {
+            throw new AccessDeniedException("Bạn không có quyền xem bằng chứng uống thuốc này.");
+        }
+
+        // Check if proof exists
+        if (task.getProofPublicId() == null || task.getProofPublicId().isBlank()) {
+            log.warn("Task ID {} does not have a proof file.", taskId);
+            throw new ResourceNotFoundException("Không có file bằng chứng nào được tìm thấy cho công việc này.");
+        }
+
+        // Generate URL using FileStorageService
+        try {
+            return fileStorageService.generateSignedUrl(task.getProofPublicId(), task.getProofResourceType(), 180);
+        } catch (Exception e) {
+            log.error("Failed to generate access URL for task ID {}: {}", taskId, e.getMessage(), e);
+            throw new RuntimeException("Không thể tạo URL truy cập cho file bằng chứng.");
+        }
     }
 
     @Transactional

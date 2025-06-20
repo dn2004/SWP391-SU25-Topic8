@@ -30,7 +30,6 @@ public interface StudentMedicationMapper { // Đổi thành interface nếu khô
     @Mapping(target = "dateReceived", expression = "java(java.time.LocalDate.now())") // Tự gán ngày nhận
     @Mapping(target = "receivedByMedicalStaff", source = "staff") // NVYT nhận thuốc
     @Mapping(target = "status", ignore = true) // Service sẽ set status (ví dụ: AVAILABLE)
-    @Mapping(target = "rejectionReason", ignore = true)
     @Mapping(target = "createdAt", ignore = true) // Được quản lý bởi @CreationTimestamp
     @Mapping(target = "createdByUser", source = "staff") // NVYT tạo bản ghi
     @Mapping(target = "updatedAt", ignore = true) // Được quản lý bởi @UpdateTimestamp
@@ -73,7 +72,6 @@ public interface StudentMedicationMapper { // Đổi thành interface nếu khô
     @Mapping(target = "dateReceived", ignore = true)
     @Mapping(target = "receivedByMedicalStaff", ignore = true)
     @Mapping(target = "status", ignore = true)
-    @Mapping(target = "rejectionReason", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "createdByUser", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
@@ -100,7 +98,6 @@ public interface StudentMedicationMapper { // Đổi thành interface nếu khô
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "notes", ignore = true)
     @Mapping(target = "usageInstruction", ignore = true)
-    @Mapping(target = "rejectionReason", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "createdByUser", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)

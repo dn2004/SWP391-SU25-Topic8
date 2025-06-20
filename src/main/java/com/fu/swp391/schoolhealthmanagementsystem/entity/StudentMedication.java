@@ -66,9 +66,6 @@ public class StudentMedication {
     @Column(name = "UsageInstruction", length = 1000, columnDefinition = "NVARCHAR(1000)")
     private String usageInstruction;
 
-    @Column(name = "RejectionReason", length = 500, columnDefinition = "NVARCHAR(500)")
-    private String rejectionReason;
-
     @Column(name = "ScheduleStartDate", nullable = false) // Bắt buộc nếu status = AVAILABLE
     private LocalDate scheduleStartDate;
 

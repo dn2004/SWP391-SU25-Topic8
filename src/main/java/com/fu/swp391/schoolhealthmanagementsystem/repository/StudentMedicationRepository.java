@@ -53,4 +53,6 @@ public interface StudentMedicationRepository extends JpaRepository<StudentMedica
 
     @Query("SELECT sm FROM StudentMedication sm JOIN FETCH sm.medicationTimeSlots WHERE sm.studentMedicationId = :id")
     Optional<StudentMedication> findWithMedicationTimeSlotsByStudentMedicationId(@Param("id") Long id);
+
+    int countByStudent(Student student);
 }

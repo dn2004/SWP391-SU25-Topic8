@@ -220,7 +220,7 @@ public class StudentVaccinationController {
 
     @Operation(summary = "Lấy URL truy cập (đã ký) cho file bằng chứng của một bản ghi tiêm chủng",
             description = "Người dùng đã xác thực và có quyền sẽ nhận được một URL tạm thời để truy cập file.")
-    @ApiResponse(responseCode = "200", description = "Thành công, trả về URL đã ký trong một đối tượng JSON вида {'url': 'SIGNED_URL'}",
+    @ApiResponse(responseCode = "200", description = "Thành công, trả về URL đã ký trong một đối tượng JSON {'url': 'SIGNED_URL'}",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(type = "object", example = "{\"url\": \"https://res.cloudinary.com/...SIGNED_URL...\"}")))
     @ApiResponse(responseCode = "403", description = "Không có quyền truy cập file này",
