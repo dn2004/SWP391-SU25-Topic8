@@ -8,6 +8,7 @@ import com.fu.swp391.schoolhealthmanagementsystem.entity.User;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.LinkStatus;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.UserRole;
 import com.fu.swp391.schoolhealthmanagementsystem.exception.AppException;
+import com.fu.swp391.schoolhealthmanagementsystem.exception.ResourceNotFoundException;
 import com.fu.swp391.schoolhealthmanagementsystem.mapper.StudentMapper;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.ParentStudentLinkRepository;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.StudentRepository;
@@ -17,6 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,22 +31,22 @@ public class ParentStudentLinkService {
 
     private final ParentStudentLinkRepository parentStudentLinkRepository;
     private final StudentRepository studentRepository;
-    private final UserRepository userRepository; // To fetch current user
-    private final UserService userService; // To get current authenticated user
+    private final UserRepository userRepository;
+    private final UserService userService;
     private final StudentMapper studentMapper;
 
     @Transactional
     public void linkParentToStudentByInvitation(LinkStudentRequestDto dto) {
         String currentUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
         User parent = userRepository.findByEmail(currentUserEmail)
-                .orElseThrow(() -> new AppException(HttpStatus.UNAUTHORIZED, "Không tìm thấy thông tin phụ huynh hiện tại."));
+                .orElseThrow(() -> new BadCredentialsException("Không tìm thấy người dùng với email: " + currentUserEmail));
 
         log.info("Phụ huynh {} đang cố gắng liên kết với học sinh bằng mã mời: {}", parent.getEmail(), dto.invitationCode());
 
         Student student = studentRepository.findByInvitationCode(dto.invitationCode())
                 .orElseThrow(() -> {
                     log.warn("Mã mời {} không hợp lệ hoặc không tìm thấy học sinh.", dto.invitationCode());
-                    return new AppException(HttpStatus.NOT_FOUND, "Mã mời không hợp lệ hoặc không tìm thấy học sinh.");
+                    return new ResourceNotFoundException("Mã mời không hợp lệ hoặc không tìm thấy học sinh.");
                 });
 
         // Kiểm tra xem phụ huynh này đã liên kết với học sinh này chưa
@@ -63,9 +66,9 @@ public class ParentStudentLinkService {
         link.setParent(parent);
         link.setStudent(student);
         link.setRelationshipType(dto.relationshipType());
-        link.setStatus(LinkStatus.ACTIVE); // Mã mời -> ACTIVE ngay
+        link.setStatus(LinkStatus.ACTIVE);
 
-        ParentStudentLink savedLink = parentStudentLinkRepository.save(link);
+        parentStudentLinkRepository.save(link);
         log.info("Phụ huynh {} đã liên kết thành công với học sinh {} (Mã: {}) với vai trò {}. Trạng thái: ACTIVE",
                 parent.getEmail(), student.getFullName(), student.getStudentCode(), dto.relationshipType());
     }

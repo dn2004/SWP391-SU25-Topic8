@@ -19,7 +19,7 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 import java.util.List; // Import List
 
 @Mapper(componentModel = "spring", uses = {MedicationTimeSlotMapper.class})
-public interface StudentMedicationMapper { // Đổi thành interface nếu không cần inject ObjectMapper trực tiếp
+public interface StudentMedicationMapper {
 
     @Mapping(target = "studentMedicationId", ignore = true)
     @Mapping(target = "student", source = "student")

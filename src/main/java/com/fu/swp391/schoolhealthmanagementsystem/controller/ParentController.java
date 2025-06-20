@@ -4,8 +4,6 @@ import com.fu.swp391.schoolhealthmanagementsystem.dto.parent.LinkStudentRequestD
 import com.fu.swp391.schoolhealthmanagementsystem.dto.student.StudentDto;
 import com.fu.swp391.schoolhealthmanagementsystem.service.ParentStudentLinkService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -22,6 +20,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/parent")
 @RequiredArgsConstructor
@@ -35,10 +35,9 @@ public class ParentController {
 
     @PostMapping("/link-student")
     @Operation(summary = "Phụ huynh liên kết với học sinh bằng mã mời")
-    public ResponseEntity<Void> linkStudent(@Valid @RequestBody LinkStudentRequestDto requestDto) {
-        log.info("API Phụ huynh: Yêu cầu liên kết với học sinh bằng mã mời: {}", requestDto.invitationCode());
+    public ResponseEntity<String> linkStudent(@Valid @RequestBody LinkStudentRequestDto requestDto) {
         parentStudentLinkService.linkParentToStudentByInvitation(requestDto);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok().body("Liên kết thành công với học sinh.");
     }
 
     @GetMapping("/my-students")

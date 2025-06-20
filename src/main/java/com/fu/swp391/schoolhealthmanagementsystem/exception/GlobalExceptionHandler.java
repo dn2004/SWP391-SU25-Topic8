@@ -85,14 +85,30 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponseDto> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex, HttpServletRequest request) {
-        log.warn("Lỗi phân tích cú pháp yêu cầu " +
-                "(HttpMessageNotReadableException): {}", ex.getMessage());
-        // Cung cấp thông báo lỗi thân thiện hơn cho người dùng
-        String errorMessage = "Yêu cầu không hợp lệ. Vui lòng kiểm tra lại định dạng dữ liệu, đặc biệt là các giá trị của enum.";
+        log.warn("Lỗi phân tích cú pháp yêu cầu (HttpMessageNotReadableException) cho {}: {}", request.getRequestURI(), ex.getMessage());
 
-        // Có thể phân tích sâu hơn `ex.getMessage()` để cung cấp thông báo cụ thể hơn nếu cần
-        if (ex.getCause() instanceof com.fasterxml.jackson.databind.exc.InvalidFormatException) {
-            errorMessage = "Một trong các giá trị bạn cung cấp không hợp lệ. Vui lòng kiểm tra lại, đặc biệt là các giá trị của enum.";
+        String errorMessage;
+
+        // Check for the specific "missing body" case first
+        if (ex.getMessage() != null && ex.getMessage().contains("Required request body is missing")) {
+            errorMessage = "Nội dung yêu cầu (request body) không được để trống.";
+        } else {
+            Throwable cause = ex.getCause();
+            if (cause instanceof com.fasterxml.jackson.databind.exc.InvalidFormatException) {
+                com.fasterxml.jackson.databind.exc.InvalidFormatException ife = (com.fasterxml.jackson.databind.exc.InvalidFormatException) cause;
+                String fieldName = ife.getPath().stream()
+                        .map(com.fasterxml.jackson.databind.JsonMappingException.Reference::getFieldName)
+                        .collect(java.util.stream.Collectors.joining("."));
+                errorMessage = String.format("Giá trị '%s' không hợp lệ cho trường '%s'. Vui lòng kiểm tra lại các giá trị được chấp nhận.", ife.getValue(), fieldName);
+            } else if (cause instanceof com.fasterxml.jackson.databind.exc.MismatchedInputException) {
+                com.fasterxml.jackson.databind.exc.MismatchedInputException mie = (com.fasterxml.jackson.databind.exc.MismatchedInputException) cause;
+                String fieldName = mie.getPath().stream()
+                        .map(com.fasterxml.jackson.databind.JsonMappingException.Reference::getFieldName)
+                        .collect(java.util.stream.Collectors.joining("."));
+                errorMessage = String.format("Định dạng dữ liệu không đúng cho trường '%s'.", fieldName);
+            } else {
+                errorMessage = "Yêu cầu không hợp lệ. Vui lòng kiểm tra lại định dạng JSON.";
+            }
         }
 
         ErrorResponseDto errorResponse = ErrorResponseDto.of(

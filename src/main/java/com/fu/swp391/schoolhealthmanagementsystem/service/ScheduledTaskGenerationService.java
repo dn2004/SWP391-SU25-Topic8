@@ -1,6 +1,5 @@
 package com.fu.swp391.schoolhealthmanagementsystem.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.MedicationTimeSlot;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.ScheduledMedicationTask;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.StudentMedication;

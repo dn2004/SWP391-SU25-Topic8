@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Getter
 @Slf4j
-@Schema(description = "Trạng thái liên kết", allowableValues = {"ACTIVE", "INACTIVE"}) // Ví dụ nếu dùng Swagger
+@Schema(description = "Trạng thái liên kết", allowableValues = {"ACTIVE", "INACTIVE"})
 public enum LinkStatus {
     ACTIVE("Hoạt động"),
     INACTIVE("Không hoạt động");

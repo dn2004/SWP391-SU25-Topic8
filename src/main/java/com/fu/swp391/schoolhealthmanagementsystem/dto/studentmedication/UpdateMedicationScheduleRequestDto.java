@@ -4,14 +4,11 @@ import com.fu.swp391.schoolhealthmanagementsystem.validation.IsWorkday;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
+
 
 // DTO để NVYT cập nhật/thiết lập thông tin lịch trình cho StudentMedication
 @Slf4j
