@@ -12,6 +12,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -32,13 +33,13 @@ public class DemoHealthIncidentInitializer implements ApplicationRunner {
         log.info("Bắt đầu khởi tạo dữ liệu Sự cố Sức khỏe...");
 
         // Lấy Học sinh và Y tá đã được tạo
-        Optional<Student> studentOpt = studentRepository.findByStudentCode("ST001");
+        Optional<Student> studentOpt = studentRepository.findByFullNameAndDateOfBirth("Alice Student", LocalDate.of(2015, 1, 1));
         Optional<User> nurseOpt = userRepository.findByEmail("nurse@example.com");
         Optional<MedicalSupply> paracetamolOpt = medicalSupplyRepository.findFirstByName("Thuốc hạ sốt Paracetamol 500mg");
         Optional<MedicalSupply> bandageOpt = medicalSupplyRepository.findFirstByName("Băng gạc y tế tiệt trùng");
 
         if (studentOpt.isEmpty() || nurseOpt.isEmpty()) {
-            log.warn("Không tìm thấy học sinh ST001 hoặc y tá nurse@example.com. Bỏ qua khởi tạo sự cố sức khỏe.");
+            log.warn("Không tìm thấy học sinh Alice Student hoặc y tá nurse@example.com. Bỏ qua khởi tạo sự cố sức khỏe.");
             return;
         }
 

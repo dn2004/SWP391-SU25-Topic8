@@ -4,10 +4,10 @@ import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
 
 @Converter(autoApply = true)
-public class UserRoleConverter implements AttributeConverter<UserRole, String> {
+public class StudentMedicationTransactionTypeConverter implements AttributeConverter<StudentMedicationTransactionType, String> {
 
     @Override
-    public String convertToDatabaseColumn(UserRole attribute) {
+    public String convertToDatabaseColumn(StudentMedicationTransactionType attribute) {
         if (attribute == null) {
             return null;
         }
@@ -15,11 +15,11 @@ public class UserRoleConverter implements AttributeConverter<UserRole, String> {
     }
 
     @Override
-    public UserRole convertToEntityAttribute(String dbData) {
+    public StudentMedicationTransactionType convertToEntityAttribute(String dbData) {
         if (dbData == null) {
             return null;
         }
-        return UserRole.fromDisplayName(dbData);
+        return StudentMedicationTransactionType.fromDisplayName(dbData);
     }
 }
 

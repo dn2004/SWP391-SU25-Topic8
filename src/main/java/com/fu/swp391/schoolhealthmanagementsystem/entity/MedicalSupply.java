@@ -61,14 +61,4 @@ public class MedicalSupply {
     @OneToMany(mappedBy = "medicalSupply", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     @Builder.Default
     private List<SupplyTransaction> supplyTransactions = new ArrayList<>();
-
-    public void addTransaction(SupplyTransaction transaction) {
-        supplyTransactions.add(transaction);
-        transaction.setMedicalSupply(this);
-    }
-
-    public void removeTransaction(SupplyTransaction transaction) {
-        supplyTransactions.remove(transaction);
-        transaction.setMedicalSupply(null);
-    }
 }

@@ -66,7 +66,7 @@ public interface ScheduledMedicationTaskRepository extends JpaRepository<Schedul
     @Query("SELECT smt FROM ScheduledMedicationTask smt " +
             "JOIN FETCH smt.studentMedication sm " +
             "JOIN FETCH sm.student s " +
-            "WHERE s.studentId = :studentId " +
+            "WHERE s.id = :studentId " +
             "AND smt.status <> com.fu.swp391.schoolhealthmanagementsystem.entity.enums.ScheduledMedicationTaskStatus.SCHEDULED " +
             "AND (cast(:startDate as timestamp) IS NULL OR smt.administeredAt >= :startDate) " +
             "AND (cast(:endDate as timestamp) IS NULL OR smt.administeredAt <= :endDate)")
@@ -80,7 +80,7 @@ public interface ScheduledMedicationTaskRepository extends JpaRepository<Schedul
     @Query("SELECT smt FROM ScheduledMedicationTask smt " +
             "JOIN FETCH smt.studentMedication sm " +
             "JOIN FETCH sm.student s " +
-            "WHERE s.studentId = :studentId " +
+            "WHERE s.id = :studentId " +
             "AND smt.status = :status " +
             "AND (cast(:startDate as timestamp) IS NULL OR smt.administeredAt >= :startDate) " +
             "AND (cast(:endDate as timestamp) IS NULL OR smt.administeredAt <= :endDate)")
@@ -96,7 +96,7 @@ public interface ScheduledMedicationTaskRepository extends JpaRepository<Schedul
             "JOIN FETCH smt.studentMedication sm " +
             "JOIN FETCH sm.student s " +
             "WHERE smt.status <> com.fu.swp391.schoolhealthmanagementsystem.entity.enums.ScheduledMedicationTaskStatus.SCHEDULED " +
-            "AND (:studentId IS NULL OR s.studentId = :studentId) " +
+            "AND (:studentId IS NULL OR s.id = :studentId) " +
             "AND (:staffId IS NULL OR smt.administeredByStaff.userId = :staffId) " +
             "AND (:status IS NULL OR smt.status = :status) " +
             "AND (cast(:startDate as timestamp) IS NULL OR smt.administeredAt >= :startDate) " +

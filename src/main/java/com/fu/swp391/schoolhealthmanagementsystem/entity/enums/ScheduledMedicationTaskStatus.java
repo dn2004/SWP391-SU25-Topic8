@@ -1,5 +1,7 @@
 package com.fu.swp391.schoolhealthmanagementsystem.entity.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 
@@ -20,5 +22,23 @@ public enum ScheduledMedicationTaskStatus {
 
     ScheduledMedicationTaskStatus(String displayName) {
         this.displayName = displayName;
+    }
+
+    @JsonValue
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    @JsonCreator
+    public static ScheduledMedicationTaskStatus fromDisplayName(String displayName) {
+        if (displayName == null || displayName.isEmpty()) {
+            throw new IllegalArgumentException("Display name không được để trống");
+        }
+        for (ScheduledMedicationTaskStatus status : ScheduledMedicationTaskStatus.values()) {
+            if (status.displayName.equalsIgnoreCase(displayName)) {
+                return status;
+            }
+        }
+        throw new IllegalArgumentException("Không tìm thấy ScheduledMedicationTaskStatus với displayName: " + displayName);
     }
 }

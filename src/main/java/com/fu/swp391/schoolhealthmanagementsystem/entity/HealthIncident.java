@@ -17,7 +17,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-//@SQLDelete(sql = "UPDATE HealthIncidents SET Deleted = true, DeletedAt = NOW() WHERE IncidentID = ?")
 @SQLRestriction("Deleted = false")
 public class HealthIncident {
     @Id

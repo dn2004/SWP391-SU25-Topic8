@@ -177,9 +177,8 @@ public class StudentVaccinationController {
     @PreAuthorize("hasAnyRole('SchoolAdmin', 'MedicalStaff', 'StaffManager')")
     @GetMapping("/vaccinations/status") // Consider a more descriptive path if needed, e.g., /vaccinations/filter-by-status
     public ResponseEntity<Page<StudentVaccinationResponseDto>> getVaccinationsByStatus(
-            @Parameter(description = "Trạng thái tiêm chủng để lọc (PENDING, APPROVE, REJECTED)", required = true,
-                    schema = @Schema(implementation = StudentVaccinationStatus.class))
-            @RequestParam("status") StudentVaccinationStatus status,
+            @Parameter(description = "Trạng thái tiêm chủng để lọc. Sử dụng tên tiếng Việt (Chờ xử lý, Chấp nhận, Từ chối) hoặc tên hằng số (PENDING, APPROVE, REJECTED).", required = true)
+            @RequestParam StudentVaccinationStatus status,
             @ParameterObject
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) // Default sort by creation time
             Pageable pageable) {
@@ -206,8 +205,7 @@ public class StudentVaccinationController {
     @GetMapping("/students/{studentId}/vaccinations/status")
     public ResponseEntity<Page<StudentVaccinationResponseDto>> getStudentVaccinationsByStatus(
             @Parameter(description = "ID của học sinh") @PathVariable Long studentId,
-            @Parameter(description = "Trạng thái tiêm chủng để lọc (PENDING, APPROVE, REJECTED)", required = true,
-                    schema = @Schema(implementation = StudentVaccinationStatus.class))
+            @Parameter(description = "Trạng thái tiêm chủng để lọc. Sử dụng tên tiếng Việt (Chờ xử lý, Chấp nhận, Từ chối) hoặc tên hằng số (PENDING, APPROVE, REJECTED).", required = true)
             @RequestParam("status") StudentVaccinationStatus status,
             @ParameterObject
             @PageableDefault(size = 10, sort = "vaccinationDate", direction = Sort.Direction.DESC)

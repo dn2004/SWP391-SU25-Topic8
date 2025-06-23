@@ -49,7 +49,7 @@ public interface StudentMedicationMapper {
         }
     }
 
-    @Mapping(source = "student.studentId", target = "studentId")
+    @Mapping(source = "student.id", target = "studentId")
     @Mapping(source = "student.fullName", target = "studentFullName")
     @Mapping(source = "submittedByParent.userId", target = "submittedByParentId")
     @Mapping(source = "submittedByParent.fullName", target = "parentFullName")

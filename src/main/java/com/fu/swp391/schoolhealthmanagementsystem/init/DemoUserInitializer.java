@@ -40,10 +40,10 @@ public class DemoUserInitializer implements ApplicationRunner {
 
         // 1. Khởi tạo tài khoản Phụ huynh
         User parent1;
-        String parent1Email = "";;
+        String parent1Email = "parent@example.com";
         if (userRepository.findByEmail(parent1Email).isEmpty()) {
             parent1 = User.builder()
-                    .email("parent@example.com")
+                    .email(parent1Email)
                     .password(passwordEncoder.encode("password123"))
                     .fullName("John Parent")
                     .phoneNumber("0123456789")
@@ -58,23 +58,22 @@ public class DemoUserInitializer implements ApplicationRunner {
         }
 
         // 2. Khởi tạo Học sinh
-        String student1Code = "ST001";
+        String studentFullName = "Alice Student";
+        LocalDate studentDob = LocalDate.of(2015, 1, 1);
         Student student1;
-        if (studentRepository.findByStudentCode(student1Code).isEmpty()) {
+        if (studentRepository.findByFullNameAndDateOfBirth(studentFullName, studentDob).isEmpty()) {
             student1 = new Student();
-            student1.setStudentCode(student1Code);
-            student1.setFullName("Alice Student");
-            student1.setDateOfBirth(LocalDate.of(2015, 1, 1));
+            student1.setFullName(studentFullName);
+            student1.setDateOfBirth(studentDob);
             student1.setGender(Gender.FEMALE);
             student1.setClassName("Class 3A");
-            student1.setAddress("123 Student Street");
             student1.setInvitationCode(generateInvitationCode());
             student1.setActive(true);
             student1 = studentRepository.save(student1);
-            log.info("Đã tạo Học sinh: {} với mã {}", student1.getFullName(), student1.getStudentCode());
+            log.info("Đã tạo Học sinh: {}", student1.getFullName());
         } else {
-            student1 = studentRepository.findByStudentCode(student1Code).get();
-            log.info("Học sinh với mã {} đã tồn tại.", student1Code);
+            student1 = studentRepository.findByFullNameAndDateOfBirth(studentFullName, studentDob).get();
+            log.info("Học sinh {} đã tồn tại.", studentFullName);
         }
 
         // 3. Liên kết Phụ huynh và Học sinh
@@ -86,9 +85,9 @@ public class DemoUserInitializer implements ApplicationRunner {
             link.setRelationshipType(RelationshipType.FATHER);
             link.setStatus(LinkStatus.ACTIVE);
             parentStudentLinkRepository.save(link);
-            log.info("Đã liên kết Phụ huynh {} với Học sinh {}.", parent1.getEmail(), student1.getStudentCode());
+            log.info("Đã liên kết Phụ huynh {} với Học sinh {}.", parent1.getEmail(), student1.getFullName());
         } else {
-            log.info("Liên kết giữa Phụ huynh {} và Học sinh {} đã tồn tại.", parent1.getEmail(), student1.getStudentCode());
+            log.info("Liên kết giữa Phụ huynh {} và Học sinh {} đã tồn tại.", parent1.getEmail(), student1.getFullName());
         }
 
         // 4. Khởi tạo tài khoản School Nurse (Y tá học đường)

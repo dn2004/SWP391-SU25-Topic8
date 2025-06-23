@@ -29,7 +29,7 @@ public interface HealthIncidentMapper {
     @Mapping(target = "deletedByUser", ignore = true)
     HealthIncident toEntity(CreateHealthIncidentRequestDto dto);
 
-    @Mapping(source = "student.studentId", target = "studentId")
+    @Mapping(source = "student.id", target = "studentId")
     @Mapping(source = "student.fullName", target = "studentName")
     @Mapping(source = "student.className", target = "studentClass")
     @Mapping(source = "recordedByUser.userId", target = "recordedByUserId") // Đổi tên

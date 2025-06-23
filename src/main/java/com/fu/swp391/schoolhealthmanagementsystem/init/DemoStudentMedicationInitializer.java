@@ -36,8 +36,8 @@ public class DemoStudentMedicationInitializer implements ApplicationRunner {
 
         try {
             // Tìm học sinh và người dùng được tạo trong DemoUserInitializer
-            Student student = studentRepository.findByStudentCode("ST001")
-                    .orElseThrow(() -> new IllegalStateException("Không tìm thấy học sinh ST001. Hãy chạy DemoUserInitializer trước."));
+            Student student = studentRepository.findByFullNameAndDateOfBirth("Alice Student", LocalDate.of(2015, 1, 1))
+                    .orElseThrow(() -> new IllegalStateException("Không tìm thấy học sinh Alice Student. Hãy chạy DemoUserInitializer trước."));
             User parent = userRepository.findByEmail("parent@example.com")
                     .orElseThrow(() -> new IllegalStateException("Không tìm thấy người dùng parent@example.com."));
             User nurse = userRepository.findByEmail("nurse@example.com")

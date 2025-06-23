@@ -1,12 +1,12 @@
 package com.fu.swp391.schoolhealthmanagementsystem.entity.enums;
 
+import com.fasterxml.jackson.annotation.JsonValue;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Getter
-@Schema(description = "Loại mối quan hệ giữa phụ huynh và học sinh",
-        allowableValues = {"FATHER", "MOTHER", "GUARDIAN", "GRANDFATHER", "GRANDMOTHER", "OTHER"})
+@Schema(description = "Loại mối quan hệ giữa phụ huynh và học sinh")
 @Slf4j
 public enum RelationshipType {
     FATHER("Bố"),
@@ -17,6 +17,11 @@ public enum RelationshipType {
     OTHER("Khác");
 
     private final String vietnameseName;
+
+    @JsonValue
+    public String getVietnameseName() {
+        return vietnameseName;
+    }
 
     RelationshipType(String vietnameseName) {
         this.vietnameseName = vietnameseName;

@@ -1,8 +1,12 @@
 package com.fu.swp391.schoolhealthmanagementsystem.entity.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 
-@Getter // Để dễ dàng lấy displayValue
+@Getter // Để dễ dàng lấy displayName
+@Schema(description = "Loại giao dịch vật tư")
 public enum SupplyTransactionType {
     RECEIVED("Nhập kho mới"),
     USED_FOR_INCIDENT("Sử dụng cho sự cố"),
@@ -10,28 +14,27 @@ public enum SupplyTransactionType {
     ADJUSTMENT_IN("Điều chỉnh tăng"), // Ví dụ: kiểm kê thừa
     RETURN_FROM_INCIDENT("Trả lại từ sự cố");
 
-    private final String displayValue;
+    private final String displayName;
 
-    SupplyTransactionType(String displayValue) {
-        this.displayValue = displayValue;
+    SupplyTransactionType(String displayName) {
+        this.displayName = displayName;
     }
 
-    // Optional: Phương thức để tìm Enum từ displayValue (hữu ích cho việc parse từ UI nếu cần)
-    public static SupplyTransactionType fromDisplayValue(String displayValue) {
+    @JsonValue
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    @JsonCreator
+    public static SupplyTransactionType fromDisplayName(String displayName) {
+        if (displayName == null || displayName.isEmpty()) {
+            throw new IllegalArgumentException("Display name không được để trống");
+        }
         for (SupplyTransactionType type : SupplyTransactionType.values()) {
-            if (type.getDisplayValue().equalsIgnoreCase(displayValue)) {
+            if (type.getDisplayName().equalsIgnoreCase(displayName)) {
                 return type;
             }
         }
-        throw new IllegalArgumentException("Không tìm thấy loại giao dịch vật tư với giá trị hiển thị: " + displayValue);
-    }
-
-    // Optional: Phương thức để tìm Enum từ name (giá trị lưu trong DB)
-    public static SupplyTransactionType fromName(String name) {
-        try {
-            return SupplyTransactionType.valueOf(name.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Không tìm thấy loại giao dịch vật tư với tên: " + name, e);
-        }
+        throw new IllegalArgumentException("Không tìm thấy loại giao dịch vật tư với giá trị hiển thị: " + displayName);
     }
 }

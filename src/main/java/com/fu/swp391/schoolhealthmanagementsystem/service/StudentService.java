@@ -9,16 +9,18 @@ import com.fu.swp391.schoolhealthmanagementsystem.exception.AppException;
 import com.fu.swp391.schoolhealthmanagementsystem.mapper.StudentMapper;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.ParentStudentLinkRepository;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.StudentRepository;
+import com.fu.swp391.schoolhealthmanagementsystem.repository.specification.StudentSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils; // Cần dependency commons-lang3
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+
+import java.time.LocalDate;
 
 @Service
 @RequiredArgsConstructor
@@ -29,11 +31,12 @@ public class StudentService {
     private final StudentMapper studentMapper;
     private final ParentStudentLinkRepository parentStudentLinkRepository; // Inject
     private final UserService userService;
+    private final StudentSpecification studentSpecification;
 
     @Transactional
     public StudentDto createStudent(CreateStudentRequestDto dto) {
         log.info("Yêu cầu tạo học sinh mới với mã: {}", dto.studentCode());
-        if (studentRepository.findByStudentCode(dto.studentCode()).isPresent()) {
+        if (studentRepository.findByInvitationCode(dto.studentCode()).isPresent()) {
             log.warn("Mã học sinh {} đã tồn tại.", dto.studentCode());
             throw new AppException(HttpStatus.BAD_REQUEST, "Mã học sinh đã tồn tại: " + dto.studentCode());
         }
@@ -90,21 +93,21 @@ public class StudentService {
     }
 
     @Transactional(readOnly = true)
-    public Page<StudentDto> getAllStudents(Pageable pageable) {
-        // Ở đây, chúng ta giả định API này chỉ dành cho Admin/Staff
-        // Nếu vai trò khác được phép, cần thêm logic kiểm tra quyền ở đây.
+    public Page<StudentDto> getAllStudents(String fullName, LocalDate dob, String className, Boolean active, Pageable pageable) {
         User currentUser = userService.getCurrentAuthenticatedUser(); // Lấy user từ service đã có
 
-        // Ví dụ: Chỉ Admin, StaffManager, MedicalStaff mới được xem toàn bộ danh sách
         if (!(currentUser.getRole() == UserRole.SchoolAdmin ||
                 currentUser.getRole() == UserRole.StaffManager ||
                 currentUser.getRole() == UserRole.MedicalStaff)) {
-            log.warn("Người dùng {} với vai trò {} không có quyền xem danh sách tất cả học sinh.", currentUser.getEmail(), currentUser.getRole());
-            throw new AppException(HttpStatus.FORBIDDEN, "Bạn không có quyền thực hiện hành động này.");
+            throw new AppException(HttpStatus.FORBIDDEN, "You do not have permission to perform this action.");
         }
 
-        log.info("Yêu cầu lấy danh sách học sinh - Trang: {}, Kích thước: {}", pageable.getPageNumber(), pageable.getPageSize());
-        Page<Student> studentsPage = studentRepository.findAll(pageable); // Sử dụng phương thức findAll có sẵn của JpaRepository
-        return studentsPage.map(studentMapper::studentToStudentDto);
+        Specification<Student> spec = studentSpecification.hasFullName(fullName)
+                .and(studentSpecification.hasDateOfBirth(dob))
+                .and(studentSpecification.hasClassName(className))
+                .and(studentSpecification.isActive(active));
+
+        Page<Student> studentPage = studentRepository.findAll(spec, pageable);
+        return studentPage.map(studentMapper::studentToStudentDto);
     }
 }

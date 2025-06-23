@@ -1,5 +1,7 @@
 package com.fu.swp391.schoolhealthmanagementsystem.entity.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 
@@ -17,5 +19,23 @@ public enum StudentMedicationTransactionType {
 
     StudentMedicationTransactionType(String displayName) {
         this.displayName = displayName;
+    }
+
+    @JsonValue
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    @JsonCreator
+    public static StudentMedicationTransactionType fromDisplayName(String displayName) {
+        if (displayName == null || displayName.isEmpty()) {
+            throw new IllegalArgumentException("Display name không được để trống");
+        }
+        for (StudentMedicationTransactionType type : StudentMedicationTransactionType.values()) {
+            if (type.displayName.equalsIgnoreCase(displayName)) {
+                return type;
+            }
+        }
+        throw new IllegalArgumentException("Không tìm thấy StudentMedicationTransactionType với displayName: " + displayName);
     }
 }

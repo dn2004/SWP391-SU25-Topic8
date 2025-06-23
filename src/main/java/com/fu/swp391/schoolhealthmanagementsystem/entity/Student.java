@@ -15,9 +15,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "Students",
-        uniqueConstraints = @UniqueConstraint(columnNames = "StudentCode")
-)
+@Table(name = "student", uniqueConstraints = {
+        @UniqueConstraint(columnNames = "InvitationCode")
+})
 @Getter
 @Setter
 public class Student {
@@ -25,10 +25,7 @@ public class Student {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "StudentID")
-    private Long studentId;
-
-    @Column(name = "StudentCode", unique = true, nullable = false, length = 50)
-    private String studentCode;
+    private Long id;
 
     @Column(name = "FullName", nullable = false, length = 50, columnDefinition = "NVARCHAR(100)")
     private String fullName;
@@ -42,8 +39,6 @@ public class Student {
     @Column(name = "ClassName", nullable = false, length = 50)
     private String className;
 
-    @Column(name = "Address", length = 255)
-    private String address;
 
     @Column(name = "Active", nullable = false)
     private boolean active = true;

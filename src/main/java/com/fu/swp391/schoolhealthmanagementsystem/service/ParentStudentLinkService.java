@@ -19,7 +19,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,7 +51,7 @@ public class ParentStudentLinkService {
         // Kiểm tra xem phụ huynh này đã liên kết với học sinh này chưa
         boolean alreadyLinked = parentStudentLinkRepository.existsByParentAndStudent(parent, student);
         if (alreadyLinked) {
-            log.info("Phụ huynh {} đã liên kết với học sinh {} (Mã: {}) rồi.", parent.getEmail(), student.getFullName(), student.getStudentCode());
+            log.info("Phụ huynh {} đã liên kết với học sinh {} (Mã: {}) rồi.", parent.getEmail(), student.getFullName(), student.getId());
 
             ParentStudentLink existingLink = parentStudentLinkRepository.findByParentAndStudent(parent, student)
                     .orElseThrow(() -> new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "Liên kết tồn tại nhưng không thể truy xuất."));
@@ -70,7 +69,7 @@ public class ParentStudentLinkService {
 
         parentStudentLinkRepository.save(link);
         log.info("Phụ huynh {} đã liên kết thành công với học sinh {} (Mã: {}) với vai trò {}. Trạng thái: ACTIVE",
-                parent.getEmail(), student.getFullName(), student.getStudentCode(), dto.relationshipType());
+                parent.getEmail(), student.getFullName(), student.getId(), dto.relationshipType());
     }
 
     @Transactional(readOnly = true)

@@ -1,15 +1,13 @@
 package com.fu.swp391.schoolhealthmanagementsystem.entity.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Getter
 @Slf4j
-@Schema(
-        description = "Trạng thái tiêm chủng của học sinh",
-        allowableValues = {"PENDING", "APPROVE", "REJECTED"}
-)
 public enum StudentVaccinationStatus {
     PENDING("Chờ xử lý"),
     APPROVE("Chấp nhận"),
@@ -21,6 +19,12 @@ public enum StudentVaccinationStatus {
         this.vietnameseName = vietnameseName;
     }
 
+    @JsonValue
+    public String getVietnameseName() {
+        return this.vietnameseName;
+    }
+
+    @JsonCreator
     public static StudentVaccinationStatus fromDisplayName(String text) {
         if (text == null || text.trim().isEmpty()) {
 
@@ -29,18 +33,14 @@ public enum StudentVaccinationStatus {
 
         }
 
-        for (StudentVaccinationStatus b : StudentVaccinationStatus.values()) {
+        for (StudentVaccinationStatus status : values()) {
 
-            if (b.vietnameseName.equalsIgnoreCase(text)) {
-                return b;
-            }
-            if (b.name().equalsIgnoreCase(text)) {
-                log.warn("Tìm thấy StudentVaccinationStatus bằng tên hằng số '{}' thay vì vietnameseName. Giá trị từ DB/request có thể không phải tiếng Việt.", text);
-                return b;
+            if (status.getVietnameseName().equalsIgnoreCase(text) || status.name().equalsIgnoreCase(text)) {
+                return status;
             }
         }
-        log.warn("Không tìm thấy StudentVaccinationStatus cho giá trị displayName: '{}'. Ném IllegalArgumentException.", text);
-        throw new IllegalArgumentException("Không tìm thấy trạng thái của thông tin này: " + text);
+        log.warn("Không tìm thấy StudentVaccinationStatus nào khớp với: '{}'", text);
+        throw new IllegalArgumentException("No matching status for: " + text);
     }
 
 }

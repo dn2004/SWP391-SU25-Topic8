@@ -8,12 +8,16 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/students") // Hoặc một base path chung hơn
@@ -36,13 +40,20 @@ public class StudentController {
         StudentDto studentDto = studentService.getStudentById(studentId);
         return ResponseEntity.ok(studentDto);
     }
+
     @GetMapping
-    @Operation(summary = "Lấy danh sách học sinh (phân trang)")
-    @PreAuthorize("hasAnyRole('SchoolAdmin', 'StaffManager', 'MedicalStaff')") // Chỉ cho phép các vai trò này
+    @Operation(summary = "Lấy danh sách học sinh (phân trang và lọc)")
+    @PreAuthorize("hasAnyRole('SchoolAdmin', 'StaffManager', 'MedicalStaff')")
     public ResponseEntity<Page<StudentDto>> getAllStudents(
-            @PageableDefault(size = 10, sort = "fullName") Pageable pageable) {
+            @RequestParam(required = false) String fullName,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dob,
+            @RequestParam(required = false) String className,
+            @RequestParam(required = false) Boolean active,
+            @PageableDefault(size = 10, sort = "fullName")
+            @ParameterObject
+            Pageable pageable) {
         log.info("API: Yêu cầu lấy danh sách học sinh - Page: {}, Size: {}", pageable.getPageNumber(), pageable.getPageSize());
-        Page<StudentDto> studentPage = studentService.getAllStudents(pageable);
+        Page<StudentDto> studentPage = studentService.getAllStudents(fullName, dob, className, active, pageable);
         return ResponseEntity.ok(studentPage);
     }
 }

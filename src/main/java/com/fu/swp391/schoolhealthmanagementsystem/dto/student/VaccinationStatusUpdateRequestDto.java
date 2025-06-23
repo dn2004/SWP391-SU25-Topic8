@@ -8,10 +8,8 @@ import jakarta.validation.constraints.Size;
 @Schema(description = "DTO để cập nhật trạng thái của một bản ghi tiêm chủng")
 public record VaccinationStatusUpdateRequestDto(
         @Schema(description = "Trạng thái mới của bản ghi tiêm chủng.",
-                allowableValues = {"PENDING", "APPROVE", "REJECTED"},
                 example = "APPROVE",
                 requiredMode = Schema.RequiredMode.REQUIRED
-
         )
         @NotNull(message = "Trạng thái mới không được để trống.")
         StudentVaccinationStatus newStatus,

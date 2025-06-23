@@ -72,7 +72,7 @@ public class ScheduledMedicationTaskService {
             } catch (AccessDeniedException e) {
                 log.warn("Parent {} (ID: {}) is not authorized to view medication schedule for student {} (ID: {}). Medication ID: {}",
                         currentUser.getEmail(), currentUser.getUserId(),
-                        studentOfMedication.getFullName(), studentOfMedication.getStudentId(),
+                        studentOfMedication.getFullName(), studentOfMedication.getId(),
                         studentMedicationId);
                 throw e;
             }

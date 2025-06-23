@@ -11,7 +11,7 @@ import org.mapstruct.Named;
 @Mapper(componentModel = "spring")
 public interface    StudentMapper {
 
-    @Mapping(target = "studentId", ignore = true) // Sẽ được tự sinh
+    @Mapping(target = "id", ignore = true) // Sẽ được tự sinh
     @Mapping(target = "active", constant = "true") // Mặc định là active khi tạo mới
     @Mapping(target = "createdAt", ignore = true) // Sẽ được tự sinh
     @Mapping(target = "updatedAt", ignore = true) // Sẽ được tự sinh

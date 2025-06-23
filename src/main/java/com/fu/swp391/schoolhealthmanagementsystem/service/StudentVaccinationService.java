@@ -7,23 +7,18 @@ import com.fu.swp391.schoolhealthmanagementsystem.dto.student.VaccinationStatusU
 import com.fu.swp391.schoolhealthmanagementsystem.entity.Student;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.StudentVaccination;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.User;
-import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.LinkStatus;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentVaccinationStatus;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.UserRole;
 import com.fu.swp391.schoolhealthmanagementsystem.exception.FileStorageException;
 import com.fu.swp391.schoolhealthmanagementsystem.exception.ResourceNotFoundException;
 import com.fu.swp391.schoolhealthmanagementsystem.mapper.StudentVaccinationMapper;
-import com.fu.swp391.schoolhealthmanagementsystem.repository.ParentStudentLinkRepository;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.StudentRepository;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.StudentVaccinationRepository;
-import com.fu.swp391.schoolhealthmanagementsystem.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -84,7 +79,7 @@ public class StudentVaccinationService {
             authorizationService.authorizeParentAction(currentUser, student, "xem danh sách tiêm chủng");
         }
 
-        Page<StudentVaccination> vaccinationsEntityPage = vaccinationRepository.findByStudent_StudentId(studentId, pageable);
+        Page<StudentVaccination> vaccinationsEntityPage = vaccinationRepository.findByStudent_Id(studentId, pageable);
         log.info("Tìm thấy {} bản ghi tiêm chủng cho học sinh ID {} trên trang {}.", vaccinationsEntityPage.getNumberOfElements(), studentId, pageable.getPageNumber());
         return vaccinationsEntityPage.map(vaccinationMapper::toDto);
     }
@@ -124,7 +119,7 @@ public class StudentVaccinationService {
         }
 
         Page<StudentVaccination> vaccinationsEntityPage =
-                vaccinationRepository.findByStudent_StudentIdAndStatus(studentId, status, pageable);
+                vaccinationRepository.findByStudent_IdAndStatus(studentId, status, pageable);
 
         log.info("Tìm thấy {} bản ghi tiêm chủng cho học sinh ID {} với trạng thái {} trên trang {}.",
                 vaccinationsEntityPage.getNumberOfElements(), studentId, status, pageable.getPageNumber());
@@ -163,7 +158,7 @@ public class StudentVaccinationService {
         if (studentOfRecord == null) {
             throw new IllegalStateException("Bản ghi tiêm chủng không liên kết với học sinh.");
         }
-        Long studentId = studentOfRecord.getStudentId(); // Lấy studentId từ bản ghi
+        Long studentId = studentOfRecord.getId(); // Lấy studentId từ bản ghi
 
         // Kiểm tra quyền cập nhật
         if (currentUser.getRole() == UserRole.Parent) {
@@ -218,7 +213,7 @@ public class StudentVaccinationService {
         if (currentStatus != StudentVaccinationStatus.PENDING) {
             throw new IllegalArgumentException("Chỉ có thể duyệt các bản ghi đang ở trạng thái 'Chờ xử lý'.");
         }
-        if (requestedNewStatus != StudentVaccinationStatus.APPROVE && requestedNewStatus != StudentVaccinationStatus.REJECTED) {
+        if (requestedNewStatus != StudentVaccinationStatus.APPROVE && requestedNewStatus != StudentVaccinationStatus.   REJECTED) {
             throw new IllegalArgumentException("Khi duyệt, trạng thái mới chỉ có thể là 'Chấp nhận' hoặc 'Từ chối'.");
         }
 

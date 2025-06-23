@@ -12,7 +12,7 @@ import org.mapstruct.*;
 @Mapper(componentModel = "spring")
 public interface StudentVaccinationMapper {
 
-    @Mapping(source = "student.studentId", target = "studentId")
+    @Mapping(source = "student.id", target = "studentId")
     @Mapping(source = "student.fullName", target = "studentFullName")
     @Mapping(source = "student.className", target = "studentClassName")
     @Mapping(source = "approvedByUser.userId", target = "approvedByUserId")

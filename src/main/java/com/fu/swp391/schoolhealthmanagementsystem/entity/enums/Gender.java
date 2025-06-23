@@ -1,12 +1,13 @@
 package com.fu.swp391.schoolhealthmanagementsystem.entity.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Getter
-@Schema(description = "Giới tính của cá nhân",
-        allowableValues = {"MALE", "FEMALE"})
+@Schema(description = "Giới tính của cá nhân")
 @Slf4j
 public enum Gender {
     MALE("Nam"),
@@ -18,20 +19,21 @@ public enum Gender {
         this.displayName = displayName;
     }
 
-    public static Gender fromDisplayName(String text) {
-        if (text == null || text.trim().isEmpty()) {
-            log.warn("Giá trị displayName đầu vào cho Gender là null hoặc rỗng. Trả về null.");
-            return null;
+    @JsonValue
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    @JsonCreator
+    public static Gender fromDisplayName(String displayName) {
+        if (displayName == null || displayName.isEmpty()) {
+            throw new IllegalArgumentException("Display name không được để trống");
         }
         for (Gender gender : Gender.values()) {
-            if (gender.displayName.equalsIgnoreCase(text)) {
-                return gender;
-            }
-            if (gender.name().equalsIgnoreCase(text)) {
+            if (gender.displayName.equalsIgnoreCase(displayName)) {
                 return gender;
             }
         }
-        log.warn("Không tìm thấy Gender cho giá trị displayName: '{}'. Ném IllegalArgumentException.", text);
-        throw new IllegalArgumentException("Không tìm thấy giới tính với tên hiển thị: " + text);
+        throw new IllegalArgumentException("Không tìm thấy giới tính với tên hiển thị: " + displayName);
     }
 }

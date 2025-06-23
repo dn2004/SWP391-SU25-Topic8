@@ -1,5 +1,12 @@
 package com.fu.swp391.schoolhealthmanagementsystem.entity.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Getter;
+
+@Getter
+@Schema(description = "Loại sự cố sức khỏe")
 public enum HealthIncidentType {
     MINOR_INJURY("Chấn thương nhẹ"),
     ILLNESS("Ốm đau"),
@@ -15,16 +22,21 @@ public enum HealthIncidentType {
         this.displayName = displayName;
     }
 
+    @JsonValue
     public String getDisplayName() {
         return displayName;
     }
 
-    public static HealthIncidentType fromString(String text) {
-        for (HealthIncidentType b : HealthIncidentType.values()) {
-            if (b.name().equalsIgnoreCase(text) || b.displayName.equalsIgnoreCase(text)) {
-                return b;
+    @JsonCreator
+    public static HealthIncidentType fromDisplayName(String displayName) {
+        if (displayName == null || displayName.isEmpty()) {
+            throw new IllegalArgumentException("Display name không được để trống");
+        }
+        for (HealthIncidentType type : HealthIncidentType.values()) {
+            if (type.displayName.equalsIgnoreCase(displayName)) {
+                return type;
             }
         }
-        return OTHER;
+        throw new IllegalArgumentException("Không tìm thấy HealthIncidentType với displayName: " + displayName);
     }
 }

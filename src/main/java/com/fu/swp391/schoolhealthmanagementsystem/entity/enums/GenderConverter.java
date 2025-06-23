@@ -1,33 +1,26 @@
 package com.fu.swp391.schoolhealthmanagementsystem.entity.enums;
 
-import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.Gender;
+
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
-import lombok.extern.slf4j.Slf4j;
-
 
 @Converter(autoApply = true)
-@Slf4j
 public class GenderConverter implements AttributeConverter<Gender, String> {
 
     @Override
-    public String convertToDatabaseColumn(Gender attribute) {
-        if (attribute == null) {
+    public String convertToDatabaseColumn(Gender gender) {
+        if (gender == null) {
             return null;
         }
-        return attribute.getDisplayName();
+        return gender.getDisplayName();
     }
 
     @Override
-    public Gender convertToEntityAttribute(String dbData) {
-        if (dbData == null || dbData.trim().isEmpty()) {
+    public Gender convertToEntityAttribute(String displayName) {
+        if (displayName == null) {
             return null;
         }
-        try {
-            return Gender.fromDisplayName(dbData);
-        } catch (IllegalArgumentException e) {
-            log.error("Lỗi: Không thể chuyển đổi giá trị '{}' từ DB thành Gender. {}", dbData, e.getMessage());
-            return null;
-        }
+        return Gender.fromDisplayName(displayName);
     }
 }
+

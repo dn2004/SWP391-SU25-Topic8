@@ -11,9 +11,9 @@ public interface StudentVaccinationRepository extends JpaRepository<StudentVacci
 
     Page<StudentVaccination> findByStudent(Student student, Pageable pageable);
 
-    Page<StudentVaccination> findByStudent_StudentId(Long studentId, Pageable pageable);
+    Page<StudentVaccination> findByStudent_Id(Long studentId, Pageable pageable);
 
     Page<StudentVaccination> findByStatus(StudentVaccinationStatus status, Pageable pageable);
 
-    Page<StudentVaccination> findByStudent_StudentIdAndStatus(Long studentId, StudentVaccinationStatus status, Pageable pageable);
+    Page<StudentVaccination> findByStudent_IdAndStatus(Long studentId, StudentVaccinationStatus status, Pageable pageable);
 }

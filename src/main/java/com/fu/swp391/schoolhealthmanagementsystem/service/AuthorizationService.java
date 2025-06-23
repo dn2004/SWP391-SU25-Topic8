@@ -16,14 +16,14 @@ public class AuthorizationService {
     private final ParentStudentLinkRepository parentStudentLinkRepository;
     private final UserService userService;
     public void authorizeParentAction(User parent, Student student, String action) {
-        log.info("Kiểm tra quyền của Phụ huynh {} cho hành động '{}' với học sinh ID {}", parent.getEmail(), action, student.getStudentId());
+        log.info("Kiểm tra quyền của Phụ huynh {} cho hành động '{}' với học sinh ID {}", parent.getEmail(), action, student.getId());
         boolean isLinked = parentStudentLinkRepository.existsByParentAndStudentAndStatus(parent, student, LinkStatus.ACTIVE);
         if (!isLinked) {
             log.error("Phụ huynh {} không có quyền thực hiện '{}' cho học sinh ID {}.",
-                    parent.getEmail(), action, student.getStudentId());
+                    parent.getEmail(), action, student.getId());
             throw new AccessDeniedException("Bạn không có quyền thực hiện hành động này cho học sinh được chỉ định.");
         }
-        log.info("Phụ huynh {} được xác nhận có liên kết với học sinh ID {}.", parent.getEmail(), student.getStudentId());
+        log.info("Phụ huynh {} được xác nhận có liên kết với học sinh ID {}.", parent.getEmail(), student.getId());
     }
 
     public User getCurrentUserAndValidate() {

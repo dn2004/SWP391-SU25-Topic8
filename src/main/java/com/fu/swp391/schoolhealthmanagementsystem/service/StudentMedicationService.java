@@ -63,7 +63,7 @@ public class StudentMedicationService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phụ huynh với Email: " + requestDto.submittedByParentEmail() + " hoặc người dùng không phải là phụ huynh."));
 
         if (!parentStudentLinkRepository.existsByParentAndStudentAndStatus(parent, student, LinkStatus.ACTIVE)) {
-            throw new AccessDeniedException("Phụ huynh (Email: " + parent.getEmail() + ") không có liên kết hợp lệ với học sinh (ID: " + student.getStudentId() + ").");
+            throw new AccessDeniedException("Phụ huynh (Email: " + parent.getEmail() + ") không có liên kết hợp lệ với học sinh (ID: " + student.getId() + ").");
         }
         log.info("Parent {} is confirmed to be linked with student {}.", parent.getEmail(), student.getFullName());
 
