@@ -26,12 +26,16 @@ public class UserInitializer implements ApplicationRunner { // Thay đổi ở �
     PasswordEncoder passwordEncoder;   // Dùng final và constructor injection
     AdminProperties adminProperties;
 
+    private static final String SYSTEM_EMAIL = "system@example.com";
+    private static final String SYSTEM_PASSWORD = "StrongP@ssw0rd!123";
+    private static final String SYSTEM_NAME = "System User";
 
     @Override
     @Transactional
-    public void run(ApplicationArguments args) throws Exception { // Thay đổi ở đây
+    public void run(ApplicationArguments args) throws Exception {
         log.info("Bắt đầu khởi tạo dữ liệu người dùng (sử dụng ApplicationRunner)...");
 
+        // Khởi tạo tài khoản admin
         if (userRepository.existsByEmail(adminProperties.email())) {
             log.info("Tài khoản Admin với email {} đã tồn tại. Bỏ qua việc tạo.", adminProperties.email());
         } else {
@@ -49,8 +53,22 @@ public class UserInitializer implements ApplicationRunner { // Thay đổi ở �
                     adminUser.getUsername(), adminUser.getEmail(), adminUser.getRole());
         }
 
-        // Thêm logic khởi tạo dữ liệu người dùng khác nếu cần
+        // Khởi tạo tài khoản system cho các scheduler tự động
+        if (userRepository.existsByEmail(SYSTEM_EMAIL)) {
+            log.info("Tài khoản System với email {} đã tồn tại. Bỏ qua việc tạo.", SYSTEM_EMAIL);
+        } else {
+            User systemUser = User.builder()
+                    .email(SYSTEM_EMAIL)
+                    .password(passwordEncoder.encode(SYSTEM_PASSWORD))
+                    .fullName(SYSTEM_NAME)
+                    .role(UserRole.SchoolAdmin) // Gán quyền admin cho tài khoản hệ thống
+                    .active(true)
+                    .build();
 
+            userRepository.save(systemUser);
+            log.info("Đã tạo tài khoản System {} ({}) cho các tiến trình tự động.",
+                    systemUser.getUsername(), systemUser.getEmail());
+        }
         log.info("Hoàn tất khởi tạo dữ liệu người dùng.");
     }
 }

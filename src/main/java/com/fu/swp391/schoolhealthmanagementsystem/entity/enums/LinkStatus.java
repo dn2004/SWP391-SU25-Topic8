@@ -30,7 +30,7 @@ public enum LinkStatus {
             throw new IllegalArgumentException("Display name không được để trống");
         }
         for (LinkStatus status : LinkStatus.values()) {
-            if (status.displayName.equalsIgnoreCase(displayName)) {
+            if (status.displayName.equalsIgnoreCase(displayName) || status.name().equalsIgnoreCase(displayName)) {
                 return status;
             }
         }

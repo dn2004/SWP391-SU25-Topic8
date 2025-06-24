@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Schema(description = "Xác định vai trò người dùng trong hệ thống.")
 public enum UserRole {
+    System("Hệ thống"),
     Parent("Phụ huynh"),
     MedicalStaff("Nhân viên Y tế"),
     StaffManager("Quản lý Nhân sự/Nhân viên"),

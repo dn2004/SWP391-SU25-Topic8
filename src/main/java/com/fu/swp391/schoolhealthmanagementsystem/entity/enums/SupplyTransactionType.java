@@ -12,7 +12,7 @@ public enum SupplyTransactionType {
     USED_FOR_INCIDENT("Sử dụng cho sự cố"),
     ADJUSTMENT_OUT("Điều chỉnh giảm"), // Ví dụ: hỏng, hết hạn
     ADJUSTMENT_IN("Điều chỉnh tăng"), // Ví dụ: kiểm kê thừa
-    RETURN_FROM_INCIDENT("Trả lại từ sự cố");
+    RETURN_FROM_INCIDENT("Trả lại từ sự cố"), EXPIRED("Loại bỏ hết vì hết hạn");
 
     private final String displayName;
 
@@ -31,7 +31,7 @@ public enum SupplyTransactionType {
             throw new IllegalArgumentException("Display name không được để trống");
         }
         for (SupplyTransactionType type : SupplyTransactionType.values()) {
-            if (type.getDisplayName().equalsIgnoreCase(displayName)) {
+            if (type.getDisplayName().equalsIgnoreCase(displayName) || type.name().equalsIgnoreCase(displayName)) {
                 return type;
             }
         }

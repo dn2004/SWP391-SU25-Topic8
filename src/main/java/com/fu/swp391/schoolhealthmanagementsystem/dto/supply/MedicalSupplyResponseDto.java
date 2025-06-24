@@ -1,7 +1,9 @@
 package com.fu.swp391.schoolhealthmanagementsystem.dto.supply;
 
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.MedicalSupplyStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public record MedicalSupplyResponseDto(
@@ -23,6 +25,9 @@ public record MedicalSupplyResponseDto(
         @Schema(description = "Mô tả chi tiết về vật tư", example = "Khẩu trang y tế 3 lớp, màu xanh")
         String description,
 
+        @Schema(description = "Ngày hết hạn của vật tư", example = "2026-01-15")
+        LocalDate expiredDate,
+
         @Schema(description = "Ngày tạo vật tư", example = "2025-06-13T10:15:30")
         LocalDateTime createdAt,
 
@@ -35,6 +40,6 @@ public record MedicalSupplyResponseDto(
         @Schema(description = "Email của người cập nhật", example = "manager@example.com")
         String updatedByUserEmail,
 
-        @Schema(description = "Trạng thái hoạt động của vật tư", example = "true")
-        boolean active
+        @Schema(description = "Trạng thái của vật tư y tế", example = "AVAILABLE")
+        MedicalSupplyStatus status
 ) {}

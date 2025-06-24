@@ -2,6 +2,7 @@ package com.fu.swp391.schoolhealthmanagementsystem.service;
 
 import com.fu.swp391.schoolhealthmanagementsystem.dto.incident.UpdateHealthIncidentRequestDto;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.HealthIncidentType;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.MedicalSupplyStatus;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.SupplyTransactionType;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.UserRole;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.incident.CreateHealthIncidentRequestDto;
@@ -61,9 +62,12 @@ public class HealthIncidentService {
             for (HealthIncidentSupplyUsageDto usageDto : requestDto.supplyUsages()) {
                 MedicalSupply supply = medicalSupplyRepository.findById(usageDto.supplyId())
                         .orElseThrow(() -> new ResourceNotFoundException("Medical supply not found with ID: " + usageDto.supplyId()));
-                if (!supply.isActive()) {
-                    throw new IllegalStateException("Medical supply '" + supply.getName() + "' (ID: " + supply.getSupplyId() + ") is inactive and cannot be used.");
+
+                if (supply.getStatus() == MedicalSupplyStatus.DISPOSE || supply.getStatus() == MedicalSupplyStatus.EXPIRED) {
+                    throw new IllegalStateException("Medical supply '" + supply.getName() + "' (ID: " + supply.getSupplyId() +
+                    ") has status " + supply.getStatus() + " and cannot be used.");
                 }
+
                 if (supply.getCurrentStock() < usageDto.quantityUsed()) {
                     throw new IllegalStateException("Insufficient stock for medical supply '" + supply.getName() + "'. Requested: " +
                             usageDto.quantityUsed() + ", Available: " + supply.getCurrentStock());
@@ -79,8 +83,9 @@ public class HealthIncidentService {
                 MedicalSupply supply = medicalSupplyRepository.findById(usageDto.supplyId())
                         .orElseThrow(() -> new ResourceNotFoundException("Medical supply not found with ID: " + usageDto.supplyId()));
 
-                if (!supply.isActive()) {
-                    throw new IllegalStateException("Medical supply '" + supply.getName() + "' (ID: " + supply.getSupplyId() + ") is inactive and cannot be used.");
+                if (supply.getStatus() == MedicalSupplyStatus.DISPOSE || supply.getStatus() == MedicalSupplyStatus.EXPIRED) {
+                    throw new IllegalStateException("Medical supply '" + supply.getName() + "' (ID: " + supply.getSupplyId() +
+                    ") has status " + supply.getStatus() + " and cannot be used.");
                 }
 
                 if (supply.getCurrentStock() < usageDto.quantityUsed()) {
@@ -98,7 +103,15 @@ public class HealthIncidentService {
                 supplyTransactionRepository.save(transaction);
 
                 // Update the supply stock
-                supply.setCurrentStock(supply.getCurrentStock() - usageDto.quantityUsed());
+                int oldStock = supply.getCurrentStock();
+                supply.setCurrentStock(oldStock - usageDto.quantityUsed());
+
+                // Cập nhật trạng thái nếu hết hàng
+                if (supply.getCurrentStock() == 0) {
+                    supply.setStatus(MedicalSupplyStatus.OUT_OF_STOCK);
+                    log.info("Medical supply ID {} is now out of stock, updating status to OUT_OF_STOCK", supply.getSupplyId());
+                }
+
                 medicalSupplyRepository.save(supply);
             }
         }
@@ -255,7 +268,30 @@ public class HealthIncidentService {
             throw new IllegalStateException("Health incident with ID " + incidentId + " is already deleted.");
         }
 
-        // Bước 3: Xử lý hoàn trả vật tư và tạo transaction hoàn trả
+        // Bước 3: Kiểm tra quyền và điều kiện xóa (trong ngày, đúng vai trò)
+        if (!incidentToSoftDelete.getCreatedAt().toLocalDate().isEqual(LocalDate.now())) {
+            log.warn("User {} attempted to delete health incident ID {} which was not created today.",
+                    currentUser.getEmail(), incidentId);
+            throw new IllegalStateException("Cannot delete a health incident that was not created today. Deletion is only allowed on the day of creation.");
+        }
+
+        User recordedUser = incidentToSoftDelete.getRecordedByUser();
+        boolean canDelete = false;
+        if (currentUser.getRole() == UserRole.StaffManager || currentUser.getRole() == UserRole.SchoolAdmin) {
+            canDelete = true;
+        } else if (currentUser.getRole() == UserRole.MedicalStaff) {
+            if (recordedUser != null && currentUser.getUserId().equals(recordedUser.getUserId())) {
+                canDelete = true;
+            }
+        }
+
+        if (!canDelete) {
+            log.warn("User {} (Role: {}) attempted to delete health incident ID {} without permission.",
+                    currentUser.getEmail(), currentUser.getRole(), incidentId);
+            throw new AccessDeniedException("You do not have permission to delete this health incident. Only the creator, a Staff Manager, or a School Admin can delete it on the day of creation.");
+        }
+
+        // Bước 4: Xử lý hoàn trả vật tư và tạo transaction hoàn trả
         List<SupplyTransaction> originalUsages = new ArrayList<>(incidentToSoftDelete.getSupplyUsages());
         List<SupplyTransaction> returnTransactionsToSave = new ArrayList<>(); // Danh sách các transaction hoàn trả mới
 
@@ -273,7 +309,15 @@ public class HealthIncidentService {
                         quantityToReturn, supply.getName(), supply.getSupplyId(), incidentId);
 
                 // Tăng lại tồn kho
-                supply.setCurrentStock(supply.getCurrentStock() + quantityToReturn);
+                int oldStock = supply.getCurrentStock();
+                supply.setCurrentStock(oldStock + quantityToReturn);
+
+                // Nếu trước đó là OUT_OF_STOCK và giờ có hàng, cập nhật trạng thái thành AVAILABLE
+                if (oldStock == 0 && supply.getStatus() == MedicalSupplyStatus.OUT_OF_STOCK) {
+                    supply.setStatus(MedicalSupplyStatus.AVAILABLE);
+                    log.info("Medical supply ID {} now has stock again, updating status to AVAILABLE", supply.getSupplyId());
+                }
+
                 supply.setUpdatedByUser(currentUser);
                 medicalSupplyRepository.save(supply); // Lưu thay đổi tồn kho
 
@@ -297,7 +341,7 @@ public class HealthIncidentService {
             log.info("Saved {} return supply transactions for incident ID: {}", returnTransactionsToSave.size(), incidentId);
         }
 
-        // Bước 4: Thực hiện soft delete cho HealthIncident
+        // Bước 5: Thực hiện soft delete cho HealthIncident
         incidentToSoftDelete.setDeleted(true);
         incidentToSoftDelete.setDeletedAt(LocalDateTime.now());
         incidentToSoftDelete.setDeletedByUser(currentUser);

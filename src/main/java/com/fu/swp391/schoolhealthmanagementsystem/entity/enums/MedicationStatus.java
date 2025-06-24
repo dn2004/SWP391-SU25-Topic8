@@ -6,7 +6,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 
 @Getter
-@Schema(description = "Trạng thái của thuốc được gửi tại trường")
+@Schema(description = "Trạng thái của thuốc được gửi tại trường"
+)
+
 public enum MedicationStatus {
 
     AVAILABLE("Sẵn có"),
@@ -25,11 +27,12 @@ public enum MedicationStatus {
 
     @JsonCreator
     public static MedicationStatus fromDisplayName(String displayName) {
-        if (displayName == null || displayName.isEmpty()) {
+        if (displayName == null || displayName.trim().isEmpty()) {
             throw new IllegalArgumentException("Display name không được để trống");
         }
+        String trimmedDisplayName = displayName.trim();
         for (MedicationStatus status : MedicationStatus.values()) {
-            if (status.displayName.equalsIgnoreCase(displayName)) {
+            if (status.displayName.equalsIgnoreCase(trimmedDisplayName) || status.name().equalsIgnoreCase(trimmedDisplayName)) {
                 return status;
             }
         }

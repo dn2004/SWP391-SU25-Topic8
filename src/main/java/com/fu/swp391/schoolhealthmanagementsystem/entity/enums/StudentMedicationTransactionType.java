@@ -32,7 +32,7 @@ public enum StudentMedicationTransactionType {
             throw new IllegalArgumentException("Display name không được để trống");
         }
         for (StudentMedicationTransactionType type : StudentMedicationTransactionType.values()) {
-            if (type.displayName.equalsIgnoreCase(displayName)) {
+            if (type.displayName.equalsIgnoreCase(displayName) || type.name().equalsIgnoreCase(displayName)) {
                 return type;
             }
         }

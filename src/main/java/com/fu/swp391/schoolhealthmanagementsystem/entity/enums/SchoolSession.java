@@ -30,6 +30,6 @@ public enum SchoolSession {
                 return session;
             }
         }
-        throw new IllegalArgumentException("Không tìm th���y SchoolSession với displayName: " + displayName);
+        throw new IllegalArgumentException("Không tìm thấy SchoolSession với displayName: " + displayName);
     }
 }

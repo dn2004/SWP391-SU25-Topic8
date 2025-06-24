@@ -35,7 +35,6 @@ public class HealthIncident {
     @Column(name = "IncidentDateTime", nullable = false)
     private LocalDateTime incidentDateTime;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "IncidentType", nullable = false, length = 50)
     private HealthIncidentType incidentType;
 

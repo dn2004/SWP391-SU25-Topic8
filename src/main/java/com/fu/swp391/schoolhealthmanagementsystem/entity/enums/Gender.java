@@ -30,7 +30,7 @@ public enum Gender {
             throw new IllegalArgumentException("Display name không được để trống");
         }
         for (Gender gender : Gender.values()) {
-            if (gender.displayName.equalsIgnoreCase(displayName)) {
+            if (gender.displayName.equalsIgnoreCase(displayName) || gender.name().equalsIgnoreCase(displayName)) {
                 return gender;
             }
         }

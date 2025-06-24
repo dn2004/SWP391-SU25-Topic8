@@ -1,9 +1,11 @@
 package com.fu.swp391.schoolhealthmanagementsystem.dto.supply;
 
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.MedicalSupplyStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+
+import java.time.LocalDate;
 
 public record MedicalSupplyUpdateDto(
         @Schema(description = "Tên vật tư y tế", example = "Khẩu trang y tế")
@@ -21,5 +23,11 @@ public record MedicalSupplyUpdateDto(
 
         @Schema(description = "Mô tả chi tiết về vật tư", example = "Khẩu trang y tế 3 lớp, màu xanh")
         @Size(max = 500, message = "Mô tả không quá 500 ký tự")
-        String description
+        String description,
+
+        @Schema(description = "Ngày hết hạn của vật tư", example = "2026-01-15")
+        LocalDate expiredDate,
+
+        @Schema(description = "Trạng thái của vật tư y tế", example = "AVAILABLE")
+        MedicalSupplyStatus status
 ) {}

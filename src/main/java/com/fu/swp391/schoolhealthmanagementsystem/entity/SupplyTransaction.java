@@ -27,7 +27,6 @@ public class SupplyTransaction {
     @Column(name = "Quantity", nullable = false)
     private Integer quantity;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "SupplyTransactionType", nullable = false, length = 50)
     private SupplyTransactionType supplyTransactionType;
 

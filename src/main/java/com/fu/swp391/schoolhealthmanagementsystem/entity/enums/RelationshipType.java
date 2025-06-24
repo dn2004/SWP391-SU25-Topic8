@@ -18,10 +18,10 @@ public enum RelationshipType {
 
     private final String vietnameseName;
 
-    @JsonValue
-    public String getVietnameseName() {
-        return vietnameseName;
-    }
+//    @JsonValue
+//    public String getVietnameseName() {
+//        return vietnameseName;
+//    }
 
     RelationshipType(String vietnameseName) {
         this.vietnameseName = vietnameseName;

@@ -20,6 +20,7 @@ public interface    StudentMapper {
     Student createStudentRequestDtoToStudent(CreateStudentRequestDto dto);
 
     @Mapping(source = "gender", target = "gender", qualifiedByName = "genderToDisplayNameString")
+    @Mapping(source = "id", target = "studentId")
     StudentDto studentToStudentDto(Student student);
 
     // This custom mapping method handles the Gender enum to its Vietnamese display name String conversion.

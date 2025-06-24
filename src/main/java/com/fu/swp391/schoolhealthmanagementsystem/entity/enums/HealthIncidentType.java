@@ -33,7 +33,7 @@ public enum HealthIncidentType {
             throw new IllegalArgumentException("Display name không được để trống");
         }
         for (HealthIncidentType type : HealthIncidentType.values()) {
-            if (type.displayName.equalsIgnoreCase(displayName)) {
+            if (type.displayName.equalsIgnoreCase(displayName) || type.name().equalsIgnoreCase(displayName)) {
                 return type;
             }
         }

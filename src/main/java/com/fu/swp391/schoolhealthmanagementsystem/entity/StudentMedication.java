@@ -56,7 +56,6 @@ public class StudentMedication {
     private User receivedByMedicalStaff;
 
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "Status", nullable = false)
     private MedicationStatus status; // Trạng thái thuốc, ví dụ: AVAILABLE, OUT_OF_DOSES
 

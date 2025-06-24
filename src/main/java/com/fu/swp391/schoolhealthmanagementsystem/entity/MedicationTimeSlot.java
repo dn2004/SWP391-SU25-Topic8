@@ -31,7 +31,6 @@ public class MedicationTimeSlot {
     private String timeExpression; // Ví dụ: "08:00", "Sau bữa trưa", "14:30"
     // Vẫn giữ dạng text để linh hoạt, việc suy ra SchoolSession sẽ ở logic
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "SchoolSessionHint", length = 20) // Gợi ý buổi, có thể NVYT chọn hoặc hệ thống suy ra
     private SchoolSession schoolSessionHint;
 

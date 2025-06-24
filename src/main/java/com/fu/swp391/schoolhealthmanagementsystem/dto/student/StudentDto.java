@@ -11,9 +11,6 @@ public record StudentDto(
         @Schema(description = "ID học sinh")
         Long studentId,
 
-        @Schema(description = "Mã học sinh")
-        String studentCode,
-
         @Schema(description = "Họ tên đầy đủ")
         String fullName,
 
@@ -25,9 +22,6 @@ public record StudentDto(
 
         @Schema(description = "Lớp học")
         String className,
-
-        @Schema(description = "Địa chỉ")
-        String address,
 
         @Schema(description = "Trạng thái hoạt động")
         boolean isActive,

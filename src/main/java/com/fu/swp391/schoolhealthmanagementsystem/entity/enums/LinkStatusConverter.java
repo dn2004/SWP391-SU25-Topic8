@@ -8,11 +8,11 @@ public class LinkStatusConverter implements AttributeConverter<LinkStatus, Strin
 
     @Override
     public String convertToDatabaseColumn(LinkStatus attribute) {
-        return attribute == null ? null : attribute.name();
+        return attribute == null ? null : attribute.getDisplayName();
     }
 
     @Override
     public LinkStatus convertToEntityAttribute(String dbData) {
-        return dbData == null ? null : LinkStatus.valueOf(dbData);
+        return dbData == null ? null : LinkStatus.fromDisplayName(dbData);
     }
 }

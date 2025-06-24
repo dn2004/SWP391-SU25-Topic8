@@ -5,6 +5,7 @@ import com.fu.swp391.schoolhealthmanagementsystem.dto.supply.MedicalSupplyRespon
 import com.fu.swp391.schoolhealthmanagementsystem.dto.supply.MedicalSupplyUpdateDto;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.MedicalSupply;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.User;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.MedicalSupplyStatus;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -21,7 +22,7 @@ public interface MedicalSupplyMapper {
     @Mapping(target = "lastUpdatedAt", ignore = true)
     @Mapping(target = "createdByUser", ignore = true)
     @Mapping(target = "updatedByUser", ignore = true)
-    @Mapping(target = "active", constant = "true")
+    @Mapping(target = "status", constant = "AVAILABLE")
     @Mapping(target = "supplyTransactions", ignore = true)
     MedicalSupply requestDtoToEntity(MedicalSupplyRequestDto dto);
 
@@ -35,7 +36,6 @@ public interface MedicalSupplyMapper {
     @Mapping(target = "createdByUser", ignore = true)
     @Mapping(target = "lastUpdatedAt", ignore = true)
     @Mapping(target = "updatedByUser", ignore = true)
-    @Mapping(target = "active", ignore = true)
     @Mapping(target = "supplyTransactions", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateEntityFromUpdateDto(MedicalSupplyUpdateDto dto, @MappingTarget MedicalSupply entity);

@@ -57,7 +57,6 @@ public class StudentVaccination {
     @Column(name = "UpdatedAt")
     private LocalDateTime updatedAt;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "Status", nullable = false, length = 50)
     @Builder.Default
     private StudentVaccinationStatus status = StudentVaccinationStatus.PENDING;

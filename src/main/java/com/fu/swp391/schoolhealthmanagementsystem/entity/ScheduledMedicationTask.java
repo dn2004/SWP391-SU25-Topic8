@@ -34,11 +34,9 @@ public class ScheduledMedicationTask {
     @Column(name = "ScheduledTimeText", length = 50, columnDefinition = "NVARCHAR(50)") // "08:00", "Sau ăn trưa"
     private String scheduledTimeText; // Vẫn giữ để NVYT dễ đọc
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "SchoolSession", length = 20) // Có thể suy ra từ ScheduledTimeText hoặc từ MedicationTimesPerDay
     private SchoolSession schoolSession; // ENUM: MORNING, AFTERNOON
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "Status", nullable = false)
     private ScheduledMedicationTaskStatus status;
 
@@ -64,7 +62,6 @@ public class ScheduledMedicationTask {
 
     @Column(name = "ProofResourceType", length = 50)
     private String proofResourceType;
-    // Kết thúc các trường Proof File
 
     @Column(name = "StaffNotes", length = 1000, columnDefinition = "NVARCHAR(1000)")
     private String staffNotes;

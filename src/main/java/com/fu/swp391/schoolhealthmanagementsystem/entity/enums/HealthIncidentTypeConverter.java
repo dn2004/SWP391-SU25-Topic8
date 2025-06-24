@@ -7,19 +7,12 @@ import jakarta.persistence.Converter;
 public class HealthIncidentTypeConverter implements AttributeConverter<HealthIncidentType, String> {
 
     @Override
-    public String convertToDatabaseColumn(HealthIncidentType attribute) {
-        if (attribute == null) {
-            return null;
-        }
-        return attribute.getDisplayName();
+    public String convertToDatabaseColumn(HealthIncidentType healthIncidentType) {
+        return healthIncidentType == null ? null : healthIncidentType.name();
     }
 
     @Override
     public HealthIncidentType convertToEntityAttribute(String dbData) {
-        if (dbData == null) {
-            return null;
-        }
-        return HealthIncidentType.fromDisplayName(dbData);
+        return dbData == null || dbData.isEmpty() ? null : HealthIncidentType.valueOf(dbData);
     }
 }
-

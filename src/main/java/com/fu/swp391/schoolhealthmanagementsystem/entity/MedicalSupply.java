@@ -1,10 +1,12 @@
 package com.fu.swp391.schoolhealthmanagementsystem.entity;
 
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.MedicalSupplyStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,9 +40,13 @@ public class MedicalSupply {
     @Column(name = "Description", columnDefinition = "NVARCHAR(500)")
     private String description;
 
-    @Column(name = "active", nullable = false, columnDefinition = "BIT")
+    @Column(name = "ExpiredDate")
+    private LocalDate expiredDate;
+
+    @Column(name = "Status", nullable = false, length = 20)
+    @Enumerated(EnumType.STRING)
     @Builder.Default
-    private boolean active = true;
+    private MedicalSupplyStatus status = MedicalSupplyStatus.AVAILABLE;
 
     @CreationTimestamp
     @Column(name = "CreatedAt", nullable = false, updatable = false)

@@ -11,15 +11,25 @@ public class ScheduledMedicationTaskStatusConverter implements AttributeConverte
         if (attribute == null) {
             return null;
         }
-        return attribute.getDisplayName();
+        // Store the standard enum name (e.g., "SCHEDULED") in the database.
+        // This is more robust than storing the display name.
+        return attribute.name();
     }
 
     @Override
     public ScheduledMedicationTaskStatus convertToEntityAttribute(String dbData) {
-        if (dbData == null) {
+        if (dbData == null || dbData.isEmpty()) {
             return null;
         }
-        return ScheduledMedicationTaskStatus.fromDisplayName(dbData);
+        try {
+            // Convert from the standard enum name (e.g., "SCHEDULED").
+            // This aligns with how Spring MVC binds request parameters.
+            return ScheduledMedicationTaskStatus.valueOf(dbData);
+        } catch (IllegalArgumentException e) {
+            // This block provides backward compatibility for any existing data
+            // that was stored using the display name. It can be removed
+            // after migrating the data to use enum names.
+            return ScheduledMedicationTaskStatus.fromDisplayName(dbData);
+        }
     }
 }
-

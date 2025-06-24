@@ -1,10 +1,6 @@
 package com.fu.swp391.schoolhealthmanagementsystem.controller;
 
-import com.fu.swp391.schoolhealthmanagementsystem.dto.supply.MedicalSupplyRequestDto;
-import com.fu.swp391.schoolhealthmanagementsystem.dto.supply.MedicalSupplyResponseDto;
-import com.fu.swp391.schoolhealthmanagementsystem.dto.supply.MedicalSupplyStockAdjustmentDto;
-import com.fu.swp391.schoolhealthmanagementsystem.dto.supply.MedicalSupplyUpdateDto;
-import com.fu.swp391.schoolhealthmanagementsystem.dto.supply.SupplyTransactionResponseDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.supply.*;
 import com.fu.swp391.schoolhealthmanagementsystem.service.MedicalSupplyService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -158,11 +154,29 @@ public class MedicalSupplyController {
             @ApiResponse(responseCode = "403", description = "Không có quyền truy cập"),
             @ApiResponse(responseCode = "404", description = "Không tìm thấy vật tư y tế")
     })
-    @DeleteMapping("/{supplyId}")
+    @PostMapping("/{supplyId}/dispose")
     @PreAuthorize("hasRole('StaffManager')") // Chỉ StaffManager mới có quyền xóa
-    public ResponseEntity<Void> deleteMedicalSupply(
+    public ResponseEntity<Void> disposeMedicalSupply(
             @Parameter(description = "ID của vật tư y tế cần xóa mềm") @PathVariable Long supplyId) {
-        medicalSupplyService.deleteMedicalSupply(supplyId);
+        medicalSupplyService.disposeMedicalSupply(supplyId);
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Xóa cứng một vật tư y tế",
+            description = "Xóa hoàn toàn một vật tư y tế khỏi hệ thống. Chỉ có thể thực hiện nếu vật tư không có giao dịch liên quan đến sự cố y tế. " +
+                    "Người thực hiện phải là người tạo vật tư hoặc có quyền StaffManager/Admin.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Vật tư y tế đã được xóa cứng thành công"),
+            @ApiResponse(responseCode = "400", description = "Không thể xóa cứng vật tư này vì nó có giao dịch liên quan đến sự cố y tế"),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực"),
+            @ApiResponse(responseCode = "403", description = "Không có quyền xóa cứng vật tư này"),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy vật tư y tế")
+    })
+    @DeleteMapping("/{supplyId}/delete")
+    @PreAuthorize("hasAnyRole('MedicalStaff','StaffManager', 'SchoolAdmin')")
+    public ResponseEntity<String> deleteMedicalSupply(
+            @Parameter(description = "ID của vật tư y tế cần xóa cứng") @PathVariable Long supplyId) {
+        medicalSupplyService.deleteMedicalSupply(supplyId);
+        return ResponseEntity.ok().body("Vật tư y tế đã được xóa cứng thành công");
     }
 }

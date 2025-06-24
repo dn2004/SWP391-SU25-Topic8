@@ -14,7 +14,7 @@ public record CreateStudentRequestDto(
 
         @NotBlank(message = "Mã học sinh không được để trống")
         @Size(max = 50, message = "Mã học sinh tối đa 50 ký tự")
-        @Schema(description = "Mã học sinh (ví dụ: do trường cấp, phải là duy nhất)", example = "HS00123")
+        @Schema(description = "Mã học sinh (ví dụ: do trường cấp, phải là duy nhất)", example = "01")
         String studentCode,
 
         @NotBlank(message = "Họ và tên không được để trống")
@@ -28,16 +28,11 @@ public record CreateStudentRequestDto(
         LocalDate dateOfBirth,
 
         @NotNull(message = "Giới tính không được để trống")
-        @Schema(description = "Giới tính dùng enum (MALE, FEMALE)", example = "MALE")
+        @Schema(description = "Giá trị giới tính bao gồm: Nam/Nữ", example = "Nam")
         Gender gender,
 
         @NotBlank(message = "Tên lớp không được để trống")
         @Size(max = 50, message = "Tên lớp tối đa 50 ký tự")
         @Schema(description = "Lớp học của học sinh (ví dụ: 1A, 2B)", example = "3C")
-        String className,
-
-        @Size(max = 255, message = "Địa chỉ tối đa 255 ký tự")
-        @Schema(description = "Địa chỉ của học sinh (tùy chọn)", example = "123 Đường ABC, Phường XYZ, Quận UVW, Thành phố H")
-        String address
-
+        String className
 ) {}

@@ -25,7 +25,6 @@ public class StudentMedicationTransaction {
     @JoinColumn(name = "StudentMedicationID", nullable = false)
     private StudentMedication studentMedication;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "TransactionType", nullable = false)
     private StudentMedicationTransactionType transactionType;
 

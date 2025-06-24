@@ -35,7 +35,7 @@ public enum ScheduledMedicationTaskStatus {
             throw new IllegalArgumentException("Display name không được để trống");
         }
         for (ScheduledMedicationTaskStatus status : ScheduledMedicationTaskStatus.values()) {
-            if (status.displayName.equalsIgnoreCase(displayName)) {
+            if (status.displayName.equalsIgnoreCase(displayName) || status.name().equalsIgnoreCase(displayName)) {
                 return status;
             }
         }

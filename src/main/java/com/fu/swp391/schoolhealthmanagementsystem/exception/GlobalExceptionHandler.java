@@ -203,4 +203,14 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ErrorResponseDto> handleIllegalStateException(IllegalStateException ex, HttpServletRequest request) {
+        log.error("Trạng thái không hợp lệ (IllegalStateException): {} tại {}", ex.getMessage(), request.getRequestURI());
+        ErrorResponseDto errorResponse = ErrorResponseDto.of(
+                HttpStatus.BAD_REQUEST,
+                "Trạng thái không hợp lệ: " + ex.getMessage(),
+                request.getRequestURI()
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 }

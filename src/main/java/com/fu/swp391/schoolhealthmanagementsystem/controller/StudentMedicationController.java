@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +31,7 @@ import java.util.Optional;
 @RequestMapping("/api/student-medications")
 @RequiredArgsConstructor
 @Tag(name = "Quản lý Thuốc của Học Sinh", description = "Các API liên quan đến quản lý thuốc của học sinh")
+@Slf4j
 public class StudentMedicationController {
 
     private final StudentMedicationService studentMedicationService;
@@ -138,7 +140,7 @@ public class StudentMedicationController {
 
     @Operation(summary = "Hủy bỏ thuốc đã nhập",
             description = "Cho phép nhân viên y tế hủy bỏ thuốc đã nhập (chỉ người tạo mới được hủy và thuốc chưa được lên lịch). " +
-                    "Trạng thái sẽ được đổi thành RETURNED_TO_PARENT và tạo transaction CANCELLATION_REVERSAL.")
+                    "Trạng thái sẽ được đổi thành CANCELED và tạo transaction CANCELLATION_REVERSAL.")
     @ApiResponse(responseCode = "200", description = "Hủy thuốc thành công",
             content = @Content(mediaType = "application/json", schema = @Schema(implementation = StudentMedicationResponseDto.class)))
     @ApiResponse(responseCode = "400", description = "Không thể hủy (thuốc đã có lịch hoặc không ở trạng thái cho phép)")
@@ -177,17 +179,21 @@ public class StudentMedicationController {
     @GetMapping
     @PreAuthorize("hasAnyRole('MedicalStaff', 'StaffManager', 'SchoolAdmin')")
     public ResponseEntity<Page<StudentMedicationResponseDto>> getAllStudentMedications(
-            @Parameter(description = "Lọc theo trạng thái thuốc") @RequestParam Optional<MedicationStatus> status,
+            @Parameter(description = "Lọc theo trạng thái thuốc")
+            @RequestParam(required = false) Optional<MedicationStatus> status,
+
             @Parameter(description = "Lọc từ ngày (YYYY-MM-DDTHH:mm:ss)")
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Optional<LocalDate> startDate,
+
             @Parameter(description = "Lọc đến ngày (YYYY-MM-DDTHH:mm:ss)")
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Optional<LocalDate> endDate,
+
             @ParameterObject
             @PageableDefault(size = 10, sort = "dateReceived", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        log.info("status: {}, startDate: {}, endDate: {}", status, startDate, endDate);
 
         Page<StudentMedicationResponseDto> response = studentMedicationService.getAllStudentMedications(status, startDate, endDate, pageable);
         return ResponseEntity.ok(response);
     }
-
-
 }

@@ -5,12 +5,12 @@ import com.fu.swp391.schoolhealthmanagementsystem.dto.supply.MedicalSupplyRespon
 import com.fu.swp391.schoolhealthmanagementsystem.dto.supply.MedicalSupplyStockAdjustmentDto;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.supply.MedicalSupplyUpdateDto;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.supply.SupplyTransactionResponseDto;
-import com.fu.swp391.schoolhealthmanagementsystem.entity.HealthIncident; // Thêm import nếu chưa có
+import com.fu.swp391.schoolhealthmanagementsystem.entity.HealthIncident;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.MedicalSupply;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.SupplyTransaction;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.User;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.MedicalSupplyStatus;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.SupplyTransactionType;
-// import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.UserRole; // Không cần nữa nếu không check role ở đây
 import com.fu.swp391.schoolhealthmanagementsystem.exception.ResourceNotFoundException;
 import com.fu.swp391.schoolhealthmanagementsystem.mapper.MedicalSupplyMapper;
 import com.fu.swp391.schoolhealthmanagementsystem.mapper.SupplyTransactionMapper;
@@ -20,11 +20,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-// import org.springframework.security.access.AccessDeniedException; // Không cần nữa nếu không check role ở đây
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -35,12 +32,11 @@ public class MedicalSupplyService {
     private final SupplyTransactionRepository supplyTransactionRepository;
     private final MedicalSupplyMapper medicalSupplyMapper;
     private final SupplyTransactionMapper supplyTransactionMapper;
-    private final AuthorizationService authorizationService; // Vẫn cần để lấy currentUser
+    private final AuthorizationService authorizationService;
 
     @Transactional
     public MedicalSupplyResponseDto createMedicalSupply(MedicalSupplyRequestDto requestDto) {
         User currentUser = authorizationService.getCurrentUserAndValidate();
-        // @PreAuthorize("hasAnyRole('NURSE', 'NURSE_MANAGER')") sẽ ở Controller
         log.info("Người dùng {} đang tạo vật tư y tế mới: {}", currentUser.getEmail(), requestDto.name());
 
         MedicalSupply medicalSupply = medicalSupplyMapper.requestDtoToEntity(requestDto);
@@ -79,11 +75,9 @@ public class MedicalSupplyService {
 
     @Transactional(readOnly = true)
     public MedicalSupplyResponseDto getMedicalSupplyById(Long supplyId) {
-        User currentUser = authorizationService.getCurrentUserAndValidate(); // Vẫn cần cho logging hoặc nếu có logic khác
-        // @PreAuthorize("hasAnyRole('ADMIN', 'NURSE_MANAGER', 'NURSE')") sẽ ở Controller
-        // Hoặc Parent có thể xem gián tiếp qua HealthIncident, không phải qua API này trực tiếp
-
+        User currentUser = authorizationService.getCurrentUserAndValidate();
         log.info("Người dùng {} đang lấy thông tin vật tư y tế ID: {}", currentUser.getEmail(), supplyId);
+
         MedicalSupply medicalSupply = medicalSupplyRepository.findById(supplyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy vật tư y tế với ID: " + supplyId));
 
@@ -93,30 +87,36 @@ public class MedicalSupplyService {
     @Transactional(readOnly = true)
     public Page<MedicalSupplyResponseDto> getAllMedicalSupplies(Pageable pageable, Boolean isActiveFilter) {
         User currentUser = authorizationService.getCurrentUserAndValidate();
-        // @PreAuthorize("hasAnyRole('ADMIN', 'NURSE_MANAGER', 'NURSE')") sẽ ở Controller
-
         log.info("Người dùng {} đang lấy danh sách vật tư y tế. isActiveFilter: {}", currentUser.getEmail(), isActiveFilter);
+
         Page<MedicalSupply> medicalSuppliesPage;
         if (isActiveFilter != null) {
-            medicalSuppliesPage = medicalSupplyRepository.findAllByActive(isActiveFilter, pageable);
+            if (isActiveFilter) {
+                // Trả về tất cả các vật tư y tế không phải ARCHIVED (tương đương active=true)
+                medicalSuppliesPage = medicalSupplyRepository.findAllByStatusNot(MedicalSupplyStatus.DISPOSE, pageable);
+            } else {
+                // Chỉ trả về các vật tư y tế có trạng thái ARCHIVED (tương đương active=false)
+                medicalSuppliesPage = medicalSupplyRepository.findAllByStatus(MedicalSupplyStatus.DISPOSE, pageable);
+            }
         } else {
+            // Trả về tất cả vật tư y tế không phân biệt trạng thái
             medicalSuppliesPage = medicalSupplyRepository.findAll(pageable);
         }
+
         return medicalSuppliesPage.map(medicalSupplyMapper::entityToResponseDto);
     }
 
     @Transactional
     public MedicalSupplyResponseDto updateMedicalSupply(Long supplyId, MedicalSupplyUpdateDto updateDto) {
         User currentUser = authorizationService.getCurrentUserAndValidate();
-        // @PreAuthorize("hasAnyRole('NURSE', 'NURSE_MANAGER')") sẽ ở Controller
-
         log.info("Người dùng {} đang cập nhật vật tư y tế ID: {}", currentUser.getEmail(), supplyId);
+
         MedicalSupply existingSupply = medicalSupplyRepository.findById(supplyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy vật tư y tế với ID: " + supplyId));
 
-        if (!existingSupply.isActive()) {
-            log.warn("Không thể cập nhật vật tư y tế ID: {} vì nó không hoạt động.", supplyId);
-            throw new IllegalStateException("Không thể cập nhật vật tư y tế không hoạt động.");
+        if (existingSupply.getStatus() == MedicalSupplyStatus.DISPOSE) {
+            log.warn("Không thể cập nhật vật tư y tế ID: {} vì nó đã được lưu trữ.", supplyId);
+            throw new IllegalStateException("Không thể cập nhật vật tư y tế đã được lưu trữ.");
         }
 
         medicalSupplyMapper.updateEntityFromUpdateDto(updateDto, existingSupply);
@@ -130,32 +130,42 @@ public class MedicalSupplyService {
     @Transactional
     public MedicalSupplyResponseDto adjustMedicalSupplyStock(Long supplyId, MedicalSupplyStockAdjustmentDto adjustmentDto) {
         User currentUser = authorizationService.getCurrentUserAndValidate();
-        // @PreAuthorize("hasAnyRole('NURSE', 'NURSE_MANAGER')") sẽ ở Controller
-
         log.info("Người dùng {} đang điều chỉnh tồn kho cho vật tư ID: {}. Chi tiết: {}",
                 currentUser.getEmail(), supplyId, adjustmentDto);
 
         MedicalSupply medicalSupply = medicalSupplyRepository.findById(supplyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy vật tư y tế với ID: " + supplyId));
 
-        if (!medicalSupply.isActive()) {
-            log.warn("Không thể điều chỉnh tồn kho cho vật tư ID: {} vì nó không hoạt động.", supplyId);
-            throw new IllegalStateException("Không thể điều chỉnh tồn kho cho vật tư y tế không hoạt động.");
+        if (medicalSupply.getStatus() == MedicalSupplyStatus.DISPOSE) {
+            log.warn("Không thể điều chỉnh tồn kho cho vật tư ID: {} vì nó đã được lưu trữ.", supplyId);
+            throw new IllegalStateException("Không thể điều chỉnh tồn kho cho vật tư y tế đã được lưu trữ.");
         }
 
         int quantityChange = adjustmentDto.quantity();
         SupplyTransactionType transactionType = adjustmentDto.transactionType();
         int oldStock = medicalSupply.getCurrentStock();
 
-        if (transactionType == SupplyTransactionType.ADJUSTMENT_OUT) { // Mở rộng cho cả EXPORT nếu có API riêng
+        if (transactionType == SupplyTransactionType.ADJUSTMENT_OUT) {
             if (oldStock < quantityChange) {
                 log.error("Không đủ tồn kho ({} < {}) cho vật tư ID {} để thực hiện giảm/xuất.",
                         oldStock, quantityChange, supplyId);
                 throw new IllegalStateException("Không đủ tồn kho để thực hiện. Tồn kho hiện tại: " + oldStock);
             }
             medicalSupply.setCurrentStock(oldStock - quantityChange);
+
+            // Nếu stock giảm xuống 0, cập nhật trạng thái thành OUT_OF_STOCK
+            if (medicalSupply.getCurrentStock() == 0) {
+                medicalSupply.setStatus(MedicalSupplyStatus.OUT_OF_STOCK);
+                log.info("Vật tư ID: {} đã hết hàng, cập nhật trạng thái thành OUT_OF_STOCK", supplyId);
+            }
         } else if (transactionType == SupplyTransactionType.RECEIVED) {
             medicalSupply.setCurrentStock(oldStock + quantityChange);
+
+            // Nếu vật tư trước đó hết hàng và giờ có stock, cập nhật trạng thái thành AVAILABLE
+            if (oldStock == 0 && medicalSupply.getStatus() == MedicalSupplyStatus.OUT_OF_STOCK) {
+                medicalSupply.setStatus(MedicalSupplyStatus.AVAILABLE);
+                log.info("Vật tư ID: {} đã có hàng, cập nhật trạng thái thành AVAILABLE", supplyId);
+            }
         } else {
             log.error("Loại giao dịch không hợp lệ ({}) cho việc điều chỉnh tồn kho vật tư ID {}.", transactionType, supplyId);
             throw new IllegalArgumentException("Loại giao dịch không hợp lệ cho việc điều chỉnh tồn kho.");
@@ -178,22 +188,30 @@ public class MedicalSupplyService {
         return medicalSupplyMapper.entityToResponseDto(updatedSupply);
     }
 
-    // Phương thức này được gọi từ HealthIncidentService khi xuất kho cho sự cố
-    // Nó không cần @PreAuthorize ở đây vì HealthIncidentService sẽ có phân quyền riêng
     @Transactional
     public void recordSupplyUsageForIncident(MedicalSupply medicalSupply, int quantityUsed, HealthIncident healthIncident, User performedBy) {
         log.info("Ghi nhận sử dụng {} đơn vị vật tư '{}' (ID: {}) cho sự cố ID: {}",
                 quantityUsed, medicalSupply.getName(), medicalSupply.getSupplyId(), healthIncident.getIncidentId());
 
-        if (!medicalSupply.isActive()) {
-            throw new IllegalStateException("Vật tư y tế '" + medicalSupply.getName() + "' không hoạt động.");
+        if (medicalSupply.getStatus() == MedicalSupplyStatus.DISPOSE ||
+            medicalSupply.getStatus() == MedicalSupplyStatus.EXPIRED) {
+            throw new IllegalStateException("Vật tư y tế '" + medicalSupply.getName() +
+                "' không khả dụng (trạng thái: " + medicalSupply.getStatus() + ").");
         }
+
         if (medicalSupply.getCurrentStock() < quantityUsed) {
-            throw new IllegalStateException("Không đủ tồn kho cho vật tư '" + medicalSupply.getName() + "'. Yêu cầu: " + quantityUsed + ", Hiện có: " + medicalSupply.getCurrentStock());
+            throw new IllegalStateException("Không đủ tồn kho cho vật tư '" + medicalSupply.getName() +
+                "'. Yêu cầu: " + quantityUsed + ", Hiện có: " + medicalSupply.getCurrentStock());
         }
 
         int oldStock = medicalSupply.getCurrentStock();
         medicalSupply.setCurrentStock(oldStock - quantityUsed);
+
+        // Cập nhật trạng thái nếu hết hàng
+        if (medicalSupply.getCurrentStock() == 0) {
+            medicalSupply.setStatus(MedicalSupplyStatus.OUT_OF_STOCK);
+        }
+
         medicalSupply.setUpdatedByUser(performedBy);
         medicalSupplyRepository.save(medicalSupply);
 
@@ -205,34 +223,58 @@ public class MedicalSupplyService {
                 performedBy,
                 healthIncident // Liên kết với HealthIncident
         );
+
         log.info("Đã cập nhật tồn kho cho vật tư '{}' (ID: {}), tồn kho {} -> {}. Sử dụng cho sự cố ID: {}",
                 medicalSupply.getName(), medicalSupply.getSupplyId(), oldStock, medicalSupply.getCurrentStock(), healthIncident.getIncidentId());
     }
 
     @Transactional
-    public void deleteMedicalSupply(Long supplyId) { // Soft delete
+    public void disposeMedicalSupply(Long supplyId) { // Soft delete -> chuyển trạng thái thành ARCHIVED
         User currentUser = authorizationService.getCurrentUserAndValidate();
-        // @PreAuthorize("hasRole('NURSE_MANAGER')") sẽ ở Controller
+        log.info("Người dùng {} đang yêu cầu lưu trữ vật tư y tế ID: {}", currentUser.getEmail(), supplyId);
 
-        log.info("Người dùng {} đang yêu cầu xóa (soft delete) vật tư y tế ID: {}", currentUser.getEmail(), supplyId);
         MedicalSupply medicalSupply = medicalSupplyRepository.findById(supplyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy vật tư y tế với ID: " + supplyId));
 
-        if (!medicalSupply.isActive()) {
-            log.warn("Vật tư y tế ID: {} đã ở trạng thái không hoạt động.", supplyId);
-            throw new IllegalStateException("Vật tư y tế này đã ở trạng thái không hoạt động.");
+        if (medicalSupply.getStatus() == MedicalSupplyStatus.DISPOSE) {
+            log.warn("Vật tư y tế ID: {} đã ở trạng thái lưu trữ.", supplyId);
+            throw new IllegalStateException("Vật tư y tế này đã ở trạng thái lưu trữ.");
         }
 
-        medicalSupply.setActive(false);
+        medicalSupply.setStatus(MedicalSupplyStatus.DISPOSE);
         medicalSupply.setUpdatedByUser(currentUser);
         medicalSupplyRepository.save(medicalSupply);
-        log.info("Đã xóa mềm (chuyển sang inactive) vật tư y tế ID: {}", supplyId);
+        log.info("Đã lưu trữ vật tư y tế ID: {}", supplyId);
+    }
+
+    @Transactional
+    public void deleteMedicalSupply(Long supplyId) { //xóa cứng
+        User currentUser = authorizationService.getCurrentUserAndValidate();
+        log.info("Người dùng {} đang yêu cầu xóa cứng vật tư y tế ID: {}", currentUser.getEmail(), supplyId);
+
+        MedicalSupply medicalSupply = medicalSupplyRepository.findById(supplyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy vật tư y tế với ID: " + supplyId));
+
+
+
+        // Kiểm tra xem có giao dịch nào liên quan đến sự cố y tế không
+        boolean hasIncidentRelation = supplyTransactionRepository.existsByMedicalSupplyAndHealthIncidentNotNull(medicalSupply);
+        if (hasIncidentRelation) {
+            log.warn("Không thể xóa cứng vật tư y tế ID: {} vì nó có giao dịch liên quan đến sự cố y tế.", supplyId);
+            throw new IllegalStateException("Không thể xóa cứng vật tư y tế này vì có giao dịch liên quan.");
+        }
+
+        String deletedName = medicalSupply.getName();
+
+        // Thực hiện xóa cứng
+        medicalSupplyRepository.delete(medicalSupply);
+        log.info("Đã xóa vật tư y tế ID: {}, tên: {}", supplyId, deletedName);
     }
 
     // --- Helper Method for Transactions ---
 
-    private SupplyTransaction createAndSaveTransaction(MedicalSupply medicalSupply, int quantity,
-                                                       SupplyTransactionType type, String note, User performedBy, HealthIncident healthIncident) {
+    private void createAndSaveTransaction(MedicalSupply medicalSupply, int quantity,
+                                          SupplyTransactionType type, String note, User performedBy, HealthIncident healthIncident) {
         SupplyTransaction transaction = SupplyTransaction.builder()
                 .medicalSupply(medicalSupply)
                 .quantity(quantity)
@@ -241,6 +283,7 @@ public class MedicalSupplyService {
                 .performedByUser(performedBy)
                 .healthIncident(healthIncident)
                 .build();
-        return supplyTransactionRepository.save(transaction);
+        supplyTransactionRepository.save(transaction);
     }
 }
+

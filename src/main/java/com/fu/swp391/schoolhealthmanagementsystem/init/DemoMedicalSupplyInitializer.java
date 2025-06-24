@@ -3,6 +3,7 @@ package com.fu.swp391.schoolhealthmanagementsystem.init;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.MedicalSupply;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.SupplyTransaction;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.User;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.MedicalSupplyStatus;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.SupplyTransactionType;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.MedicalSupplyRepository;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.SupplyTransactionRepository;
@@ -53,7 +54,7 @@ public class DemoMedicalSupplyInitializer implements ApplicationRunner {
                     .unit("Gói")
                     .currentStock(0) // Sẽ được cập nhật bởi transaction ban đầu
                     .description("Băng gạc y tế tiệt trùng, kích thước 10x10cm, dùng một lần.")
-                    .active(true)
+                    .status(MedicalSupplyStatus.AVAILABLE)
                     .createdByUser(creator)
                     .updatedByUser(creator)
                     // createdAt và lastUpdatedAt sẽ được tự động gán
@@ -74,7 +75,7 @@ public class DemoMedicalSupplyInitializer implements ApplicationRunner {
                     .unit("Viên")
                     .currentStock(0)
                     .description("Thuốc hạ sốt, giảm đau Paracetamol 500mg.")
-                    .active(true)
+                    .status(MedicalSupplyStatus.AVAILABLE)
                     .createdByUser(creator)
                     .updatedByUser(creator)
                     .build();
@@ -94,7 +95,7 @@ public class DemoMedicalSupplyInitializer implements ApplicationRunner {
                     .unit("Chai 500ml")
                     .currentStock(0)
                     .description("Nước muối sinh lý dùng để rửa vết thương, súc miệng.")
-                    .active(true)
+                    .status(MedicalSupplyStatus.AVAILABLE)
                     .createdByUser(creator)
                     .updatedByUser(creator)
                     .build();
