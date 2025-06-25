@@ -7,6 +7,7 @@ import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -15,21 +16,11 @@ import java.util.Collection;
 import java.util.Optional;
 
 @Repository
-public interface HealthIncidentRepository extends JpaRepository<HealthIncident, Long> {
+public interface HealthIncidentRepository extends JpaRepository<HealthIncident, Long>, JpaSpecificationExecutor<HealthIncident> {
 
     @Query("SELECT hi FROM HealthIncident hi WHERE hi.incidentId = :incidentId")
     Optional<HealthIncident> findIncidentEvenIfDeleted(@Param("incidentId") Long incidentId);
 
-    Page<HealthIncident> findByStudentAndDeletedFalse(Student student, Pageable pageable);
-
-    Page<HealthIncident> findByIncidentTypeAndIncidentDateTimeBetweenAndDeletedFalse(
-            HealthIncidentType incidentType, LocalDateTime start, LocalDateTime end, Pageable pageable);
-
-    Page<HealthIncident> findByIncidentTypeAndDeletedFalse(HealthIncidentType healthIncidentType, Pageable pageable);
-
-    Page<HealthIncident> findByIncidentDateTimeBetweenAndDeletedFalse(LocalDateTime startOfDay, LocalDateTime endOfDay, Pageable pageable);
-
-    Page<HealthIncident> findAllByDeletedFalse(Pageable pageable);
 
     Page<HealthIncident> findByStudent(Student student, Pageable pageable);
 

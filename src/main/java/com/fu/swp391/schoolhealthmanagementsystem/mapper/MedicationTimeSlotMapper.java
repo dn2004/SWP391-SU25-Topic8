@@ -2,13 +2,8 @@ package com.fu.swp391.schoolhealthmanagementsystem.mapper;
 
 import com.fu.swp391.schoolhealthmanagementsystem.dto.studentmedication.MedicationTimeSlotDto;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.MedicationTimeSlot;
-import com.fu.swp391.schoolhealthmanagementsystem.entity.StudentMedication; // Cần thiết cho context
-import com.fu.swp391.schoolhealthmanagementsystem.util.SchoolSessionUtil; // Import
-import org.mapstruct.Context;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.AfterMapping; // Import
-import org.mapstruct.MappingTarget; // Import
 
 import java.util.List;
 

@@ -11,7 +11,7 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addFormatters(FormatterRegistry registry) {
-        // Các converter sẽ tự động được Spring đăng ký do đã được đánh dấu @Component
+
         log.info("Đã cấu hình WebConfig với các Enum converters");
     }
 }

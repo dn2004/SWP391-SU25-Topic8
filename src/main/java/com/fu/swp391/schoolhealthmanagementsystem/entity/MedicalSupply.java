@@ -44,7 +44,6 @@ public class MedicalSupply {
     private LocalDate expiredDate;
 
     @Column(name = "Status", nullable = false, length = 20)
-    @Enumerated(EnumType.STRING)
     @Builder.Default
     private MedicalSupplyStatus status = MedicalSupplyStatus.AVAILABLE;
 

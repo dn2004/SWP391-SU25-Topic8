@@ -21,5 +21,4 @@ public record ChangePasswordRequestDto(
         @NotBlank(message = "Xác nhận mật khẩu mới không được để trống")
         @Schema(description = "Xác nhận lại mật khẩu mới", example = "newStrongPassword456")
         String confirmNewPassword
-
 ) {}

@@ -12,11 +12,6 @@ import java.time.LocalDate;
 @Schema(description = "Yêu cầu tạo mới thông tin học sinh")
 public record CreateStudentRequestDto(
 
-        @NotBlank(message = "Mã học sinh không được để trống")
-        @Size(max = 50, message = "Mã học sinh tối đa 50 ký tự")
-        @Schema(description = "Mã học sinh (ví dụ: do trường cấp, phải là duy nhất)", example = "01")
-        String studentCode,
-
         @NotBlank(message = "Họ và tên không được để trống")
         @Size(max = 100, message = "Họ và tên tối đa 100 ký tự")
         @Schema(description = "Họ và tên đầy đủ của học sinh", example = "Nguyễn Thị C")

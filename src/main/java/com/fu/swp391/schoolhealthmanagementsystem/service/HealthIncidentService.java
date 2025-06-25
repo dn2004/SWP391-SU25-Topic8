@@ -15,10 +15,12 @@ import com.fu.swp391.schoolhealthmanagementsystem.repository.HealthIncidentRepos
 import com.fu.swp391.schoolhealthmanagementsystem.repository.MedicalSupplyRepository;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.StudentRepository;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.SupplyTransactionRepository;
+import com.fu.swp391.schoolhealthmanagementsystem.repository.specification.HealthIncidentSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,6 +43,7 @@ public class HealthIncidentService {
     private final HealthIncidentMapper healthIncidentMapper;
     private final AuthorizationService authorizationService;
     private final SupplyTransactionRepository supplyTransactionRepository;
+    private final HealthIncidentSpecification healthIncidentSpecification;
 
 
     // --- CREATE ---
@@ -65,7 +68,7 @@ public class HealthIncidentService {
 
                 if (supply.getStatus() == MedicalSupplyStatus.DISPOSE || supply.getStatus() == MedicalSupplyStatus.EXPIRED) {
                     throw new IllegalStateException("Medical supply '" + supply.getName() + "' (ID: " + supply.getSupplyId() +
-                    ") has status " + supply.getStatus() + " and cannot be used.");
+                            ") has status " + supply.getStatus() + " and cannot be used.");
                 }
 
                 if (supply.getCurrentStock() < usageDto.quantityUsed()) {
@@ -85,7 +88,7 @@ public class HealthIncidentService {
 
                 if (supply.getStatus() == MedicalSupplyStatus.DISPOSE || supply.getStatus() == MedicalSupplyStatus.EXPIRED) {
                     throw new IllegalStateException("Medical supply '" + supply.getName() + "' (ID: " + supply.getSupplyId() +
-                    ") has status " + supply.getStatus() + " and cannot be used.");
+                            ") has status " + supply.getStatus() + " and cannot be used.");
                 }
 
                 if (supply.getCurrentStock() < usageDto.quantityUsed()) {
@@ -155,7 +158,12 @@ public class HealthIncidentService {
     }
 
     @Transactional(readOnly = true)
-    public Page<HealthIncidentResponseDto> getAllHealthIncidentsByStudentId(Long studentId, Pageable pageable) {
+    public Page<HealthIncidentResponseDto> getAllHealthIncidentsByStudentId(Long studentId,
+                                                                            Pageable pageable,
+                                                                            HealthIncidentType incidentType,
+                                                                            String location,
+                                                                            LocalDate startDate,
+                                                                            LocalDate endDate) {
         User currentUser = authorizationService.getCurrentUserAndValidate();
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with ID: " + studentId));
@@ -171,43 +179,87 @@ public class HealthIncidentService {
             throw new AccessDeniedException("You do not have permission to view health incidents for this student.");
         }
 
-        log.info("User {} retrieving health incidents for student ID: {}", currentUser.getEmail(), studentId);
-        Page<HealthIncident> incidentsPage = healthIncidentRepository.findByStudentAndDeletedFalse(student, pageable);
+        log.info("User {} retrieving health incidents for student ID: {} with filters - Type: {}, Location: {}, StartDate: {}, EndDate: {}",
+                currentUser.getEmail(), studentId, incidentType, location, startDate, endDate);
+
+        LocalDateTime startDateTime = startDate != null ? startDate.atStartOfDay() : null;
+        LocalDateTime endDateTime = endDate != null ? endDate.atTime(23, 59, 59, 999999999) : null;
+
+        Specification<HealthIncident> spec = Specification
+                .allOf(healthIncidentSpecification.forStudent(studentId))
+                .and(healthIncidentSpecification.isNotDeleted())
+                .and(healthIncidentSpecification.hasType(incidentType))
+                .and(healthIncidentSpecification.hasLocationContaining(location))
+                .and(healthIncidentSpecification.happenedOnOrAfter(startDateTime))
+                .and(healthIncidentSpecification.happenedOnOrBefore(endDateTime));
+        Page<HealthIncident> incidentsPage = healthIncidentRepository.findAll(spec, pageable);
         return incidentsPage.map(healthIncidentMapper::toDto);
     }
 
     @Transactional(readOnly = true)
     public Page<HealthIncidentResponseDto> getAllHealthIncidents(Pageable pageable,
-                                                                 Optional<HealthIncidentType> incidentTypeFilter,
-                                                                 Optional<LocalDate> dateFilter) {
+                                                                 HealthIncidentType incidentType,
+                                                                 LocalDate startDate,
+                                                                 LocalDate endDate,
+                                                                 String studentName,
+                                                                 String recordedByName,
+                                                                 String location,
+                                                                 String description) {
         User currentUser = authorizationService.getCurrentUserAndValidate();
         // Authorization for these roles will be handled by @PreAuthorize in controller
         // e.g., @PreAuthorize("hasAnyRole('MedicalStaff', 'StaffManager', 'SchoolAdmin')")
 
-        log.info("User {} retrieving all health incidents with filters - Type: {}, Date: {}",
-                currentUser.getEmail(), incidentTypeFilter, dateFilter);
+        log.info("User {} retrieving all health incidents with filters - Type: {}, StartDate: {}, EndDate: {}, StudentName: {}, RecordedByName: {}, Location: {}, Description: {}",
+                currentUser.getEmail(), incidentType, startDate, endDate, studentName, recordedByName, location, description);
 
-        // Simple filtering example, can be expanded with Specifications or QueryDSL
-        if (incidentTypeFilter.isPresent() && dateFilter.isPresent()) {
-            LocalDateTime startOfDay = dateFilter.get().atStartOfDay();
-            LocalDateTime endOfDay = dateFilter.get().atTime(23, 59, 59, 999999999);
-            return healthIncidentRepository.findByIncidentTypeAndIncidentDateTimeBetweenAndDeletedFalse(
-                            incidentTypeFilter.get(), startOfDay, endOfDay, pageable)
-                    .map(healthIncidentMapper::toDto);
-        } else if (incidentTypeFilter.isPresent()) {
-            return healthIncidentRepository
-                    .findByIncidentTypeAndDeletedFalse(incidentTypeFilter.get(), pageable)
-                    .map(healthIncidentMapper::toDto);
-        } else if (dateFilter.isPresent()) {
-            LocalDateTime startOfDay = dateFilter.get().atStartOfDay();
-            LocalDateTime endOfDay = dateFilter.get().atTime(23, 59, 59, 999999999);
-            return healthIncidentRepository
-                    .findByIncidentDateTimeBetweenAndDeletedFalse(startOfDay, endOfDay, pageable)
-                    .map(healthIncidentMapper::toDto);
-        } else {
-            return healthIncidentRepository.findAllByDeletedFalse(pageable)
-                    .map(healthIncidentMapper::toDto);
-        }
+        LocalDateTime startDateTime = startDate != null ? startDate.atStartOfDay() : null;
+        LocalDateTime endDateTime = endDate != null ? endDate.atTime(23, 59, 59, 999999999) : null;
+
+        Specification<HealthIncident> spec = Specification
+                .allOf(healthIncidentSpecification.isNotDeleted())
+                .and(healthIncidentSpecification.forStudentName(studentName))
+                .and(healthIncidentSpecification.recordedByName(recordedByName))
+                .and(healthIncidentSpecification.hasType(incidentType))
+                .and(healthIncidentSpecification.happenedOnOrAfter(startDateTime))
+                .and(healthIncidentSpecification.happenedOnOrBefore(endDateTime))
+                .and(healthIncidentSpecification.hasLocationContaining(location))
+                .and(healthIncidentSpecification.descriptionContaining(description));
+
+
+        return healthIncidentRepository.findAll(spec, pageable)
+                .map(healthIncidentMapper::toDto);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<HealthIncidentResponseDto> getMyHealthIncidents(Pageable pageable,
+                                                              HealthIncidentType incidentType,
+                                                              LocalDate startDate,
+                                                              LocalDate endDate,
+                                                              String studentName,
+                                                              String location,
+                                                              String description) {
+        User currentUser = authorizationService.getCurrentUserAndValidate();
+        // @PreAuthorize("hasRole('MedicalStaff')") in controller will handle authorization
+
+        log.info("User {} retrieving their own health incidents with filters - Type: {}, StartDate: {}, EndDate: {}, StudentName: {}, Location: {}, Description: {}",
+                currentUser.getEmail(), incidentType, startDate, endDate, studentName, location, description);
+
+        LocalDateTime startDateTime = startDate != null ? startDate.atStartOfDay() : null;
+        LocalDateTime endDateTime = endDate != null ? endDate.atTime(23, 59, 59, 999999999) : null;
+
+        Specification<HealthIncident> spec = Specification
+                .allOf(healthIncidentSpecification.isNotDeleted())
+                .and(healthIncidentSpecification.recordedBy(currentUser.getUserId())) // Filter by current user's ID
+                .and(healthIncidentSpecification.forStudentName(studentName))
+                .and(healthIncidentSpecification.hasType(incidentType))
+                .and(healthIncidentSpecification.happenedOnOrAfter(startDateTime))
+                .and(healthIncidentSpecification.happenedOnOrBefore(endDateTime))
+                .and(healthIncidentSpecification.hasLocationContaining(location))
+                .and(healthIncidentSpecification.descriptionContaining(description));
+
+
+        return healthIncidentRepository.findAll(spec, pageable)
+                .map(healthIncidentMapper::toDto);
     }
 
     // --- UPDATE ---

@@ -10,11 +10,13 @@ import com.fu.swp391.schoolhealthmanagementsystem.exception.FileStorageException
 import com.fu.swp391.schoolhealthmanagementsystem.exception.ResourceNotFoundException;
 import com.fu.swp391.schoolhealthmanagementsystem.mapper.ScheduledMedicationTaskMapper;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.*;
+import com.fu.swp391.schoolhealthmanagementsystem.repository.specification.ScheduledMedicationTaskSpecification;
 import com.fu.swp391.schoolhealthmanagementsystem.util.DateUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +41,7 @@ public class ScheduledMedicationTaskService {
     private final StudentMedicationTransactionRepository studentMedicationTransactionRepository;
     private final UserRepository userRepository;
     private final ParentStudentLinkRepository parentStudentLinkRepository;
+    private final ScheduledMedicationTaskSpecification scheduledMedicationTaskSpecification;
     // ParentStudentLinkRepository sẽ được gọi qua AuthorizationService
 
     /**
@@ -256,9 +259,9 @@ public class ScheduledMedicationTaskService {
     @Transactional(readOnly = true)
     public Page<ScheduledMedicationTaskResponseDto> getHandledTasksByStaff(
             Long staffId,
-            Optional<LocalDateTime> startDateOpt,
-            Optional<LocalDateTime> endDateOpt,
-            Optional<ScheduledMedicationTaskStatus> statusOpt,
+            LocalDateTime startDate,
+            LocalDateTime endDate,
+            ScheduledMedicationTaskStatus status,
             Pageable pageable) {
 
         User currentUser = authorizationService.getCurrentUserAndValidate();
@@ -282,24 +285,26 @@ public class ScheduledMedicationTaskService {
         }
         // StaffManager và SchoolAdmin được phép xem của bất kỳ staff nào.
 
-        LocalDateTime startDate = startDateOpt.orElse(null);
-        LocalDateTime endDate = endDateOpt.orElse(null);
-        ScheduledMedicationTaskStatus status = statusOpt.orElse(null);
-
         log.info("User {} is requesting handled tasks by staff {} (ID: {}) for period: {} to {}, status filter: {}",
                 currentUser.getEmail(), targetStaff.getFullName(), staffId,
                 startDate != null ? startDate : "N/A",
                 endDate != null ? endDate : "N/A",
                 status != null ? status.getDisplayName() : "All statuses");
 
-        Page<ScheduledMedicationTask> tasksPage = taskRepository.findDynamicHandledTasksForStaff(
-                targetStaff, status, startDate, endDate, pageable);
+        // Sử dụng Specification để tạo query động
+        Specification<ScheduledMedicationTask> spec = Specification.allOf(
+                scheduledMedicationTaskSpecification.administeredByStaff(staffId)
+                        .and(scheduledMedicationTaskSpecification.isHandled()).and(scheduledMedicationTaskSpecification.hasStatus(status)).and(scheduledMedicationTaskSpecification.administeredOnOrAfter(startDate)).and(scheduledMedicationTaskSpecification.administeredOnOrBefore(endDate)));
+
+        // Thực hiện truy vấn với specification
+        Page<ScheduledMedicationTask> tasksPage = taskRepository.findAll(spec, pageable);
 
         log.info("Found {} handled tasks by staff {} (ID: {}), with applied filters",
-                tasksPage.getNumberOfElements(), targetStaff.getFullName(), staffId);
+                tasksPage.getTotalElements(), targetStaff.getFullName(), staffId);
 
         return tasksPage.map(taskMapper::toDto);
     }
+
     private void tryToRescheduleTask(ScheduledMedicationTask skippedTask, StudentMedication medication, User responsibleStaff) {
         LocalDate nextWorkday = DateUtils.getNextWorkday(skippedTask.getScheduledDate());
 
@@ -340,12 +345,12 @@ public class ScheduledMedicationTaskService {
         log.info("User {} (Role: {}) is requesting scheduled tasks for date: {}",
                 currentUser.getEmail(), currentUser.getRole(), dateToQuery);
 
-        // Sử dụng phương thức query có fetch join để tối ưu
-        Page<ScheduledMedicationTask> tasksPage = taskRepository.findByScheduledDateAndStatusWithDetails(
-                dateToQuery,
-                ScheduledMedicationTaskStatus.SCHEDULED,
-                pageable
-        );
+        // Sử dụng Specification để tạo query
+        Specification<ScheduledMedicationTask> spec = Specification.allOf(
+                        scheduledMedicationTaskSpecification.hasScheduledDate(dateToQuery))
+                .and(scheduledMedicationTaskSpecification.hasStatus(ScheduledMedicationTaskStatus.SCHEDULED));
+
+        Page<ScheduledMedicationTask> tasksPage = taskRepository.findAll(spec, pageable);
 
         log.info("Found {} scheduled tasks for date {} on page {}",
                 tasksPage.getNumberOfElements(), dateToQuery, pageable.getPageNumber());
@@ -361,17 +366,14 @@ public class ScheduledMedicationTaskService {
     @Transactional(readOnly = true)
     public Page<ScheduledMedicationTaskResponseDto> getStudentTaskHistory(
             Long studentId,
-            Optional<ScheduledMedicationTaskStatus> statusOpt,
-            Optional<LocalDateTime> startDateOpt,
-            Optional<LocalDateTime> endDateOpt,
+            ScheduledMedicationTaskStatus status,
+            LocalDateTime startDate,
+            LocalDateTime endDate,
             Pageable pageable) {
 
         User currentUser = authorizationService.getCurrentUserAndValidate();
         log.info("User {} (Role: {}) is requesting medication history for student ID: {}, status filter: {}, date range: {} to {}",
-                currentUser.getEmail(), currentUser.getRole(), studentId,
-                statusOpt.orElse(null),
-                startDateOpt.orElse(null),
-                endDateOpt.orElse(null));
+                currentUser.getEmail(), currentUser.getRole(), studentId, status, startDate, endDate);
 
         // Kiểm tra học sinh có tồn tại không
         Student student = studentRepository.findById(studentId)
@@ -382,7 +384,6 @@ public class ScheduledMedicationTaskService {
         if (currentUserRole == UserRole.Parent) {
             // Phụ huynh chỉ được xem lịch sử của con mình
             authorizationService.authorizeParentAction(currentUser, student, "xem lịch sử uống thuốc của con");
-
         } else if (!(currentUserRole == UserRole.MedicalStaff ||
                 currentUserRole == UserRole.StaffManager ||
                 currentUserRole == UserRole.SchoolAdmin)) {
@@ -392,39 +393,27 @@ public class ScheduledMedicationTaskService {
             throw new AccessDeniedException("Bạn không có quyền xem lịch sử uống thuốc của học sinh.");
         }
 
-        // Truy vấn dữ liệu theo các điều kiện lọc
-        ScheduledMedicationTaskStatus status = statusOpt.orElse(null);
-        LocalDateTime startDate = startDateOpt.orElse(null);
-        LocalDateTime endDate = endDateOpt.orElse(null);
+        // Sử dụng Specification để tạo query động
+        Specification<ScheduledMedicationTask> spec = Specification.allOf(
+                scheduledMedicationTaskSpecification.forStudent(studentId)
+                .and(scheduledMedicationTaskSpecification.isHandled()).and(scheduledMedicationTaskSpecification.hasStatus(status)).and(scheduledMedicationTaskSpecification.administeredOnOrAfter(startDate)).and(scheduledMedicationTaskSpecification.administeredOnOrBefore(endDate)));
 
-        Page<ScheduledMedicationTask> historyPage;
-        if (status != null) {
-            historyPage = taskRepository.findStudentMedicationHistoryByStatus(
-                    studentId, status, startDate, endDate, pageable);
-            log.info("Retrieved {} medication task history records for student ID: {} with status: {}",
-                    historyPage.getTotalElements(), studentId, status);
-        } else {
-            historyPage = taskRepository.findStudentMedicationHistory(
-                    studentId, startDate, endDate, pageable);
-            log.info("Retrieved {} medication task history records for student ID: {}",
-                    historyPage.getTotalElements(), studentId);
-        }
+        // Thực hiện truy vấn với specification
+        Page<ScheduledMedicationTask> historyPage = taskRepository.findAll(spec, pageable);
+
+        log.info("Retrieved {} medication task history records for student ID: {} with applied filters",
+                historyPage.getTotalElements(), studentId);
 
         return historyPage.map(taskMapper::toDto);
     }
 
-    /**
-     * Lấy lịch sử tất cả các task đã xử lý trong toàn hệ thống.
-     * Có thể lọc theo học sinh, nhân viên xử lý, trạng thái và khoảng thời gian.
-     * Chỉ dành cho StaffManager và SchoolAdmin.
-     */
     @Transactional(readOnly = true)
     public Page<ScheduledMedicationTaskResponseDto> getAllHandledTasksHistory(
-            Optional<Long> studentIdOpt,
-            Optional<Long> staffIdOpt,
-            Optional<ScheduledMedicationTaskStatus> statusOpt,
-            Optional<LocalDateTime> startDateOpt,
-            Optional<LocalDateTime> endDateOpt,
+            Long studentId,
+            Long staffId,
+            ScheduledMedicationTaskStatus status,
+            LocalDateTime startDate,
+            LocalDateTime endDate,
             Pageable pageable) {
 
         User currentUser = authorizationService.getCurrentUserAndValidate();
@@ -436,12 +425,6 @@ public class ScheduledMedicationTaskService {
                     currentUser.getEmail(), currentUserRole);
             throw new AccessDeniedException("Chỉ Quản lý NVYT hoặc Admin trường mới có quyền xem lịch sử toàn bộ nhiệm vụ.");
         }
-
-        Long studentId = studentIdOpt.orElse(null);
-        Long staffId = staffIdOpt.orElse(null);
-        ScheduledMedicationTaskStatus status = statusOpt.orElse(null);
-        LocalDateTime startDate = startDateOpt.orElse(null);
-        LocalDateTime endDate = endDateOpt.orElse(null);
 
         // Tạo thông báo log chi tiết về các bộ lọc đang được áp dụng
         StringBuilder filterInfo = new StringBuilder("Filters applied: ");
@@ -460,8 +443,11 @@ public class ScheduledMedicationTaskService {
             effectiveEndDate = endDate.with(LocalTime.MAX);
         }
 
-        Page<ScheduledMedicationTask> tasksPage = taskRepository.findAllHandledTasksHistory(
-                studentId, staffId, status, startDate, effectiveEndDate, pageable);
+        // Sử dụng Specification để tạo query động
+        Specification<ScheduledMedicationTask> spec = Specification.allOf(
+                scheduledMedicationTaskSpecification.isHandled().and(scheduledMedicationTaskSpecification.forStudent(studentId)).and(scheduledMedicationTaskSpecification.administeredByStaff(staffId)).and(scheduledMedicationTaskSpecification.hasStatus(status)).and(scheduledMedicationTaskSpecification.administeredOnOrAfter(startDate)).and(scheduledMedicationTaskSpecification.administeredOnOrBefore(effectiveEndDate)));
+        // Thực hiện truy vấn với specification
+        Page<ScheduledMedicationTask> tasksPage = taskRepository.findAll(spec, pageable);
 
         log.info("Retrieved {} handled task history records with applied filters",
                 tasksPage.getTotalElements());

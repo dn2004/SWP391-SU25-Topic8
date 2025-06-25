@@ -92,7 +92,7 @@ public class ScheduledMedicationTaskController {
             @ApiResponse(responseCode = "401", description = "Chưa xác thực"),
             @ApiResponse(responseCode = "403", description = "Không có quyền truy cập")
     })
-    @GetMapping("/today")
+    @GetMapping("")
     @PreAuthorize("hasAnyRole('MedicalStaff', 'StaffManager', 'SchoolAdmin')")
     public ResponseEntity<Page<ScheduledMedicationTaskResponseDto>> getDailyScheduledTasks(
             @Parameter(description = "Ngày cần lấy danh sách nhiệm vụ (YYYY-MM-DD). Nếu bỏ trống, mặc định là ngày hiện tại.")
@@ -118,11 +118,11 @@ public class ScheduledMedicationTaskController {
     public ResponseEntity<Page<ScheduledMedicationTaskResponseDto>> getHandledTasksByStaff(
             @Parameter(description = "ID của nhân viên y tế") @PathVariable Long staffId,
             @Parameter(description = "Trạng thái của task cần lọc (ADMINISTERED, SKIPPED_STUDENT_ABSENT, v.v...)")
-            @RequestParam(required = false) Optional<ScheduledMedicationTaskStatus> status,
+            @RequestParam(required = false) ScheduledMedicationTaskStatus status,
             @Parameter(description = "Ngày bắt đầu khoảng lọc (YYYY-MM-DDTHH:mm:ss), ví dụ: 2023-01-01T00:00:00")
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Optional<LocalDateTime> startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
             @Parameter(description = "Ngày kết thúc khoảng lọc (YYYY-MM-DDTHH:mm:ss), ví dụ: 2023-01-31T23:59:59")
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Optional<LocalDateTime> endDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
             @PageableDefault(size = 20, sort = "administeredAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         Page<ScheduledMedicationTaskResponseDto> tasksPage = taskService.getHandledTasksByStaff(
@@ -148,13 +148,13 @@ public class ScheduledMedicationTaskController {
             @PathVariable Long studentId,
 
             @Parameter(description = "Lọc theo một trạng thái cụ thể của nhiệm vụ (ví dụ: ADMINISTERED, SKIPPED_STUDENT_ABSENT)")
-            @RequestParam(required = false) Optional<ScheduledMedicationTaskStatus> status,
+            @RequestParam(required = false) ScheduledMedicationTaskStatus status,
 
             @Parameter(description = "Lọc lịch sử từ ngày (YYYY-MM-DDTHH:mm:ss)")
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Optional<LocalDateTime> startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
 
             @Parameter(description = "Lọc lịch sử đến ngày (YYYY-MM-DDTHH:mm:ss)")
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Optional<LocalDateTime> endDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
 
             @ParameterObject
             @PageableDefault(size = 15, sort = "administeredAt", direction = Sort.Direction.DESC)
@@ -179,19 +179,19 @@ public class ScheduledMedicationTaskController {
     @PreAuthorize("hasAnyRole('StaffManager', 'SchoolAdmin')")
     public ResponseEntity<Page<ScheduledMedicationTaskResponseDto>> getAllHandledTasksHistory(
             @Parameter(description = "Lọc theo ID của học sinh")
-            @RequestParam(required = false) Optional<Long> studentId,
+            @RequestParam(required = false) Long studentId,
 
             @Parameter(description = "Lọc theo ID của nhân viên đã xử lý")
-            @RequestParam(required = false) Optional<Long> staffId,
+            @RequestParam(required = false) Long staffId,
 
             @Parameter(description = "Lọc theo một trạng thái cụ thể của nhiệm vụ (ví dụ: ADMINISTERED)")
-            @RequestParam(required = false) Optional<ScheduledMedicationTaskStatus> status,
+            @RequestParam(required = false) ScheduledMedicationTaskStatus status,
 
             @Parameter(description = "Lọc lịch sử từ ngày (YYYY-MM-DDTHH:mm:ss)")
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Optional<LocalDateTime> startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
 
             @Parameter(description = "Lọc lịch sử đến ngày (YYYY-MM-DDTHH:mm:ss)")
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Optional<LocalDateTime> endDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
 
             @ParameterObject
             @PageableDefault(size = 20, sort = "administeredAt", direction = Sort.Direction.DESC)

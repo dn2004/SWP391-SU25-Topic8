@@ -2,6 +2,7 @@ package com.fu.swp391.schoolhealthmanagementsystem.controller;
 
 import com.fu.swp391.schoolhealthmanagementsystem.dto.parent.LinkStudentRequestDto;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.student.StudentDto;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentStatus;
 import com.fu.swp391.schoolhealthmanagementsystem.service.ParentStudentLinkService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -50,11 +51,12 @@ public class ParentController {
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = Page.class)))
     public ResponseEntity<Page<StudentDto>> getMyLinkedStudents(
+            @RequestParam(required = false) StudentStatus status,
             @ParameterObject
             @PageableDefault(size = 5, sort = "student.fullName")
             Pageable pageable) {
-        log.info("API Phụ huynh: Yêu cầu lấy danh sách học sinh đã liên kết.");
-        Page<StudentDto> linkedStudents = parentStudentLinkService.getMyLinkedStudents(pageable); // THAY ĐỔI Ở ĐÂY: Gọi từ parentService
+        log.info("API Phụ huynh: Yêu cầu lấy danh sách học sinh đã liên kết với trạng thái {}", status);
+        Page<StudentDto> linkedStudents = parentStudentLinkService.getMyLinkedStudents(status, pageable);
         return ResponseEntity.ok(linkedStudents);
     }
 }

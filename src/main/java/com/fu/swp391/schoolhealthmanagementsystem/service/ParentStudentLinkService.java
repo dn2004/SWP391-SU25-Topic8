@@ -6,6 +6,7 @@ import com.fu.swp391.schoolhealthmanagementsystem.entity.ParentStudentLink;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.Student;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.User;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.LinkStatus;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentStatus;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.UserRole;
 import com.fu.swp391.schoolhealthmanagementsystem.exception.AppException;
 import com.fu.swp391.schoolhealthmanagementsystem.exception.ResourceNotFoundException;
@@ -13,10 +14,12 @@ import com.fu.swp391.schoolhealthmanagementsystem.mapper.StudentMapper;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.ParentStudentLinkRepository;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.StudentRepository;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.UserRepository;
+import com.fu.swp391.schoolhealthmanagementsystem.repository.specification.ParentStudentLinkSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -33,6 +36,7 @@ public class ParentStudentLinkService {
     private final UserRepository userRepository;
     private final UserService userService;
     private final StudentMapper studentMapper;
+    private final ParentStudentLinkSpecification parentStudentLinkSpecification;
 
     @Transactional
     public void linkParentToStudentByInvitation(LinkStudentRequestDto dto) {
@@ -73,22 +77,24 @@ public class ParentStudentLinkService {
     }
 
     @Transactional(readOnly = true)
-    public Page<StudentDto> getMyLinkedStudents(Pageable pageable) {
+    public Page<StudentDto> getMyLinkedStudents(StudentStatus status, Pageable pageable) {
         User currentParent = userService.getCurrentAuthenticatedUser();
 
-        // Kiểm tra này có thể không cần thiết nếu ParentController đã có @PreAuthorize("hasRole('Parent')")
-        // Tuy nhiên, để an toàn ở tầng service thì vẫn tốt.
         if (currentParent.getRole() != UserRole.Parent) {
             log.warn("Người dùng {} (vai trò {}) không phải là Phụ huynh, cố gắng lấy danh sách học sinh liên kết.",
                     currentParent.getEmail(), currentParent.getRole());
             throw new AppException(HttpStatus.FORBIDDEN, "Chức năng này chỉ dành cho phụ huynh.");
         }
 
-        log.info("Phụ huynh {} yêu cầu danh sách học sinh đã liên kết - Trang: {}, Kích thước: {}",
-                currentParent.getEmail(), pageable.getPageNumber(), pageable.getPageSize());
+        log.info("Phụ huynh {} yêu cầu danh sách học sinh đã liên kết với trạng thái {} - Trang: {}, Kích thước: {}",
+                currentParent.getEmail(), status, pageable.getPageNumber(), pageable.getPageSize());
 
-        Page<Student> linkedStudentsPage = parentStudentLinkRepository.findStudentsByParent(currentParent, pageable);
+        Specification<ParentStudentLink> spec = Specification
+                .allOf(parentStudentLinkSpecification.hasParent(currentParent))
+                .and(parentStudentLinkSpecification.studentHasStatus(status));
 
-        return linkedStudentsPage.map(studentMapper::studentToStudentDto);
+        Page<ParentStudentLink> linkedStudentsPage = parentStudentLinkRepository.findAll(spec, pageable);
+
+        return linkedStudentsPage.map(ParentStudentLink::getStudent).map(studentMapper::studentToStudentDto);
     }
 }

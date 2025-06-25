@@ -14,15 +14,18 @@ import com.fu.swp391.schoolhealthmanagementsystem.exception.ResourceNotFoundExce
 import com.fu.swp391.schoolhealthmanagementsystem.mapper.StudentVaccinationMapper;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.StudentRepository;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.StudentVaccinationRepository;
+import com.fu.swp391.schoolhealthmanagementsystem.repository.specification.StudentVaccinationSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Service
@@ -35,6 +38,7 @@ public class StudentVaccinationService {
     private final StudentRepository studentRepository;
     private final StudentVaccinationMapper vaccinationMapper;
     private final AuthorizationService authorizationService;
+    private final StudentVaccinationSpecification vaccinationSpecification;
 
     // Phương thức này vẫn giữ studentId vì nó tạo mới cho một student cụ thể
     @Transactional
@@ -69,7 +73,22 @@ public class StudentVaccinationService {
     }
 
     @Transactional(readOnly = true)
-    public Page<StudentVaccinationResponseDto> getAllVaccinationsByStudentIdPage(Long studentId, Pageable pageable) {
+    public Page<StudentVaccinationResponseDto> getAllVaccinations(String studentName, String vaccineName, LocalDate fromDate, LocalDate toDate, StudentVaccinationStatus status, Pageable pageable) {
+        log.info("Lấy tất cả danh sách tiêm chủng phân trang với bộ lọc.");
+
+        Specification<StudentVaccination> spec = Specification.allOf(vaccinationSpecification.hasStudentNameContaining(studentName))
+                .and(vaccinationSpecification.hasVaccineNameContaining(vaccineName))
+                .and(vaccinationSpecification.vaccinatedOnOrAfter(fromDate))
+                .and(vaccinationSpecification.vaccinatedOnOrBefore(toDate))
+                .and(vaccinationSpecification.hasStatus(status));
+
+        Page<StudentVaccination> vaccinationsEntityPage = vaccinationRepository.findAll(spec, pageable);
+        log.info("Tìm thấy {} bản ghi tiêm chủng trên trang {}.", vaccinationsEntityPage.getNumberOfElements(), pageable.getPageNumber());
+        return vaccinationsEntityPage.map(vaccinationMapper::toDto);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<StudentVaccinationResponseDto> getAllVaccinationsByStudentIdPage(Long studentId, String vaccineName, LocalDate fromDate, LocalDate toDate, StudentVaccinationStatus status, Pageable pageable) {
         log.info("Lấy danh sách tiêm chủng phân trang cho học sinh ID: {}. Trang: {}", studentId, pageable.getPageNumber());
         User currentUser = authorizationService.getCurrentUserAndValidate();
         Student student = studentRepository.findById(studentId)
@@ -79,9 +98,25 @@ public class StudentVaccinationService {
             authorizationService.authorizeParentAction(currentUser, student, "xem danh sách tiêm chủng");
         }
 
-        Page<StudentVaccination> vaccinationsEntityPage = vaccinationRepository.findByStudent_Id(studentId, pageable);
+        Specification<StudentVaccination> spec = Specification.allOf(vaccinationSpecification.forStudent(studentId))
+                .and(vaccinationSpecification.hasVaccineNameContaining(vaccineName))
+                .and(vaccinationSpecification.vaccinatedOnOrAfter(fromDate))
+                .and(vaccinationSpecification.vaccinatedOnOrBefore(toDate))
+                .and(vaccinationSpecification.hasStatus(status));
+
+
+        Page<StudentVaccination> vaccinationsEntityPage = vaccinationRepository.findAll(spec, pageable);
         log.info("Tìm thấy {} bản ghi tiêm chủng cho học sinh ID {} trên trang {}.", vaccinationsEntityPage.getNumberOfElements(), studentId, pageable.getPageNumber());
         return vaccinationsEntityPage.map(vaccinationMapper::toDto);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<StudentVaccinationResponseDto> getPendingVaccinations(Pageable pageable) {
+        log.info("Lấy danh sách tiêm chủng đang chờ duyệt (PENDING) cho trang: {}. Sắp xếp: {}", pageable.getPageNumber(), pageable.getSort());
+        Page<StudentVaccination> pendingVaccinationsPage = vaccinationRepository.findByStatus(StudentVaccinationStatus.PENDING, pageable);
+        log.info("Tìm thấy {} bản ghi tiêm chủng đang chờ duyệt trên trang {}.",
+                pendingVaccinationsPage.getNumberOfElements(), pageable.getPageNumber());
+        return pendingVaccinationsPage.map(vaccinationMapper::toDto);
     }
 
     @Transactional(readOnly = true)
@@ -300,3 +335,4 @@ public class StudentVaccinationService {
         return signedUrl;
     }
 }
+

@@ -2,6 +2,7 @@ package com.fu.swp391.schoolhealthmanagementsystem.controller;
 
 import com.fu.swp391.schoolhealthmanagementsystem.dto.studentmedication.*;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.MedicationStatus;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentMedicationTransactionType;
 import com.fu.swp391.schoolhealthmanagementsystem.service.StudentMedicationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -25,6 +26,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @RestController
@@ -72,7 +74,7 @@ public class StudentMedicationController {
     }
 
     @Operation(summary = "Lấy lịch sử giao dịch của một đơn thuốc",
-            description = "Lấy danh sách (phân trang) các giao dịch liên quan đến một đơn thuốc cụ thể (nhập, dùng, hủy, hết hạn, v.v.). Phụ huynh chỉ xem được của con mình. NVYT, Quản lý NVYT, Admin trường có thể xem bất kỳ.")
+            description = "Lấy danh sách (phân trang) các giao dịch liên quan đến một đơn thuốc cụ thể (nhập, dùng, hủy, hết hạn, v.v.). Có thể lọc theo loại giao dịch và khoảng thời gian. Phụ huynh chỉ xem được của con mình. NVYT, Quản lý NVYT, Admin trường có thể xem bất kỳ.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lấy lịch sử giao dịch thành công",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
@@ -84,8 +86,20 @@ public class StudentMedicationController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Page<StudentMedicationTransactionResponseDto>> getTransactionsForStudentMedication(
             @Parameter(description = "ID của đơn thuốc cần xem lịch sử") @PathVariable Long studentMedicationId,
+            @Parameter(description = "Lọc theo loại giao dịch")
+            @RequestParam(required = false) StudentMedicationTransactionType transactionType,
+            @Parameter(description = "Lọc từ thời điểm (YYYY-MM-DDTHH:mm:ss)")
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDateTime,
+            @Parameter(description = "Lọc đến thời điểm (YYYY-MM-DDTHH:mm:ss)")
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDateTime,
             @ParameterObject @PageableDefault(size = 10, sort = "transactionDateTime", direction = Sort.Direction.DESC) Pageable pageable) {
-        Page<StudentMedicationTransactionResponseDto> response = studentMedicationService.getTransactionsForStudentMedication(studentMedicationId, pageable);
+
+        Page<StudentMedicationTransactionResponseDto> response = studentMedicationService.getTransactionsForStudentMedication(
+            studentMedicationId,
+            startDateTime,
+            endDateTime,
+            transactionType,
+            pageable);
         return ResponseEntity.ok(response);
     }
 
@@ -164,9 +178,9 @@ public class StudentMedicationController {
     public ResponseEntity<Page<StudentMedicationResponseDto>> getMedicationsByStudent(
             @Parameter(description = "ID của học sinh") @PathVariable Long studentId,
             @Parameter(description = "Lọc từ ngày (YYYY-MM-DDTHH:mm:ss)")
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Optional<LocalDate> startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDate startDate,
             @Parameter(description = "Lọc đến ngày (YYYY-MM-DDTHH:mm:ss)")
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Optional<LocalDate> endDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDate endDate,
             @ParameterObject
             @PageableDefault(size = 10, sort = "dateReceived", direction = Sort.Direction.DESC) Pageable pageable) {
 
@@ -180,13 +194,13 @@ public class StudentMedicationController {
     @PreAuthorize("hasAnyRole('MedicalStaff', 'StaffManager', 'SchoolAdmin')")
     public ResponseEntity<Page<StudentMedicationResponseDto>> getAllStudentMedications(
             @Parameter(description = "Lọc theo trạng thái thuốc")
-            @RequestParam(required = false) Optional<MedicationStatus> status,
+            @RequestParam(required = false) MedicationStatus status,
 
             @Parameter(description = "Lọc từ ngày (YYYY-MM-DDTHH:mm:ss)")
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Optional<LocalDate> startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDate startDate,
 
             @Parameter(description = "Lọc đến ngày (YYYY-MM-DDTHH:mm:ss)")
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Optional<LocalDate> endDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDate endDate,
 
             @ParameterObject
             @PageableDefault(size = 10, sort = "dateReceived", direction = Sort.Direction.DESC) Pageable pageable) {

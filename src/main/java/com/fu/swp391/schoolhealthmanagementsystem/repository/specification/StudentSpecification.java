@@ -1,6 +1,7 @@
 package com.fu.swp391.schoolhealthmanagementsystem.repository.specification;
 
 import com.fu.swp391.schoolhealthmanagementsystem.entity.Student;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentStatus;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 
@@ -18,15 +19,6 @@ public class StudentSpecification {
         };
     }
 
-    public Specification<Student> hasDateOfBirth(LocalDate dob) {
-        return (root, query, criteriaBuilder) -> {
-            if (dob == null) {
-                return criteriaBuilder.conjunction();
-            }
-            return criteriaBuilder.equal(root.get("dateOfBirth"), dob);
-        };
-    }
-
     public Specification<Student> hasClassName(String className) {
         return (root, query, criteriaBuilder) -> {
             if (className == null || className.isEmpty()) {
@@ -36,13 +28,12 @@ public class StudentSpecification {
         };
     }
 
-    public Specification<Student> isActive(Boolean active) {
+    public Specification<Student> hasStatus(StudentStatus status) {
         return (root, query, criteriaBuilder) -> {
-            if (active == null) {
+            if (status == null) {
                 return criteriaBuilder.conjunction();
             }
-            return criteriaBuilder.equal(root.get("active"), active);
+            return criteriaBuilder.equal(root.get("status"), status);
         };
     }
 }
-

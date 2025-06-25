@@ -55,37 +55,74 @@ public class AdminController {
     }
 
     @GetMapping("/parents")
-    @Operation(summary = "Lấy danh sách phụ huynh (phân trang)")
+    @Operation(summary = "Tìm kiếm và lấy danh sách phụ huynh (phân trang)")
     public ResponseEntity<Page<UserDto>> getParents(
+            @Parameter(description = "Tên phụ huynh")
+            @RequestParam(required = false) String fullName,
+
+            @Parameter(description = "Email phụ huynh")
+            @RequestParam(required = false) String email,
+
+            @Parameter(description = "Số điện thoại")
+            @RequestParam(required = false) String phone,
+
+            @Parameter(description = "Trạng thái kích hoạt")
+            @RequestParam(required = false) Boolean active,
+
             @ParameterObject
-            @PageableDefault(size = 10, page = 0, sort = "fullName")
-            Pageable pageable
+            @PageableDefault(size = 10, page = 0, sort = "fullName") Pageable pageable
     ) {
-        log.info("API Admin: Yêu cầu lấy danh sách phụ huynh - page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
-        Page<UserDto> parents = adminService.getUsersByRole(UserRole.Parent, pageable);
+        log.info("API Admin: Tìm kiếm phụ huynh - fullName: {}, email: {}, phone: {}, active: {}, page: {}, size: {}",
+                fullName, email, phone, active, pageable.getPageNumber(), pageable.getPageSize());
+        Page<UserDto> parents = adminService.searchUsersByRole(UserRole.Parent, fullName, email, phone, active, pageable);
         return ResponseEntity.ok(parents);
     }
 
     @GetMapping("/medical-staff")
-    @Operation(summary = "Lấy danh sách nhân viên y tế (phân trang)")
+    @Operation(summary = "Tìm kiếm và lấy danh sách nhân viên y tế (phân trang)")
     public ResponseEntity<Page<UserDto>> getMedicalStaff(
+            @Parameter(description = "Tên nhân viên y tế")
+            @RequestParam(required = false) String fullName,
+
+            @Parameter(description = "Email nhân viên y tế")
+            @RequestParam(required = false) String email,
+
+            @Parameter(description = "Số điện thoại")
+            @RequestParam(required = false) String phone,
+
+            @Parameter(description = "Trạng thái kích hoạt")
+            @RequestParam(required = false) Boolean active,
+
             @ParameterObject
-            @PageableDefault(size = 10, page = 0, sort = "fullName")
-            Pageable pageable
-            ){
-        log.info("API Admin: Yêu cầu lấy danh sách nhân viên y tế - page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
-        Page<UserDto> medicalStaff = adminService.getUsersByRole(UserRole.MedicalStaff, pageable);
+            @PageableDefault(size = 10, page = 0, sort = "fullName") Pageable pageable
+    ) {
+        log.info("API Admin: Tìm kiếm nhân viên y tế - fullName: {}, email: {}, phone: {}, active: {}, page: {}, size: {}",
+                fullName, email, phone, active, pageable.getPageNumber(), pageable.getPageSize());
+        Page<UserDto> medicalStaff = adminService.searchUsersByRole(UserRole.MedicalStaff, fullName, email, phone, active, pageable);
         return ResponseEntity.ok(medicalStaff);
     }
 
     @GetMapping("/staff-managers")
-    @Operation(summary = "Lấy danh sách quản lý y tế (phân trang)")
+    @Operation(summary = "Tìm kiếm và lấy danh sách quản lý y tế (phân trang)")
     public ResponseEntity<Page<UserDto>> getStaffManagers(
+            @Parameter(description = "Tên quản lý y tế")
+            @RequestParam(required = false) String fullName,
+
+            @Parameter(description = "Email quản lý y tế")
+            @RequestParam(required = false) String email,
+
+            @Parameter(description = "Số điện thoại")
+            @RequestParam(required = false) String phone,
+
+            @Parameter(description = "Trạng thái kích hoạt")
+            @RequestParam(required = false) Boolean active,
+
             @ParameterObject
-            @PageableDefault(size = 10, page = 0, sort = "fullName")
-            Pageable pageable) {
-        log.info("API Admin: Yêu cầu lấy danh sách quản lý y tế - page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
-        Page<UserDto> staffManagers = adminService.getUsersByRole(UserRole.StaffManager, pageable);
+            @PageableDefault(size = 10, page = 0, sort = "fullName") Pageable pageable
+    ) {
+        log.info("API Admin: Tìm kiếm quản lý y tế - fullName: {}, email: {}, phone: {}, active: {}, page: {}, size: {}",
+                fullName, email, phone, active, pageable.getPageNumber(), pageable.getPageSize());
+        Page<UserDto> staffManagers = adminService.searchUsersByRole(UserRole.StaffManager, fullName, email, phone, active, pageable);
         return ResponseEntity.ok(staffManagers);
     }
 
@@ -93,14 +130,13 @@ public class AdminController {
     @Operation(summary = "Admin tạo hồ sơ học sinh mới")
     // @PreAuthorize("hasRole('SchoolAdmin')") // Đã có ở class level
     public ResponseEntity<StudentDto> createStudentProfile(@Valid @RequestBody CreateStudentRequestDto requestDto) {
-        log.info("API Admin: Yêu cầu tạo hồ sơ học sinh với mã: {}", requestDto.studentCode());
         StudentDto createdStudent = studentService.createStudent(requestDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdStudent);
     }
 
     @GetMapping("/{userId}")
     @Operation(summary = "Admin lấy thông tin chi tiết một người dùng bằng ID")
-// @PreAuthorize("hasRole('SchoolAdmin')") // Đã có ở class level
+    // @PreAuthorize("hasRole('SchoolAdmin')") // Đã có ở class level
     public ResponseEntity<UserDto> getUserById(
             @Parameter(description = "ID của người dùng cần truy vấn") @PathVariable Long userId) {
         log.info("API Admin: Yêu cầu lấy thông tin user ID: {}", userId);

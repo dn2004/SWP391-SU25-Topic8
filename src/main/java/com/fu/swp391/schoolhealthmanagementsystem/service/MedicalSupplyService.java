@@ -16,10 +16,13 @@ import com.fu.swp391.schoolhealthmanagementsystem.mapper.MedicalSupplyMapper;
 import com.fu.swp391.schoolhealthmanagementsystem.mapper.SupplyTransactionMapper;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.MedicalSupplyRepository;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.SupplyTransactionRepository;
+import com.fu.swp391.schoolhealthmanagementsystem.repository.specification.MedicalSupplySpecification;
+import com.fu.swp391.schoolhealthmanagementsystem.repository.specification.SupplyTransactionSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +36,8 @@ public class MedicalSupplyService {
     private final MedicalSupplyMapper medicalSupplyMapper;
     private final SupplyTransactionMapper supplyTransactionMapper;
     private final AuthorizationService authorizationService;
+    private final MedicalSupplySpecification medicalSupplySpecification;
+    private final SupplyTransactionSpecification supplyTransactionSpecification;
 
     @Transactional
     public MedicalSupplyResponseDto createMedicalSupply(MedicalSupplyRequestDto requestDto) {
@@ -61,14 +66,18 @@ public class MedicalSupplyService {
     }
 
     @Transactional(readOnly = true)
-    public Page<SupplyTransactionResponseDto> getTransactionsForSupply(Long supplyId, Pageable pageable) {
+    public Page<SupplyTransactionResponseDto> getTransactionsForSupply(Long supplyId, SupplyTransactionType transactionType, Pageable pageable) {
         User currentUser = authorizationService.getCurrentUserAndValidate();
         log.info("Người dùng {} đang lấy lịch sử giao dịch cho vật tư y tế ID: {}", currentUser.getEmail(), supplyId);
 
-        MedicalSupply medicalSupply = medicalSupplyRepository.findById(supplyId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy vật tư y tế với ID: " + supplyId));
+        if (!medicalSupplyRepository.existsById(supplyId)) {
+            throw new ResourceNotFoundException("Không tìm thấy vật tư y tế với ID: " + supplyId);
+        }
 
-        Page<SupplyTransaction> transactions = supplyTransactionRepository.findByMedicalSupply(medicalSupply, pageable);
+        Specification<SupplyTransaction> spec = Specification.allOf(supplyTransactionSpecification.forSupply(supplyId))
+                .and(supplyTransactionSpecification.hasType(transactionType));
+
+        Page<SupplyTransaction> transactions = supplyTransactionRepository.findAll(spec, pageable);
 
         return transactions.map(supplyTransactionMapper::toDto);
     }
@@ -85,23 +94,16 @@ public class MedicalSupplyService {
     }
 
     @Transactional(readOnly = true)
-    public Page<MedicalSupplyResponseDto> getAllMedicalSupplies(Pageable pageable, Boolean isActiveFilter) {
+    public Page<MedicalSupplyResponseDto> getAllMedicalSupplies(String name, String category, MedicalSupplyStatus status, Pageable pageable) {
         User currentUser = authorizationService.getCurrentUserAndValidate();
-        log.info("Người dùng {} đang lấy danh sách vật tư y tế. isActiveFilter: {}", currentUser.getEmail(), isActiveFilter);
+        log.info("Người dùng {} đang lấy danh sách vật tư y tế với các bộ lọc: name={}, category={}, status={}",
+                 currentUser.getEmail(), name, category, status);
 
-        Page<MedicalSupply> medicalSuppliesPage;
-        if (isActiveFilter != null) {
-            if (isActiveFilter) {
-                // Trả về tất cả các vật tư y tế không phải ARCHIVED (tương đương active=true)
-                medicalSuppliesPage = medicalSupplyRepository.findAllByStatusNot(MedicalSupplyStatus.DISPOSE, pageable);
-            } else {
-                // Chỉ trả về các vật tư y tế có trạng thái ARCHIVED (tương đương active=false)
-                medicalSuppliesPage = medicalSupplyRepository.findAllByStatus(MedicalSupplyStatus.DISPOSE, pageable);
-            }
-        } else {
-            // Trả về tất cả vật tư y tế không phân biệt trạng thái
-            medicalSuppliesPage = medicalSupplyRepository.findAll(pageable);
-        }
+        Specification<MedicalSupply> spec = Specification.allOf(medicalSupplySpecification.hasNameContaining(name))
+                .and(medicalSupplySpecification.hasCategory(category))
+                .and(medicalSupplySpecification.hasStatus(status));
+
+        Page<MedicalSupply> medicalSuppliesPage = medicalSupplyRepository.findAll(spec, pageable);
 
         return medicalSuppliesPage.map(medicalSupplyMapper::entityToResponseDto);
     }
@@ -286,4 +288,3 @@ public class MedicalSupplyService {
         supplyTransactionRepository.save(transaction);
     }
 }
-

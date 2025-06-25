@@ -6,8 +6,9 @@ import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentVaccinatio
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-public interface StudentVaccinationRepository extends JpaRepository<StudentVaccination, Long> {
+public interface StudentVaccinationRepository extends JpaRepository<StudentVaccination, Long>, JpaSpecificationExecutor<StudentVaccination> {
 
     Page<StudentVaccination> findByStudent(Student student, Pageable pageable);
 

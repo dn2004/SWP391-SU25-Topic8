@@ -8,19 +8,23 @@ import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.ScheduledMedicati
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentMedicationTransactionType;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.UserRole;
 import com.fu.swp391.schoolhealthmanagementsystem.exception.ResourceNotFoundException;
-import com.fu.swp391.schoolhealthmanagementsystem.mapper.MedicationTimeSlotMapper; // Mapper mới
+import com.fu.swp391.schoolhealthmanagementsystem.mapper.MedicationTimeSlotMapper;
 import com.fu.swp391.schoolhealthmanagementsystem.mapper.StudentMedicationMapper;
 import com.fu.swp391.schoolhealthmanagementsystem.mapper.StudentMedicationTransactionMapper;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.*;
+import com.fu.swp391.schoolhealthmanagementsystem.repository.specification.StudentMedicationSpecification;
+import com.fu.swp391.schoolhealthmanagementsystem.repository.specification.StudentMedicationTransactionSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -42,6 +46,8 @@ public class StudentMedicationService {
     private final ParentStudentLinkRepository parentStudentLinkRepository;
 
     private final ScheduledTaskGenerationService scheduledTaskGenerationService; // Inject để trigger tạo task
+    private final StudentMedicationSpecification studentMedicationSpecification   ;
+    private final StudentMedicationTransactionSpecification studentMedicationTransactionSpecification;
 
     /**
      * NVYT tạo mới StudentMedication khi nhận thuốc trực tiếp từ phụ huynh.
@@ -182,7 +188,7 @@ public class StudentMedicationService {
                 updatedMedication.getStudentMedicationId(), currentStaff.getEmail());
 
         // 3. Kích hoạt tạo lại task mới nếu lịch vẫn hợp lệ để chạy
-        if (updatedMedication.getStatus() == MedicationStatus.AVAILABLE){
+        if (updatedMedication.getStatus() == MedicationStatus.AVAILABLE) {
             if (updatedMedication.getRemainingDoses() != null && updatedMedication.getRemainingDoses() > 0 &&
                     updatedMedication.getScheduleStartDate() != null &&
                     updatedMedication.getMedicationTimeSlots() != null && !updatedMedication.getMedicationTimeSlots().isEmpty()) {
@@ -200,9 +206,17 @@ public class StudentMedicationService {
     }
 
     @Transactional(readOnly = true)
-    public Page<StudentMedicationTransactionResponseDto> getTransactionsForStudentMedication(Long studentMedicationId, Pageable pageable) {
+    public Page<StudentMedicationTransactionResponseDto> getTransactionsForStudentMedication(
+            Long studentMedicationId,
+            LocalDateTime startDateTime,
+            LocalDateTime endDateTime,
+            StudentMedicationTransactionType transactionType,
+            Pageable pageable) {
+
         User currentUser = authorizationService.getCurrentUserAndValidate();
-        log.info("User {} is requesting transaction history for StudentMedication ID: {}", currentUser.getEmail(), studentMedicationId);
+        log.info("User {} is requesting transaction history for StudentMedication ID: {}, filters: type={}, timeRange={} to {}",
+                currentUser.getEmail(), studentMedicationId, transactionType,
+                startDateTime, endDateTime);
 
         StudentMedication medication = studentMedicationRepository.findById(studentMedicationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thông tin thuốc của học sinh với ID: " + studentMedicationId));
@@ -213,9 +227,16 @@ public class StudentMedicationService {
         }
         // MedicalStaff, StaffManager, and SchoolAdmin are allowed by default (or checked at controller level)
 
-        Page<StudentMedicationTransaction> transactions = transactionRepository.findByStudentMedication(medication, pageable);
+        // Tạo specification để lọc giao dịch
+        Specification<StudentMedicationTransaction> spec = Specification.allOf(
+                studentMedicationTransactionSpecification.belongsToMedicationId(studentMedicationId).and(studentMedicationTransactionSpecification.hasTransactionType(transactionType).and(studentMedicationTransactionSpecification.createdOnOrAfter(startDateTime))).and(studentMedicationTransactionSpecification.createdOnOrBefore(endDateTime)));
 
-        log.info("Found {} transactions for StudentMedication ID: {}", transactions.getTotalElements(), studentMedicationId);
+        // Thực hiện truy vấn với specification
+        Page<StudentMedicationTransaction> transactions = transactionRepository.findAll(spec, pageable);
+
+        log.info("Found {} transactions for StudentMedication ID: {} with applied filters",
+                transactions.getTotalElements(), studentMedicationId);
+
         return transactions.map(studentMedicationTransactionMapper::toDto);
     }
 
@@ -280,7 +301,7 @@ public class StudentMedicationService {
         int dosesLost = medication.getRemainingDoses() != null ? medication.getRemainingDoses() : 0;
 
         medication.setStatus(MedicationStatus.LOST);
-        medication.setRemainingDoses(0); // Khi thất lạc, coi như mất hết số liều còn lại
+        medication.setRemainingDoses(0); // Khi th��t lạc, coi như mất hết số liều còn lại
         medication.setUpdatedByUser(currentStaff);
         // Ghi chú về việc thất lạc có thể thêm vào medication.setNotes() hoặc chỉ trong transaction
         if (requestDto.staffNotes() != null && !requestDto.staffNotes().isBlank()) {
@@ -471,15 +492,14 @@ public class StudentMedicationService {
      */
     @Transactional(readOnly = true)
     public Page<StudentMedicationResponseDto> getMedicationsByStudentId(
-            Long studentId, 
-            Optional<LocalDate> startDateOpt,
-            Optional<LocalDate> endDateOpt,
+            Long studentId,
+            LocalDate startDate,
+            LocalDate endDate,
             Pageable pageable) {
-            
+
         User currentUser = authorizationService.getCurrentUserAndValidate();
-        log.info("User {} (Role: {}) is requesting medications for student ID: {}, date range: {} to {}",
-                currentUser.getEmail(), currentUser.getRole(), studentId, 
-                startDateOpt.orElse(null), endDateOpt.orElse(null));
+        log.info("User {} (Role: {}) is requesting medications for student ID: {} with date range: {} to {}",
+                currentUser.getEmail(), currentUser.getRole(), studentId, startDate, endDate);
 
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy học sinh với ID: " + studentId));
@@ -494,70 +514,39 @@ public class StudentMedicationService {
             throw new AccessDeniedException("Bạn không có quyền xem thông tin thuốc của học sinh này.");
         }
 
+        Specification<StudentMedication> spec = Specification.allOf(
+                studentMedicationSpecification.hasStudent(student))
+                .and(studentMedicationSpecification.receivedOnOrAfter(startDate))
+                .and(studentMedicationSpecification.receivedOnOrBefore(endDate));
 
-        LocalDate startDate = startDateOpt.orElse(null);
-        LocalDate endDate = endDateOpt.orElse(null);
-
-       Page<StudentMedication> medicationsPage;
-        
-        if (startDate != null || endDate != null) {
-            medicationsPage = studentMedicationRepository.findByStudentAndDateRange(student, startDate, endDate, pageable);
-            log.info("Retrieved {} student medications for student ID: {} with date filter", 
-                    medicationsPage.getTotalElements(), studentId);
-        } else {
-            medicationsPage = studentMedicationRepository.findByStudent(student, pageable);
-            log.info("Retrieved {} student medications for student ID: {}", 
-                    medicationsPage.getTotalElements(), studentId);
-        }
-        
+        Page<StudentMedication> medicationsPage = studentMedicationRepository.findAll(spec, pageable);
         return medicationsPage.map(studentMedicationMapper::entityToResponseDto);
     }
 
-    /**
-     * Lấy tất cả các bản ghi thuốc trong hệ thống, có phân trang và lọc theo trạng thái và khoảng thời gian.
-     * Chỉ cho phép nhân viên y tế, quản lý nhân viên, hoặc admin trường truy cập.
-     */
     @Transactional(readOnly = true)
     public Page<StudentMedicationResponseDto> getAllStudentMedications(
-            Optional<MedicationStatus> statusOpt,
-            Optional<LocalDate> startDateOpt,
-            Optional<LocalDate> endDateOpt,
+            MedicationStatus status,
+            LocalDate startDate,
+            LocalDate endDate,
             Pageable pageable) {
 
         User currentUser = authorizationService.getCurrentUserAndValidate();
-
-        MedicationStatus status = statusOpt.orElse(null);
-        LocalDate startDate = startDateOpt.orElse(null);
-        LocalDate endDate = endDateOpt.orElse(null);
 
         log.info("User {} (Role: {}) is requesting all student medications, status filter: {}, date range: {} to {}",
                 currentUser.getEmail(), currentUser.getRole(), status, startDate, endDate);
 
         // Quyền truy cập đã được kiểm tra ở Controller bằng @PreAuthorize
-        Page<StudentMedication> medicationsPage;
 
-        // Xác định phương thức repository cần gọi dựa trên tham số
-        if (status != null && (startDate != null || endDate != null)) {
-            // Lọc theo cả status và date range
-            medicationsPage = studentMedicationRepository.findByStatusAndDateRange(status,  startDate, endDate, pageable);
-            log.info("Retrieved {} student medications with status: {} and date range",
-                    medicationsPage.getTotalElements(), status);
-        } else if (status != null) {
-            // Chỉ lọc theo status
-            medicationsPage = studentMedicationRepository.findByStatus(status, pageable);
-            log.info("Retrieved {} student medications with status: {}",
-                    medicationsPage.getTotalElements(), status);
-        } else if (startDate != null || endDate != null) {
-            // Chỉ lọc theo date range
-            medicationsPage = studentMedicationRepository.findByDateRange(startDate, endDate, pageable);
-            log.info("Retrieved {} student medications with date range",
-                    medicationsPage.getTotalElements());
-        } else {
-            // Không lọc gì cả
-            medicationsPage = studentMedicationRepository.findAll(pageable);
-            log.info("Retrieved {} student medications (all statuses)",
-                    medicationsPage.getTotalElements());
-        }
+        // Tạo specification bằng cách kết hợp các điều kiện
+        Specification<StudentMedication> spec = Specification.allOf(
+                studentMedicationSpecification.hasStatus(status))
+                .and(studentMedicationSpecification.receivedOnOrAfter(startDate))
+                .and(studentMedicationSpecification.receivedOnOrBefore(endDate));
+
+        // Sử dụng Specification để lọc và phân trang
+        Page<StudentMedication> medicationsPage = studentMedicationRepository.findAll(spec, pageable);
+
+        log.info("Retrieved {} student medications with applied filters", medicationsPage.getTotalElements());
 
         return medicationsPage.map(studentMedicationMapper::entityToResponseDto);
     }
@@ -577,7 +566,7 @@ public class StudentMedicationService {
 
         List<StudentMedication> medicationsToExpire = availableMedications.stream()
                 .filter(m -> m.getExpiryDate() != null && m.getExpiryDate().isBefore(today))
-                .collect(Collectors.toList());
+                .toList();
 
         if (medicationsToExpire.isEmpty()) {
             log.info("SCHEDULER: No expired medications found to process.");
@@ -663,7 +652,7 @@ public class StudentMedicationService {
 
         if (!futureTasks.isEmpty()) {
             for (ScheduledMedicationTask task : futureTasks) {
-                task.setStatus(newStatus); // Hoặc một status mới
+                task.setStatus(newStatus);
                 task.setStaffNotes((task.getStaffNotes() == null ? "" : task.getStaffNotes() + "\n") +
                         "Tác vụ bị hủy tự động. Lý do: " + reason + ". Bởi: " + staff.getFullName() + " lúc " + LocalDate.now());
                 task.setAdministeredByStaff(staff);

@@ -73,7 +73,7 @@ public class HealthIncidentController {
     }
 
     @Operation(summary = "Lấy danh sách sự cố sức khỏe của một học sinh",
-            description = "Lấy danh sách (phân trang) các sự cố sức khỏe (chưa bị xóa mềm) của một học sinh cụ thể. Parent chỉ xem được của con mình.")
+            description = "Lấy danh sách (phân trang) các sự cố sức khỏe (chưa bị xóa mềm) của một học sinh cụ thể. Parent chỉ xem được của con mình. Hỗ trợ lọc theo loại, địa điểm và khoảng thời gian.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
@@ -87,12 +87,20 @@ public class HealthIncidentController {
             @Parameter(description = "ID của học sinh") @PathVariable Long studentId,
             @PageableDefault(size = 10, sort = "incidentDateTime", direction = Sort.Direction.DESC)
             @ParameterObject
-            Pageable pageable) {
-        return ResponseEntity.ok(healthIncidentService.getAllHealthIncidentsByStudentId(studentId, pageable));
+            Pageable pageable,
+            @Parameter(description = "Lọc theo loại sự cố")
+            @RequestParam(required = false) HealthIncidentType incidentType,
+            @Parameter(description = "Lọc theo địa điểm")
+            @RequestParam(required = false) String location,
+            @Parameter(description = "Lọc từ ngày (YYYY-MM-DD)")
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @Parameter(description = "Lọc đến ngày (YYYY-MM-DD)")
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        return ResponseEntity.ok(healthIncidentService.getAllHealthIncidentsByStudentId(studentId, pageable, incidentType, location, startDate, endDate));
     }
 
     @Operation(summary = "Lấy tất cả sự cố sức khỏe (cho nhân viên)",
-            description = "Lấy danh sách (phân trang) tất cả các sự cố sức khỏe (chưa bị xóa mềm). Có thể lọc theo loại và ngày. Yêu cầu vai trò MedicalStaff, StaffManager, hoặc SchoolAdmin.")
+            description = "Lấy danh sách (phân trang) tất cả các sự cố sức khỏe (chưa bị xóa mềm). Hỗ trợ lọc theo nhiều tiêu chí. Yêu cầu vai trò MedicalStaff, StaffManager, hoặc SchoolAdmin.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công"),
             @ApiResponse(responseCode = "401", description = "Chưa xác thực"),
@@ -104,10 +112,49 @@ public class HealthIncidentController {
             @PageableDefault(size = 10, sort = "incidentDateTime", direction = Sort.Direction.DESC)
             @ParameterObject
             Pageable pageable,
-            @Parameter(description = "Lọc theo loại sự cố") @RequestParam Optional<HealthIncidentType> type,
-            @Parameter(description = "Lọc theo ngày xảy ra sự cố (YYYY-MM-DD)")
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Optional<LocalDate> date) {
-        return ResponseEntity.ok(healthIncidentService.getAllHealthIncidents(pageable, type, date));
+            @Parameter(description = "Lọc theo loại sự cố")
+            @RequestParam(required = false) HealthIncidentType incidentType,
+            @Parameter(description = "Lọc từ ngày (YYYY-MM-DD)")
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @Parameter(description = "Lọc đến ngày (YYYY-MM-DD)")
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @Parameter(description = "Lọc theo tên học sinh (một phần hoặc toàn bộ)")
+            @RequestParam(required = false) String studentName,
+            @Parameter(description = "Lọc theo tên người ghi nhận (một phần hoặc toàn bộ)")
+            @RequestParam(required = false) String recordedByName,
+            @Parameter(description = "Lọc theo địa điểm")
+            @RequestParam(required = false) String location,
+            @Parameter(description = "Lọc theo mô tả")
+            @RequestParam(required = false) String description) {
+        return ResponseEntity.ok(healthIncidentService.getAllHealthIncidents(pageable, incidentType, startDate, endDate, studentName, recordedByName, location, description));
+    }
+
+    @Operation(summary = "Lấy danh sách sự cố sức khỏe của tôi (cho nhân viên y tế)",
+            description = "Lấy danh sách (phân trang) các sự cố sức khỏe do chính nhân viên y tế đang đăng nhập ghi nhận. Hỗ trợ lọc theo nhiều tiêu chí. Yêu cầu vai trò MedicalStaff.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công"),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực"),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập (chỉ dành cho MedicalStaff)")
+    })
+    @GetMapping("/me")
+    @PreAuthorize("hasAnyRole('MedicalStaff', 'StaffManager')")
+    public ResponseEntity<Page<HealthIncidentResponseDto>> getMyHealthIncidents(
+            @PageableDefault(size = 10, sort = "incidentDateTime", direction = Sort.Direction.DESC)
+            @ParameterObject
+            Pageable pageable,
+            @Parameter(description = "Lọc theo loại sự cố")
+            @RequestParam(required = false) HealthIncidentType incidentType,
+            @Parameter(description = "Lọc từ ngày (YYYY-MM-DD)")
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @Parameter(description = "Lọc đến ngày (YYYY-MM-DD)")
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @Parameter(description = "Lọc theo tên học sinh (một phần hoặc toàn bộ)")
+            @RequestParam(required = false) String studentName,
+            @Parameter(description = "Lọc theo địa điểm")
+            @RequestParam(required = false) String location,
+            @Parameter(description = "Lọc theo mô tả")
+            @RequestParam(required = false) String description) {
+        return ResponseEntity.ok(healthIncidentService.getMyHealthIncidents(pageable, incidentType, startDate, endDate, studentName, location, description));
     }
 
     @Operation(summary = "Cập nhật một sự cố sức khỏe",

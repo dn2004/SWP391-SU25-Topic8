@@ -1,6 +1,8 @@
 package com.fu.swp391.schoolhealthmanagementsystem.controller;
 
 import com.fu.swp391.schoolhealthmanagementsystem.dto.supply.*;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.MedicalSupplyStatus;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.SupplyTransactionType;
 import com.fu.swp391.schoolhealthmanagementsystem.service.MedicalSupplyService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -80,8 +82,12 @@ public class MedicalSupplyController {
     @PreAuthorize("hasAnyRole('SchoolAdmin', 'StaffManager', 'MedicalStaff')")
     public ResponseEntity<Page<SupplyTransactionResponseDto>> getTransactionsForSupply(
             @Parameter(description = "ID của vật tư y tế cần xem lịch sử") @PathVariable Long supplyId,
+            @Parameter(description = "Loại giao dịch (nhập, xuất, điều chỉnh). Nếu không cung cấp, sẽ lấy tất cả loại giao dịch.")
+            @RequestParam(required = false)
+            SupplyTransactionType transactionType,
+            @Parameter(description = "Thông tin phân trang và sắp xếp")
             @ParameterObject Pageable pageable) {
-        Page<SupplyTransactionResponseDto> transactions = medicalSupplyService.getTransactionsForSupply(supplyId, pageable);
+        Page<SupplyTransactionResponseDto> transactions = medicalSupplyService.getTransactionsForSupply(supplyId, transactionType, pageable);
         return ResponseEntity.ok(transactions);
     }
 
@@ -97,10 +103,11 @@ public class MedicalSupplyController {
     @GetMapping
     @PreAuthorize("hasAnyRole('SchoolAdmin', 'StaffManager', 'MedicalStaff')")
     public ResponseEntity<Page<MedicalSupplyResponseDto>> getAllMedicalSupplies(
-            @Parameter(description = "Lọc theo trạng thái hoạt động (true/false). Nếu không cung cấp, tất cả vật tư sẽ được trả về.")
-            @RequestParam(required = false) Boolean isActive,
+            @Parameter(description = "Lọc theo tên vật tư (tìm kiếm một phần)") @RequestParam(required = false) String name,
+            @Parameter(description = "Lọc theo danh mục vật tư") @RequestParam(required = false) String category,
+            @Parameter(description = "Lọc theo trạng thái vật tư") @RequestParam(required = false) MedicalSupplyStatus status,
             @PageableDefault(size = 10, sort = "name") Pageable pageable) {
-        Page<MedicalSupplyResponseDto> suppliesPage = medicalSupplyService.getAllMedicalSupplies(pageable, isActive);
+        Page<MedicalSupplyResponseDto> suppliesPage = medicalSupplyService.getAllMedicalSupplies(name, category, status, pageable);
         return ResponseEntity.ok(suppliesPage);
     }
 

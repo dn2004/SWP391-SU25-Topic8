@@ -1,6 +1,7 @@
 package com.fu.swp391.schoolhealthmanagementsystem.dto.student;
 
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.Gender;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDate;
@@ -9,7 +10,7 @@ import java.time.LocalDateTime;
 @Schema(description = "Thông tin chi tiết học sinh")
 public record StudentDto(
         @Schema(description = "ID học sinh")
-        Long studentId,
+        Long id,
 
         @Schema(description = "Họ tên đầy đủ")
         String fullName,
@@ -23,8 +24,8 @@ public record StudentDto(
         @Schema(description = "Lớp học")
         String className,
 
-        @Schema(description = "Trạng thái hoạt động")
-        boolean isActive,
+        @Schema(description = "Tên hiển thị của trạng thái")
+        String status,
 
         @Schema(description = "Mã mời cho phụ huynh")
         String invitationCode,

@@ -7,10 +7,12 @@ import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.UserRole;
 import com.fu.swp391.schoolhealthmanagementsystem.exception.AppException;
 import com.fu.swp391.schoolhealthmanagementsystem.mapper.UserMapper;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.UserRepository;
+import com.fu.swp391.schoolhealthmanagementsystem.repository.specification.UserSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -102,6 +104,23 @@ public class AdminService {
     public Page<UserDto> getUsersByRole(UserRole role, Pageable pageable) {
         log.info("Admin lấy danh sách người dùng với vai trò: {} - Trang: {}, Kích thước: {}", role, pageable.getPageNumber(), pageable.getPageSize());
         Page<User> usersPage = userRepository.findAllByRole(role, pageable);
+        return usersPage.map(userMapper::userToUserDto);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<UserDto> searchUsersByRole(UserRole role, String fullName, String email, String phone, Boolean active, Pageable pageable) {
+        log.info("Tìm kiếm người dùng với vai trò {} - fullName: {}, email: {}, phone: {}, active: {}",
+                role, fullName, email, phone, active);
+
+        Specification<User> spec = Specification.allOf(
+                UserSpecification.withFullName(fullName),
+                UserSpecification.withEmail(email),
+                UserSpecification.withPhone(phone),
+                UserSpecification.withRole(role),
+                UserSpecification.isActive(active)
+        );
+
+        Page<User> usersPage = userRepository.findAll(spec, pageable);
         return usersPage.map(userMapper::userToUserDto);
     }
 

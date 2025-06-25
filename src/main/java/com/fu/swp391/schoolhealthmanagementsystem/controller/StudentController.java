@@ -1,9 +1,12 @@
 package com.fu.swp391.schoolhealthmanagementsystem.controller;
 
 import com.fu.swp391.schoolhealthmanagementsystem.dto.student.StudentDto;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentStatus;
 import com.fu.swp391.schoolhealthmanagementsystem.service.StudentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +21,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/students") // Hoặc một base path chung hơn
@@ -45,15 +50,49 @@ public class StudentController {
     @Operation(summary = "Lấy danh sách học sinh (phân trang và lọc)")
     @PreAuthorize("hasAnyRole('SchoolAdmin', 'StaffManager', 'MedicalStaff')")
     public ResponseEntity<Page<StudentDto>> getAllStudents(
+            @Parameter(description = "Tên học sinh")
             @RequestParam(required = false) String fullName,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dob,
+
+            @Parameter(description = "Ngày sinh")
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateOfBirth,
+
+            @Parameter(description = "Lớp học")
             @RequestParam(required = false) String className,
-            @RequestParam(required = false) Boolean active,
-            @PageableDefault(size = 10, sort = "fullName")
+
+            @Parameter(description = "Trạng thái")
+            @RequestParam(required = false) StudentStatus status,
+
             @ParameterObject
-            Pageable pageable) {
-        log.info("API: Yêu cầu lấy danh sách học sinh - Page: {}, Size: {}", pageable.getPageNumber(), pageable.getPageSize());
-        Page<StudentDto> studentPage = studentService.getAllStudents(fullName, dob, className, active, pageable);
+            @PageableDefault(size = 10, sort = "fullName") Pageable pageable) {
+
+        log.info("API: Yêu cầu lấy danh sách học sinh - fullName: {}, dateOfBirth: {}, className: {}, status: {}, page: {}, size: {}",
+                fullName, dateOfBirth, className, status, pageable.getPageNumber(), pageable.getPageSize());
+
+        Page<StudentDto> studentPage = studentService.getAllStudents(fullName, className, status, pageable);
         return ResponseEntity.ok(studentPage);
+    }
+
+    @DeleteMapping("/{studentId}")
+    @Operation(
+        summary = "Xóa học sinh theo ID",
+        description = "Chỉ cho phép xóa học sinh khi học sinh chưa có phụ huynh liên kết, chưa có sự cố sức khỏe và chưa có thông tin tiêm chủng"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Xóa học sinh thành công"),
+        @ApiResponse(responseCode = "403", description = "Không có quyền xóa học sinh"),
+        @ApiResponse(responseCode = "404", description = "Không tìm thấy học sinh"),
+        @ApiResponse(responseCode = "409", description = "Không thể xóa vì học sinh đã có dữ liệu liên quan")
+    })
+    @PreAuthorize("hasAnyRole('SchoolAdmin', 'StaffManager')")
+    public ResponseEntity<Map<String, Object>> deleteStudent(
+            @Parameter(description = "ID của học sinh cần xóa") @PathVariable Long studentId) {
+        log.info("API: Yêu cầu xóa học sinh ID: {}", studentId);
+        boolean deleted = studentService.deleteStudent(studentId);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", deleted);
+        response.put("message", "Đã xóa học sinh thành công");
+
+        return ResponseEntity.ok(response);
     }
 }

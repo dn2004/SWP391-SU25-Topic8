@@ -27,6 +27,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.Map;
 
 @RestController
@@ -142,6 +143,7 @@ public class StudentVaccinationController {
 
     @Operation(summary = "Lấy danh sách tất cả thông tin tiêm chủng của một học sinh (phân trang)",
             description = "Trả về đối tượng Page chứa danh sách các bản ghi tiêm chủng của học sinh. " +
+                    "Hỗ trợ lọc theo tên vắc-xin, khoảng ngày tiêm và trạng thái. " +
                     "Hỗ trợ các tham số query: `page`, `size`, `sort`.")
     @ApiResponse(responseCode = "200", description = "Thành công",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -154,66 +156,74 @@ public class StudentVaccinationController {
     @GetMapping("/students/{studentId}/vaccinations")
     public ResponseEntity<Page<StudentVaccinationResponseDto>> getAllVaccinationsByStudent(
             @Parameter(description = "ID của học sinh") @PathVariable Long studentId,
+            @Parameter(description = "Lọc theo tên vắc-xin (không phân biệt chữ hoa chữ thường)")
+            @RequestParam(required = false) String vaccineName,
+            @Parameter(description = "Lọc từ ngày (YYYY-MM-DD)")
+            @RequestParam(required = false) LocalDate fromDate,
+            @Parameter(description = "Lọc đến ngày (YYYY-MM-DD)")
+            @RequestParam(required = false) LocalDate toDate,
+            @Parameter(description = "Lọc theo trạng thái")
+            @RequestParam(required = false) StudentVaccinationStatus status,
             @ParameterObject
             @PageableDefault(size = 10, sort = "vaccinationDate", direction = Sort.Direction.DESC)
             Pageable pageable) {
         log.info("API GET /api/students/{}/vaccinations (phân trang) được gọi với pageable: {}", studentId, pageable);
         Page<StudentVaccinationResponseDto> vaccinationsPage =
-                vaccinationService.getAllVaccinationsByStudentIdPage(studentId, pageable); // Service sẽ kiểm tra quyền
+                vaccinationService.getAllVaccinationsByStudentIdPage(studentId, vaccineName, fromDate, toDate, status, pageable);
         return ResponseEntity.ok(vaccinationsPage);
     }
 
-    @Operation(summary = "Lấy danh sách thông tin tiêm chủng theo trạng thái (phân trang)",
-            description = "Chỉ dành cho Quản trị viên, Nhân viên y tế, hoặc Quản lý nhân viên. " +
-                    "Trả về đối tượng Page chứa danh sách các bản ghi tiêm chủng theo trạng thái được chỉ định. " +
+    @Operation(summary = "Lấy danh sách tất cả thông tin tiêm chủng (phân trang, có bộ lọc)",
+            description = "Chỉ Quản trị viên, Nhân viên y tế hoặc Quản lý nhân viên có thể truy cập. " +
+                    "Trả về đối tượng Page chứa danh sách các bản ghi tiêm chủng. " +
+                    "Hỗ trợ lọc theo tên học sinh, tên vắc-xin, khoảng ngày tiêm và trạng thái. " +
                     "Hỗ trợ các tham số query: `page`, `size`, `sort`.")
     @ApiResponse(responseCode = "200", description = "Thành công",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = Page.class))) // Response là một Page của StudentVaccinationResponseDto
-    @ApiResponse(responseCode = "400", description = "Trạng thái không hợp lệ",
-            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDto.class)))
-    @ApiResponse(responseCode = "403", description = "Không có quyền thực hiện hành động này",
-            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDto.class)))
+                    schema = @Schema(implementation = Page.class)))
+    @ApiResponse(responseCode = "403", description = "Không có quyền xem danh sách này",
+            content = @Content())
     @PreAuthorize("hasAnyRole('SchoolAdmin', 'MedicalStaff', 'StaffManager')")
-    @GetMapping("/vaccinations/status") // Consider a more descriptive path if needed, e.g., /vaccinations/filter-by-status
-    public ResponseEntity<Page<StudentVaccinationResponseDto>> getVaccinationsByStatus(
-            @Parameter(description = "Trạng thái tiêm chủng để lọc. Sử dụng tên tiếng Việt (Chờ xử lý, Chấp nhận, Từ chối) hoặc tên hằng số (PENDING, APPROVE, REJECTED).", required = true)
-            @RequestParam StudentVaccinationStatus status,
-            @ParameterObject
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) // Default sort by creation time
-            Pageable pageable) {
-        log.info("API GET /api/vaccinations/status được gọi với status: {} và pageable: {}", status, pageable);
-        Page<StudentVaccinationResponseDto> vaccinationsPage =
-                vaccinationService.getAllVaccinationsByStatus(status, pageable);
-        return ResponseEntity.ok(vaccinationsPage);
-    }
-
-    @Operation(summary = "Lấy danh sách thông tin tiêm chủng của học sinh theo trạng thái cụ thể (phân trang)",
-            description = "Phụ huynh có thể xem hồ sơ của con mình. Nhân viên được ủy quyền có thể xem hồ sơ của bất kỳ học sinh nào. " +
-                    "Ví dụ: Phụ huynh xem các bản ghi 'REJECTED' của con mình. Nhân viên xem các bản ghi 'APPROVED' của một học sinh. " +
-                    "Hỗ trợ các tham số query: `page`, `size`, `sort`.")
-    @ApiResponse(responseCode = "200", description = "Thành công",
-            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = Page.class))) // Response là một Page của StudentVaccinationResponseDto
-    @ApiResponse(responseCode = "400", description = "Trạng thái hoặc ID học sinh không hợp lệ",
-            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDto.class)))
-    @ApiResponse(responseCode = "403", description = "Không có quyền thực hiện hành động này",
-            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDto.class)))
-    @ApiResponse(responseCode = "404", description = "Học sinh không tìm thấy",
-            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDto.class)))
-    @PreAuthorize("isAuthenticated()") // Service layer will do more fine-grained checks
-    @GetMapping("/students/{studentId}/vaccinations/status")
-    public ResponseEntity<Page<StudentVaccinationResponseDto>> getStudentVaccinationsByStatus(
-            @Parameter(description = "ID của học sinh") @PathVariable Long studentId,
-            @Parameter(description = "Trạng thái tiêm chủng để lọc. Sử dụng tên tiếng Việt (Chờ xử lý, Chấp nhận, Từ chối) hoặc tên hằng số (PENDING, APPROVE, REJECTED).", required = true)
-            @RequestParam("status") StudentVaccinationStatus status,
+    @GetMapping("/vaccinations")
+    public ResponseEntity<Page<StudentVaccinationResponseDto>> getAllVaccinations(
+            @Parameter(description = "Lọc theo tên học sinh (không phân biệt chữ hoa chữ thường)")
+            @RequestParam(required = false) String studentName,
+            @Parameter(description = "Lọc theo tên vắc-xin (không phân biệt chữ hoa chữ thường)")
+            @RequestParam(required = false) String vaccineName,
+            @Parameter(description = "Lọc từ ngày (YYYY-MM-DD)")
+            @RequestParam(required = false) LocalDate fromDate,
+            @Parameter(description = "Lọc đến ngày (YYYY-MM-DD)")
+            @RequestParam(required = false) LocalDate toDate,
+            @Parameter(description = "Lọc theo trạng thái")
+            @RequestParam(required = false) StudentVaccinationStatus status,
             @ParameterObject
             @PageableDefault(size = 10, sort = "vaccinationDate", direction = Sort.Direction.DESC)
             Pageable pageable) {
-        log.info("API GET /api/students/{}/vaccinations/status được gọi với status: {} và pageable: {}", studentId, status, pageable);
+        log.info("API GET /api/vaccinations (phân trang) được gọi với các bộ lọc và pageable: {}", pageable);
         Page<StudentVaccinationResponseDto> vaccinationsPage =
-                vaccinationService.getVaccinationsByStudentIdAndStatus(studentId, status, pageable);
+                vaccinationService.getAllVaccinations(studentName, vaccineName, fromDate, toDate, status, pageable);
         return ResponseEntity.ok(vaccinationsPage);
+    }
+
+    @Operation(summary = "Lấy danh sách các bản ghi tiêm chủng đang chờ duyệt",
+            description = "Chỉ Quản trị viên, Nhân viên y tế hoặc Quản lý nhân viên có thể truy cập. " +
+                    "Trả về danh sách các bản ghi có trạng thái 'PENDING', được sắp xếp theo ngày tạo. " +
+                    "Hỗ trợ các tham số query: `page`, `size`, `sort`.")
+    @ApiResponse(responseCode = "200", description = "Thành công",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = Page.class)))
+    @ApiResponse(responseCode = "403", description = "Không có quyền xem danh sách này",
+            content = @Content())
+    @PreAuthorize("hasAnyRole('SchoolAdmin', 'MedicalStaff', 'StaffManager')")
+    @GetMapping("/vaccinations/pending")
+    public ResponseEntity<Page<StudentVaccinationResponseDto>> getPendingVaccinations(
+            @ParameterObject
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
+            Pageable pageable) {
+        log.info("API GET /api/vaccinations/pending (phân trang) được gọi với pageable: {}", pageable);
+        Page<StudentVaccinationResponseDto> pendingVaccinationsPage =
+                vaccinationService.getPendingVaccinations(pageable);
+        return ResponseEntity.ok(pendingVaccinationsPage);
     }
 
     @Operation(summary = "Lấy URL truy cập (đã ký) cho file bằng chứng của một bản ghi tiêm chủng",

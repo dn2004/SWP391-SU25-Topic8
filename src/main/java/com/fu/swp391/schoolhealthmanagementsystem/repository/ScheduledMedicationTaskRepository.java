@@ -7,6 +7,7 @@ import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.ScheduledMedicati
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -16,7 +17,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
-public interface ScheduledMedicationTaskRepository extends JpaRepository<ScheduledMedicationTask, Long> {
+public interface ScheduledMedicationTaskRepository extends JpaRepository<ScheduledMedicationTask, Long>, JpaSpecificationExecutor<ScheduledMedicationTask> {
 
     // Tìm các task theo StudentMedication, có phân trang
     Page<ScheduledMedicationTask> findByStudentMedication(StudentMedication studentMedication, Pageable pageable);
@@ -34,8 +35,6 @@ public interface ScheduledMedicationTaskRepository extends JpaRepository<Schedul
             @Param("status") ScheduledMedicationTaskStatus status,
             Pageable pageable
     );
-
-
 
     @Query("SELECT t FROM ScheduledMedicationTask t WHERE " +
             "t.administeredByStaff = :targetStaff " +

@@ -1,6 +1,7 @@
 package com.fu.swp391.schoolhealthmanagementsystem.entity;
 
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.Gender;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentStatus;
 import jakarta.persistence.*;
 
 import lombok.Builder;
@@ -39,9 +40,9 @@ public class Student {
     @Column(name = "ClassName", nullable = false, length = 50)
     private String className;
 
-
-    @Column(name = "Active", nullable = false)
-    private boolean active = true;
+    @Column(name = "Status", nullable = false, length = 20)
+    @Enumerated(EnumType.STRING)
+    private StudentStatus status = StudentStatus.ACTIVE;
 
     @CreationTimestamp
     @Column(name = "CreatedAt", nullable = false, updatable = false)

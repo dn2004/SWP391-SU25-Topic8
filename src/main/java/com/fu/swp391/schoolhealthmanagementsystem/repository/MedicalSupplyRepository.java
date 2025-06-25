@@ -5,6 +5,7 @@ import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.MedicalSupplyStat
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -12,7 +13,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-public interface MedicalSupplyRepository extends JpaRepository<MedicalSupply, Long> {
+public interface MedicalSupplyRepository extends JpaRepository<MedicalSupply, Long>, JpaSpecificationExecutor<MedicalSupply> {
     Optional<MedicalSupply> findBySupplyId(Long supplyId);
 
     Optional<MedicalSupply> findByNameAndUnit(String name, String unit);
@@ -46,7 +47,7 @@ public interface MedicalSupplyRepository extends JpaRepository<MedicalSupply, Lo
 
     /**
      * Kiểm tra xem vật tư y tế có bất kỳ giao dịch nào liên quan đến sự cố y tế không
-     * @param supplyId ID của vật tư y tế cần kiểm tra
+     * @param supplyId ID của vật tư y tế cần ki���m tra
      * @return true nếu có liên quan đến sự cố y tế, false nếu không
      */
     @Query("SELECT CASE WHEN COUNT(st) > 0 THEN true ELSE false END FROM SupplyTransaction st WHERE st.medicalSupply.supplyId = :supplyId AND st.healthIncident IS NOT NULL")

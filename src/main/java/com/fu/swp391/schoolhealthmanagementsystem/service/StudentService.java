@@ -4,6 +4,7 @@ import com.fu.swp391.schoolhealthmanagementsystem.dto.student.CreateStudentReque
 import com.fu.swp391.schoolhealthmanagementsystem.dto.student.StudentDto;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.Student;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.User;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentStatus;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.UserRole;
 import com.fu.swp391.schoolhealthmanagementsystem.exception.AppException;
 import com.fu.swp391.schoolhealthmanagementsystem.mapper.StudentMapper;
@@ -35,12 +36,6 @@ public class StudentService {
 
     @Transactional
     public StudentDto createStudent(CreateStudentRequestDto dto) {
-        log.info("Yêu cầu tạo học sinh mới với mã: {}", dto.studentCode());
-        if (studentRepository.findByInvitationCode(dto.studentCode()).isPresent()) {
-            log.warn("Mã học sinh {} đã tồn tại.", dto.studentCode());
-            throw new AppException(HttpStatus.BAD_REQUEST, "Mã học sinh đã tồn tại: " + dto.studentCode());
-        }
-
         Student student = studentMapper.createStudentRequestDtoToStudent(dto);
 
         // Tạo invitation code duy nhất
@@ -49,7 +44,7 @@ public class StudentService {
             invitationCode = RandomStringUtils.random(10, true, true).toUpperCase();
         } while (studentRepository.findByInvitationCode(invitationCode).isPresent());
         student.setInvitationCode(invitationCode);
-        student.setActive(true); // Đảm bảo active khi tạo
+        student.setStatus(StudentStatus.ACTIVE); // Đảm bảo active khi tạo
 
         Student savedStudent = studentRepository.save(student);
         log.info("Đã tạo thành công học sinh: {} - Mã mời: {}", savedStudent.getFullName(), savedStudent.getInvitationCode());
@@ -93,7 +88,7 @@ public class StudentService {
     }
 
     @Transactional(readOnly = true)
-    public Page<StudentDto> getAllStudents(String fullName, LocalDate dob, String className, Boolean active, Pageable pageable) {
+    public Page<StudentDto> getAllStudents(String fullName, String className, StudentStatus status, Pageable pageable) {
         User currentUser = userService.getCurrentAuthenticatedUser(); // Lấy user từ service đã có
 
         if (!(currentUser.getRole() == UserRole.SchoolAdmin ||
@@ -103,11 +98,64 @@ public class StudentService {
         }
 
         Specification<Student> spec = studentSpecification.hasFullName(fullName)
-                .and(studentSpecification.hasDateOfBirth(dob))
                 .and(studentSpecification.hasClassName(className))
-                .and(studentSpecification.isActive(active));
+                .and(studentSpecification.hasStatus(status));
 
         Page<Student> studentPage = studentRepository.findAll(spec, pageable);
         return studentPage.map(studentMapper::studentToStudentDto);
+    }
+
+    @Transactional
+    public boolean deleteStudent(Long studentId) {
+        log.info("Yêu cầu xóa học sinh với ID: {}", studentId);
+
+        // Kiểm tra quyền hạn - chỉ admin hoặc staff manager có thể xóa học sinh
+        User currentUser = userService.getCurrentAuthenticatedUser();
+        if (!(currentUser.getRole() == UserRole.SchoolAdmin ||
+                currentUser.getRole() == UserRole.StaffManager)) {
+            log.warn("Người dùng {} không có quyền xóa học sinh", currentUser.getEmail());
+            throw new AppException(HttpStatus.FORBIDDEN, "Bạn không có quyền xóa học sinh");
+        }
+
+        // Tìm học sinh theo ID
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> {
+                    log.warn("Không tìm thấy học sinh với ID: {}", studentId);
+                    return new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy học sinh với ID: " + studentId);
+                });
+
+        // Kiểm tra xem học sinh có phụ huynh liên kết không
+        boolean hasParentLinks = parentStudentLinkRepository.existsByStudent(student);
+        if (hasParentLinks) {
+            log.warn("Không thể xóa học sinh ID: {} vì đã có phụ huynh liên kết", studentId);
+            throw new AppException(HttpStatus.CONFLICT,
+                    "Không thể xóa học sinh này vì đã có phụ huynh liên kết. Hãy gỡ bỏ tất cả liên kết phụ huynh trước khi xóa.");
+        }
+
+        // Kiểm tra xem học sinh có sự cố sức khỏe liên quan không
+        if (!student.getHealthIncidents().isEmpty()) {
+            log.warn("Không thể xóa học sinh ID: {} vì đã có {} sự cố sức khỏe liên quan",
+                    studentId, student.getHealthIncidents().size());
+            throw new AppException(HttpStatus.CONFLICT,
+                    "Không thể xóa học sinh này vì đã có sự cố sức khỏe liên quan. Hãy đặt trạng thái thành không hoạt động thay vì xóa.");
+        }
+
+        // Kiểm tra xem học sinh có thông tin tiêm chủng không
+        if (!student.getVaccinations().isEmpty()) {
+            log.warn("Không thể xóa học sinh ID: {} vì đã có {} thông tin tiêm chủng",
+                    studentId, student.getVaccinations().size());
+            throw new AppException(HttpStatus.CONFLICT,
+                    "Không thể xóa học sinh này vì đã có thông tin tiêm chủng. Hãy đặt trạng thái thành không hoạt động thay vì xóa.");
+        }
+
+        // Nếu tất cả điều kiện đều thỏa mãn, tiến hành xóa học sinh
+        try {
+            studentRepository.delete(student);
+            log.info("Đã xóa thành công học sinh với ID: {}", studentId);
+            return true;
+        } catch (Exception ex) {
+            log.error("Lỗi khi xóa học sinh ID: {}", studentId, ex);
+            throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi khi xóa học sinh: " + ex.getMessage());
+        }
     }
 }
