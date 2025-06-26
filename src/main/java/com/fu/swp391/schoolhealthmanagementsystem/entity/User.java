@@ -63,6 +63,10 @@ public class User implements UserDetails {
     @Builder.Default
     private List<ParentStudentLink> childLinks = new ArrayList<>();
 
+    @OneToMany(mappedBy = "recipient", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<Notification> notifications = new ArrayList<>();
+
 
     // Helper method để kiểm tra phụ huynh đã liên kết chưa
     @Transient // Không được lưu vào DB, tính toán lúc runtime

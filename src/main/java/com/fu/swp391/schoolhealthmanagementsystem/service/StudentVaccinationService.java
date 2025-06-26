@@ -39,6 +39,7 @@ public class StudentVaccinationService {
     private final StudentVaccinationMapper vaccinationMapper;
     private final AuthorizationService authorizationService;
     private final StudentVaccinationSpecification vaccinationSpecification;
+    private final NotificationService notificationService; // Sử dụng NotificationService
 
     // Phương thức này vẫn giữ studentId vì nó tạo mới cho một student cụ thể
     @Transactional
@@ -260,7 +261,51 @@ public class StudentVaccinationService {
         StudentVaccination updatedVaccination = vaccinationRepository.save(vaccination);
         log.info("Đã cập nhật trạng thái cho bản ghi tiêm chủng ID {} thành {}. Duyệt bởi: {}. Ghi chú: {}",
                 vaccinationId, updatedVaccination.getStatus(), currentUser.getEmail(), updatedVaccination.getApproverNotes());
+
+        // Gửi thông báo đến phụ huynh
+        sendNotificationToParent(updatedVaccination);
+
         return vaccinationMapper.toDto(updatedVaccination);
+    }
+
+    private void sendNotificationToParent(StudentVaccination vaccination) {
+        try {
+            Student student = vaccination.getStudent();
+            if (student == null || student.getParentLinks() == null || student.getParentLinks().isEmpty()) {
+                log.warn("Không tìm thấy thông tin phụ huynh cho học sinh ID: {} để gửi thông báo.", student != null ? student.getId() : "null");
+                return;
+            }
+
+            String statusMessage = switch (vaccination.getStatus()) {
+                case APPROVE -> "đã được duyệt";
+                case REJECTED -> "đã bị từ chối";
+                default -> null;
+            };
+
+            if (statusMessage != null) {
+                String notificationContent = String.format("Hồ sơ tiêm chủng '%s' cho học sinh '%s' %s.",
+                        vaccination.getVaccineName(),
+                        student.getFullName(),
+                        statusMessage);
+
+                // Tạo link để điều hướng khi người dùng nhấp vào thông báo
+                String linkToResource = "/vaccinations/" + vaccination.getStudentVaccinationId();
+
+                student.getParentLinks().forEach(link -> {
+                    User parent = link.getParent();
+                    if (parent != null && parent.getEmail() != null) {
+                        String parentUsername = parent.getEmail();
+
+                        // Gọi service mới để tạo, lưu và gửi thông báo
+                        notificationService.createAndSendNotification(parentUsername, notificationContent, linkToResource);
+
+                        log.info("Đã yêu cầu gửi thông báo (và lưu vào DB) về hồ sơ tiêm chủng ID {} tới phụ huynh: {}", vaccination.getStudentVaccinationId(), parentUsername);
+                    }
+                });
+            }
+        } catch (Exception e) {
+            log.error("Lỗi khi chuẩn bị và yêu cầu gửi thông báo WebSocket đến phụ huynh: {}", e.getMessage(), e);
+        }
     }
 
     @Transactional

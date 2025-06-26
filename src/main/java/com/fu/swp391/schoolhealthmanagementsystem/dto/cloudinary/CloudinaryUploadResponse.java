@@ -1,5 +1,8 @@
 package com.fu.swp391.schoolhealthmanagementsystem.dto.cloudinary;
 
+import lombok.Builder;
+
+@Builder
 public record CloudinaryUploadResponse(
         String url,          // URL an toàn để truy cập file
         String publicId,     // public_id của file trên Cloudinary (dùng để xóa/biến đổi)

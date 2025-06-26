@@ -9,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -34,5 +36,14 @@ public class AuthorizationService {
         }
         log.debug("Người dùng hiện tại: {} (ID: {}, Role: {})", currentUser.getEmail(), currentUser.getUserId(), currentUser.getRole());
         return currentUser;
+    }
+
+    public Optional<User> tryGetCurrentUser() {
+        try {
+            return Optional.of(userService.getCurrentAuthenticatedUser());
+        } catch (Exception e) {
+            log.debug("Không có người dùng nào được xác thực hoặc đã xảy ra lỗi: {}", e.getMessage());
+            return Optional.empty();
+        }
     }
 }

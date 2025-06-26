@@ -3,6 +3,7 @@ package com.fu.swp391.schoolhealthmanagementsystem.service;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.cloudinary.CloudinaryUploadResponse;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.cloudinary.UploadSignatureResponse;
 import com.fu.swp391.schoolhealthmanagementsystem.exception.FileStorageException;
 import com.fu.swp391.schoolhealthmanagementsystem.prop.CloudinaryProperties;
 import lombok.RequiredArgsConstructor;
@@ -167,6 +168,33 @@ public class CloudinaryStorageService implements FileStorageService {
         } catch (Exception e) {
             log.error("Lỗi khi tạo signed URL cho public_id '{}', resourceType '{}': {}", publicId, resourceType, e.getMessage(), e);
             return null;
+        }
+    }
+
+    @Override
+    public UploadSignatureResponse getUploadSignature(String folder) {
+        long timestamp = System.currentTimeMillis() / 1000L;
+
+        String folderPath = cloudinaryProperties.baseFolder() +
+                (folder != null && !folder.isEmpty() ? "/" + folder : "");
+
+        Map<String, Object> paramsToSign = new HashMap<>();
+        paramsToSign.put("timestamp", timestamp);
+        paramsToSign.put("folder", folderPath);
+
+        try {
+            String signature = cloudinary.apiSignRequest(paramsToSign, cloudinaryProperties.apiSecret());
+
+            return new UploadSignatureResponse(
+                    timestamp,
+                    signature,
+                    cloudinaryProperties.apiKey(),
+                    cloudinaryProperties.cloudName(),
+                    folderPath
+            );
+        } catch (Exception e) {
+            log.error("Lỗi khi tạo chữ ký tải lên Cloudinary.", e);
+            throw new FileStorageException("Không thể tạo chữ ký để tải lên: " + e.getMessage(), e);
         }
     }
 }

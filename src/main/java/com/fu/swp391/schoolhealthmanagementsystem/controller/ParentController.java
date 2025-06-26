@@ -28,7 +28,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Tag(name = "Parent", description = "APIs cho Phụ huynh")
 @SecurityRequirement(name = "parent-api")
-@PreAuthorize("hasRole('Parent')") // Requires Parent role
+@PreAuthorize("hasRole('Parent')")
 @Slf4j
 public class ParentController {
 
