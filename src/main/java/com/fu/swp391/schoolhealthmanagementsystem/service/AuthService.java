@@ -42,6 +42,7 @@ public class AuthService {
     private final UserMapper userMapper;
     private final StringRedisTemplate redisTemplate;
     private final OtpService otpService;
+    private final NotificationService notificationService;
 
     @Value("${jwt.blacklist.prefix:jwt:blacklist:}")
     private String blacklistPrefix;
@@ -65,7 +66,22 @@ public class AuthService {
 
         User savedParent = userRepository.save(parent);
         log.info("Đã tạo tài khoản phụ huynh thành công: {}", savedParent.getEmail());
+
+        // Gửi thông báo cho admin
+        sendNewParentRegistrationNotification(savedParent);
+
         return userMapper.userToUserDto(savedParent);
+    }
+
+    private void sendNewParentRegistrationNotification(User parent) {
+        try {
+            String content = String.format("Có tài khoản phụ huynh mới vừa đăng ký: %s (%s).", parent.getFullName(), parent.getEmail());
+            String link = "/admin/users/parents"; // Link tới trang quản lý phụ huynh
+            notificationService.createAndSendNotificationToRole(UserRole.SchoolAdmin, content, link, parent.getEmail());
+            log.info("Đã gửi thông báo đăng ký phụ huynh mới tới SchoolAdmin cho tài khoản: {}", parent.getEmail());
+        } catch (Exception e) {
+            log.error("Lỗi khi gửi thông báo đăng ký phụ huynh mới cho tài khoản {}: {}", parent.getEmail(), e.getMessage(), e);
+        }
     }
 
     public LoginResponseDto login(LoginRequestDto dto) {

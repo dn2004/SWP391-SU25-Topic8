@@ -12,7 +12,6 @@ import java.util.Objects;
 @Table(name = "Notifications")
 @Getter
 @Setter
-@RequiredArgsConstructor
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -27,10 +26,15 @@ public class Notification {
     @ToString.Exclude
     private User recipient;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "SenderId") // Có thể null nếu là hệ thống
+    @ToString.Exclude
+    private User sender;
+
     @Column(nullable = false, length = 500)
     private String content;
 
-    @Column(name = "Read", nullable = false)
+    @Column(name = "`Read`", nullable = false)
     @Builder.Default
     private boolean read = false;
 
@@ -41,15 +45,4 @@ public class Notification {
     @Column(name = "CreatedAt", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Override
-    public final boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null) return false;
-        Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
-        Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
-        if (thisEffectiveClass != oEffectiveClass) return false;
-        Notification that = (Notification) o;
-        return getId() != null && Objects.equals(getId(), that.getId());
-    }
 }
-

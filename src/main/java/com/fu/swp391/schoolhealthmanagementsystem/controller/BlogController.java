@@ -4,6 +4,7 @@ import com.fu.swp391.schoolhealthmanagementsystem.dto.blog.BlogResponseDto;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.blog.CreateBlogRequestDto;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.blog.UpdateBlogRequestDto;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.blog.UpdateBlogStatusRequestDto;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.BlogCategory;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.BlogStatus;
 import com.fu.swp391.schoolhealthmanagementsystem.service.BlogService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -59,11 +60,12 @@ public class BlogController {
             @Parameter(description = "Lọc theo tiêu đề bài đăng") @RequestParam(required = false) String title,
             @Parameter(description = "(Admin/Manager) Lọc theo ID của tác giả") @RequestParam(required = false) Long authorId,
             @Parameter(description = "(Admin/Manager) Lọc theo trạng thái") @RequestParam(required = false) BlogStatus status,
+            @Parameter(description = "Lọc theo danh mục") @RequestParam(required = false) BlogCategory category,
             @Parameter(description = "Lọc từ ngày cập nhật (YYYY-MM-DD)") @RequestParam(required = false) LocalDate startDate,
             @Parameter(description = "Lọc đến ngày cập nhật (YYYY-MM-DD)") @RequestParam(required = false) LocalDate endDate,
             @ParameterObject @PageableDefault(size = 10, sort = "updatedAt", direction = Sort.Direction.DESC) Pageable pageable) {
         log.info("API GET /api/blogs (phân trang) được gọi với pageable: {}", pageable);
-        Page<BlogResponseDto> blogsPage = blogService.getAllBlogs(title, authorId, status, startDate, endDate, pageable);
+        Page<BlogResponseDto> blogsPage = blogService.getAllBlogs(title, authorId, status, category, startDate, endDate, pageable);
         return ResponseEntity.ok(blogsPage);
     }
 
@@ -91,7 +93,7 @@ public class BlogController {
             @ParameterObject @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         log.info("API GET /api/blogs/author/{} được gọi", authorId);
         // Tái sử dụng phương thức getAllBlogs với bộ lọc authorId
-        Page<BlogResponseDto> blogsPage = blogService.getAllBlogs(null, authorId, null, null, null, pageable);
+        Page<BlogResponseDto> blogsPage = blogService.getAllBlogs(null, authorId, null, null, null, null, pageable);
         return ResponseEntity.ok(blogsPage);
     }
 
@@ -122,17 +124,17 @@ public class BlogController {
         return ResponseEntity.ok(updatedBlog);
     }
 
-    @Operation(summary = "(Admin) Cập nhật trạng thái của một bài blog",
-            description = "Chỉ Admin mới có thể thay đổi trạng thái của một bài đăng (ví dụ: ẩn bài đăng). ")
+    @Operation(summary = "(Admin/Manager) Cập nhật trạng thái một bài blog",
+            description = "Chỉ Admin hoặc Manager mới có thể cập nhật trạng thái của bài đăng (ví dụ: duyệt bài).")
     @ApiResponse(responseCode = "200", description = "Cập nhật trạng thái thành công")
     @SecurityRequirement(name = "bearerAuth")
-    @PreAuthorize("hasRole('SchoolAdmin')")
+    @PreAuthorize("hasAnyRole('SchoolAdmin', 'StaffManager')")
     @PatchMapping("/{blogId}/status")
     public ResponseEntity<BlogResponseDto> updateBlogStatus(
             @Parameter(description = "ID của bài đăng cần cập nhật trạng thái") @PathVariable Long blogId,
-            @Valid @RequestBody UpdateBlogStatusRequestDto updateStatusDto) {
+            @Valid @RequestBody UpdateBlogStatusRequestDto updateBlogStatusRequestDto) {
         log.info("API PATCH /api/blogs/{}/status được gọi", blogId);
-        BlogResponseDto updatedBlog = blogService.updateBlogStatus(blogId, updateStatusDto.status());
+        BlogResponseDto updatedBlog = blogService.updateBlogStatus(blogId, updateBlogStatusRequestDto);
         return ResponseEntity.ok(updatedBlog);
     }
 

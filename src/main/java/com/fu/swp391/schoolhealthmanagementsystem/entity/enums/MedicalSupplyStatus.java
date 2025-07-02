@@ -12,7 +12,7 @@ public enum MedicalSupplyStatus {
     AVAILABLE("Sẵn có"),
     OUT_OF_STOCK("Hết hàng"),
     EXPIRED("Hết hạn"),
-    DISPOSE("Không còn sử dụng");
+    DISPOSE("Đã loại bỏ ra khỏi kho");
 
     private final String displayName;
 

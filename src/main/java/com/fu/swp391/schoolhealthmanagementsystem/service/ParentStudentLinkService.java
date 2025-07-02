@@ -37,6 +37,7 @@ public class ParentStudentLinkService {
     private final UserService userService;
     private final StudentMapper studentMapper;
     private final ParentStudentLinkSpecification parentStudentLinkSpecification;
+    private final NotificationService notificationService;
 
     @Transactional
     public void linkParentToStudentByInvitation(LinkStudentRequestDto dto) {
@@ -74,6 +75,24 @@ public class ParentStudentLinkService {
         parentStudentLinkRepository.save(link);
         log.info("Phụ huynh {} đã liên kết thành công với học sinh {} (Mã: {}) với vai trò {}. Trạng thái: ACTIVE",
                 parent.getEmail(), student.getFullName(), student.getId(), dto.relationshipType());
+
+        // Gửi thông báo cho quản trị viên và quản lý nhân viên
+        sendLinkNotificationToAdmins(parent, student);
+    }
+
+    private void sendLinkNotificationToAdmins(User parent, Student student) {
+        try {
+            String content = String.format("Phụ huynh '%s' (%s) vừa liên kết với học sinh '%s' (Lớp: %s).",
+                    parent.getFullName(), parent.getEmail(), student.getFullName(), student.getClassName());
+            String link = "/admin/users/parents"; // Link tới trang quản lý phụ huynh
+            String sender = parent.getEmail();
+
+            notificationService.createAndSendNotificationToRole(UserRole.SchoolAdmin, content, link, sender);
+            notificationService.createAndSendNotificationToRole(UserRole.StaffManager, content, link, sender);
+            log.info("Đã gửi thông báo liên kết phụ huynh-học sinh tới SchoolAdmin và StaffManager cho phụ huynh {} và học sinh {}", parent.getEmail(), student.getFullName());
+        } catch (Exception e) {
+            log.error("Lỗi khi gửi thông báo liên kết phụ huynh-học sinh cho phụ huynh {} và học sinh {}: {}", parent.getEmail(), student.getFullName(), e.getMessage(), e);
+        }
     }
 
     @Transactional(readOnly = true)

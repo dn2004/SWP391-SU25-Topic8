@@ -2,6 +2,7 @@ package com.fu.swp391.schoolhealthmanagementsystem.repository.specification;
 
 import com.fu.swp391.schoolhealthmanagementsystem.entity.Blog;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.User;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.BlogCategory;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.BlogStatus;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
@@ -36,6 +37,15 @@ public class BlogSpecification {
                 return criteriaBuilder.conjunction();
             }
             return criteriaBuilder.equal(root.get("status"), status);
+        };
+    }
+
+    public Specification<Blog> hasCategory(BlogCategory category) {
+        return (root, query, criteriaBuilder) -> {
+            if (category == null) {
+                return criteriaBuilder.conjunction();
+            }
+            return criteriaBuilder.equal(root.get("category"), category);
         };
     }
 

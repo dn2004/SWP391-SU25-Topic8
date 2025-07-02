@@ -44,6 +44,7 @@ public class HealthIncidentService {
     private final AuthorizationService authorizationService;
     private final SupplyTransactionRepository supplyTransactionRepository;
     private final HealthIncidentSpecification healthIncidentSpecification;
+    private final NotificationService notificationService; // Inject NotificationService
 
 
     // --- CREATE ---
@@ -125,7 +126,25 @@ public class HealthIncidentService {
 
         log.info("Health incident ID: {} created for student {}, recorded by {}",
                 finalIncidentWithTransactions.getIncidentId(), student.getFullName(), currentUser.getFullName());
+
+        // Send notification to parent
+        sendIncidentCreationNotification(finalIncidentWithTransactions);
+
         return healthIncidentMapper.toDto(finalIncidentWithTransactions);
+    }
+
+    private void sendIncidentCreationNotification(HealthIncident incident) {
+        try {
+            String content = String.format("Một sự cố sức khỏe vừa được ghi nhận cho học sinh '%s'.",
+                    incident.getStudent().getFullName());
+            String link = "/health-incidents/" + incident.getIncidentId();
+            // Người gửi là người ghi nhận sự cố
+            String sender = incident.getRecordedByUser() != null ? incident.getRecordedByUser().getEmail() : "system";
+
+            sendNotificationToParents(incident.getStudent(), content, link, sender, "tạo mới sự cố");
+        } catch (Exception e) {
+            log.error("Lỗi khi gửi thông báo tạo mới sự cố sức khỏe ID {}: {}", incident.getIncidentId(), e.getMessage(), e);
+        }
     }
 
     // --- READ ---
@@ -299,7 +318,40 @@ public class HealthIncidentService {
 
         HealthIncident updatedIncident = healthIncidentRepository.save(incident);
         log.info("Health incident ID: {} updated by user {}", updatedIncident.getIncidentId(), currentUser.getEmail());
+
+        // Gửi thông báo cho phụ huynh
+        sendIncidentUpdateNotification(updatedIncident);
+
         return healthIncidentMapper.toDto(updatedIncident);
+    }
+
+    private void sendIncidentUpdateNotification(HealthIncident incident) {
+        try {
+            String content = String.format("Thông tin sự cố sức khỏe của học sinh %s (xảy ra lúc %s) vừa được cập nhật.",
+                    incident.getStudent().getFullName(), incident.getIncidentDateTime().toLocalDate());
+            String link = "/health-incidents/" + incident.getIncidentId();
+            // Người gửi là người cập nhật sự cố
+            String sender = incident.getUpdatedByUser() != null ? incident.getUpdatedByUser().getEmail() : "system";
+
+            sendNotificationToParents(incident.getStudent(), content, link, sender, "cập nhật sự cố");
+        } catch (Exception e) {
+            log.error("Lỗi khi gửi thông báo cập nhật sự cố sức khỏe ID {}: {}", incident.getIncidentId(), e.getMessage(), e);
+        }
+    }
+
+    private void sendNotificationToParents(Student student, String content, String link, String sender, String logContext) {
+        if (student == null || student.getParentLinks() == null || student.getParentLinks().isEmpty()) {
+            log.warn("Không thể gửi thông báo {}. Không có thông tin phụ huynh cho học sinh ID: {}", logContext, student != null ? student.getId() : "null");
+            return;
+        }
+
+        student.getParentLinks().forEach(parentLink -> {
+            User parent = parentLink.getParent();
+            if (parent != null && parent.getEmail() != null) {
+                notificationService.createAndSendNotification(parent.getEmail(), content, link, sender);
+                log.info("Đã yêu cầu gửi thông báo {} tới phụ huynh: {}", logContext, parent.getEmail());
+            }
+        });
     }
 
     @Transactional
@@ -406,4 +458,3 @@ public class HealthIncidentService {
                 incidentId, currentUser.getEmail());
     }
 }
-

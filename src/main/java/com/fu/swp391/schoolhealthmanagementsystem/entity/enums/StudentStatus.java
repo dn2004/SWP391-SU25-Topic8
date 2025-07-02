@@ -8,7 +8,6 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum StudentStatus {
     ACTIVE("Hoạt Động"),     // Student is currently active and enrolled
     GRADUATED("Tốt Nghiệp"),  // Student has graduated
-    TRANSFERRED("Chuyển Trường"), // Student has transferred to another school
     WITHDRAWN("Thôi Học");  // Student has been withdrawn from school
 
     private final String displayName;

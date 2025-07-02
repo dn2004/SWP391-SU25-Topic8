@@ -2,6 +2,8 @@ package com.fu.swp391.schoolhealthmanagementsystem.service;
 
 import com.fu.swp391.schoolhealthmanagementsystem.dto.student.CreateStudentRequestDto;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.student.StudentDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.student.UpdateStudentRequestDto;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.ParentStudentLink;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.Student;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.User;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentStatus;
@@ -13,7 +15,7 @@ import com.fu.swp391.schoolhealthmanagementsystem.repository.StudentRepository;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.specification.StudentSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.RandomStringUtils; // Cần dependency commons-lang3
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -33,6 +35,7 @@ public class StudentService {
     private final ParentStudentLinkRepository parentStudentLinkRepository; // Inject
     private final UserService userService;
     private final StudentSpecification studentSpecification;
+    private final NotificationService notificationService;
 
     @Transactional
     public StudentDto createStudent(CreateStudentRequestDto dto) {
@@ -49,6 +52,32 @@ public class StudentService {
         Student savedStudent = studentRepository.save(student);
         log.info("Đã tạo thành công học sinh: {} - Mã mời: {}", savedStudent.getFullName(), savedStudent.getInvitationCode());
         return studentMapper.studentToStudentDto(savedStudent);
+    }
+
+    @Transactional
+    public StudentDto updateStudent(Long studentId, UpdateStudentRequestDto dto) {
+        User currentUser = userService.getCurrentAuthenticatedUser();
+        log.info("Yêu cầu cập nhật thông tin cho học sinh ID: {}", studentId);
+
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> {
+                    log.warn("Không tìm thấy học sinh với ID: {}", studentId);
+                    return new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy học sinh với ID: " + studentId);
+                });
+
+        // Cập nhật các trường thông tin từ DTO
+            studentMapper.updateStudentFromDto(dto, student);
+
+        Student updatedStudent = studentRepository.save(student);
+
+        // Gửi thông báo cho phụ huynh
+        notifyParents(updatedStudent,
+            String.format("Thông tin của con bạn, %s, vừa được cập nhật.", updatedStudent.getFullName()),
+            "/profile/student/" + updatedStudent.getId(),
+            currentUser);
+
+        log.info("Đã cập nhật thành công thông tin cho học sinh: {}", updatedStudent.getFullName());
+        return studentMapper.studentToStudentDto(updatedStudent);
     }
 
     @Transactional(readOnly = true)
@@ -106,6 +135,81 @@ public class StudentService {
     }
 
     @Transactional
+    public StudentDto graduateStudent(Long studentId) {
+        User currentUser = userService.getCurrentAuthenticatedUser();
+        log.info("Yêu cầu đánh dấu tốt nghiệp cho học sinh ID: {}", studentId);
+        Student student = findStudentByIdAndCheckStatus(studentId, StudentStatus.ACTIVE, "Chỉ học sinh đang hoạt động mới có thể được đánh dấu tốt nghiệp.");
+        student.setStatus(StudentStatus.GRADUATED);
+        Student savedStudent = studentRepository.save(student);
+
+        // Gửi thông báo cho phụ huynh
+        notifyParents(savedStudent,
+            String.format("Con của bạn, %s, đã được đánh dấu là đã tốt nghiệp.", savedStudent.getFullName()),
+            "/profile/student/" + savedStudent.getId(),
+            currentUser);
+
+        log.info("Đã đánh dấu tốt nghiệp thành công cho học sinh: {}", savedStudent.getFullName());
+        return studentMapper.studentToStudentDto(savedStudent);
+    }
+
+    @Transactional
+    public StudentDto withdrawStudent(Long studentId) {
+        User currentUser = userService.getCurrentAuthenticatedUser();
+        log.info("Yêu cầu đánh dấu thôi học cho học sinh ID: {}", studentId);
+        Student student = findStudentByIdAndCheckStatus(studentId, StudentStatus.ACTIVE, "Chỉ học sinh đang hoạt động mới có thể được đánh dấu thôi học.");
+        student.setStatus(StudentStatus.WITHDRAWN);
+        Student savedStudent = studentRepository.save(student);
+
+        // Gửi thông báo cho phụ huynh
+        notifyParents(savedStudent,
+            String.format("Con của bạn, %s, đã được đánh dấu là đã thôi học.", savedStudent.getFullName()),
+            "/profile/student/" + savedStudent.getId(),
+            currentUser);
+
+        log.info("Đã đánh dấu thôi học thành công cho học sinh: {}", savedStudent.getFullName());
+        return studentMapper.studentToStudentDto(savedStudent);
+    }
+
+    @Transactional
+    public StudentDto reactivateStudent(Long studentId) {
+        User currentUser = userService.getCurrentAuthenticatedUser();
+        log.info("Yêu cầu kích hoạt lại cho học sinh ID: {}", studentId);
+        Student student = findStudentByIdAndCheckStatus(studentId, StudentStatus.WITHDRAWN, "Chỉ học sinh đã thôi học mới có thể được kích hoạt lại.");
+        student.setStatus(StudentStatus.ACTIVE);
+        Student savedStudent = studentRepository.save(student);
+
+        // Gửi thông báo cho phụ huynh
+        notifyParents(savedStudent,
+            String.format("Học sinh %s đã được kích hoạt lại trạng thái học tập tại trường.", savedStudent.getFullName()),
+            "/profile/student/" + savedStudent.getId(),
+            currentUser);
+
+        log.info("Đã kích hoạt lại thành công cho học sinh: {}", savedStudent.getFullName());
+        return studentMapper.studentToStudentDto(savedStudent);
+    }
+
+    private void notifyParents(Student student, String content, String link, User sender) {
+        String senderEmail = (sender != null) ? sender.getEmail() : "system";
+        for (ParentStudentLink parentLink : student.getParentLinks()) {
+            User parent = parentLink.getParent();
+            if (parent != null && parent.getEmail() != null) {
+                notificationService.createAndSendNotification(parent.getEmail(), content, link, senderEmail);
+            }
+        }
+    }
+
+    private Student findStudentByIdAndCheckStatus(Long studentId, StudentStatus expectedStatus, String errorMessage) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy học sinh với ID: " + studentId));
+
+        if (student.getStatus() != expectedStatus) {
+            log.warn("Thao tác không hợp lệ cho học sinh ID: {}. Trạng thái hiện tại: {}, Trạng thái yêu cầu: {}", studentId, student.getStatus(), expectedStatus);
+            throw new AppException(HttpStatus.CONFLICT, errorMessage);
+        }
+        return student;
+    }
+
+    @Transactional
     public boolean deleteStudent(Long studentId) {
         log.info("Yêu cầu xóa học sinh với ID: {}", studentId);
 
@@ -159,3 +263,4 @@ public class StudentService {
         }
     }
 }
+

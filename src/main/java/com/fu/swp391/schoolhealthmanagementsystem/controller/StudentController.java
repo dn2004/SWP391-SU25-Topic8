@@ -1,6 +1,7 @@
 package com.fu.swp391.schoolhealthmanagementsystem.controller;
 
 import com.fu.swp391.schoolhealthmanagementsystem.dto.student.StudentDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.student.UpdateStudentRequestDto;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentStatus;
 import com.fu.swp391.schoolhealthmanagementsystem.service.StudentService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -9,6 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.annotations.ParameterObject;
@@ -70,6 +72,47 @@ public class StudentController {
 
         Page<StudentDto> studentPage = studentService.getAllStudents(fullName, className, status, pageable);
         return ResponseEntity.ok(studentPage);
+    }
+
+    @PutMapping("/{studentId}")
+    @Operation(summary = "Cập nhật thông tin học sinh")
+    @PreAuthorize("hasAnyRole('SchoolAdmin', 'StaffManager')")
+    public ResponseEntity<StudentDto> updateStudent(
+            @Parameter(description = "ID của học sinh cần cập nhật") @PathVariable Long studentId,
+            @Valid @RequestBody UpdateStudentRequestDto updateStudentRequestDto) {
+        log.info("API: Yêu cầu cập nhật thông tin cho học sinh ID: {}", studentId);
+        StudentDto updatedStudent = studentService.updateStudent(studentId, updateStudentRequestDto);
+        return ResponseEntity.ok(updatedStudent);
+    }
+
+    @PostMapping("/{studentId}/graduate")
+    @Operation(summary = "Đánh dấu học sinh đã tốt nghiệp")
+    @PreAuthorize("hasAnyRole('SchoolAdmin', 'StaffManager')")
+    public ResponseEntity<StudentDto> graduateStudent(
+            @Parameter(description = "ID của học sinh") @PathVariable Long studentId) {
+        log.info("API: Yêu cầu đánh dấu tốt nghiệp cho học sinh ID: {}", studentId);
+        StudentDto updatedStudent = studentService.graduateStudent(studentId);
+        return ResponseEntity.ok(updatedStudent);
+    }
+
+    @PostMapping("/{studentId}/withdraw")
+    @Operation(summary = "Đánh dấu học sinh đã thôi học")
+    @PreAuthorize("hasAnyRole('SchoolAdmin', 'StaffManager')")
+    public ResponseEntity<StudentDto> withdrawStudent(
+            @Parameter(description = "ID của học sinh") @PathVariable Long studentId) {
+        log.info("API: Yêu cầu đánh dấu thôi học cho học sinh ID: {}", studentId);
+        StudentDto updatedStudent = studentService.withdrawStudent(studentId);
+        return ResponseEntity.ok(updatedStudent);
+    }
+
+    @PostMapping("/{studentId}/reactivate")
+    @Operation(summary = "Kích hoạt lại học sinh đã thôi học")
+    @PreAuthorize("hasAnyRole('SchoolAdmin', 'StaffManager')")
+    public ResponseEntity<StudentDto> reactivateStudent(
+            @Parameter(description = "ID của học sinh") @PathVariable Long studentId) {
+        log.info("API: Yêu cầu kích hoạt lại cho học sinh ID: {}", studentId);
+        StudentDto updatedStudent = studentService.reactivateStudent(studentId);
+        return ResponseEntity.ok(updatedStudent);
     }
 
     @DeleteMapping("/{studentId}")

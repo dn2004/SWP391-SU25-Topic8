@@ -30,6 +30,8 @@ public class AdminService {
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final UserMapper userMapper;
+    private final NotificationService notificationService;
+    private final AuthorizationService authorizationService;
 
     @Transactional(readOnly = true)
     public UserDto getUserById(Long userId) {
@@ -82,29 +84,14 @@ public class AdminService {
                     return new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng.");
                 });
 
-        // Optional: Prevent deactivating self or other admins if needed
-        // Authentication currentUserAuth = SecurityContextHolder.getContext().getAuthentication();
-        // if (currentUserAuth.getPrincipal() instanceof User) {
-        //     User adminUser = (User) currentUserAuth.getPrincipal();
-        //     if (adminUser.getUserId().equals(userId)) {
-        //         throw new AppException(HttpStatus.BAD_REQUEST, "Bạn không thể tự vô hiệu hóa tài khoản của mình.");
-        //     }
-        // }
-        // if (user.getRole() == UserRole.SchoolAdmin && !active) {
-        //      throw new AppException(HttpStatus.BAD_REQUEST, "Không thể vô hiệu hóa tài khoản SchoolAdmin khác.");
-        // }
-
-
         user.setActive(isActive);
         User updatedUser = userRepository.save(user);
         log.info("Đã cập nhật trạng thái người dùng ID {} thành {}", userId, isActive ? "active" : "inactive");
-        return userMapper.userToUserDto(updatedUser);
-    }
 
-    public Page<UserDto> getUsersByRole(UserRole role, Pageable pageable) {
-        log.info("Admin lấy danh sách người dùng với vai trò: {} - Trang: {}, Kích thước: {}", role, pageable.getPageNumber(), pageable.getPageSize());
-        Page<User> usersPage = userRepository.findAllByRole(role, pageable);
-        return usersPage.map(userMapper::userToUserDto);
+        // Send notification to the user
+        sendAccountStatusChangeNotification(updatedUser);
+
+        return userMapper.userToUserDto(updatedUser);
     }
 
     @Transactional(readOnly = true)
@@ -122,6 +109,25 @@ public class AdminService {
 
         Page<User> usersPage = userRepository.findAll(spec, pageable);
         return usersPage.map(userMapper::userToUserDto);
+    }
+
+    private void sendAccountStatusChangeNotification(User user) {
+        try {
+            if (user == null || user.getEmail() == null) {
+                log.warn("Cannot send account status change notification. User or email is null for user ID: {}", user != null ? user.getUserId() : "null");
+                return;
+            }
+
+            User admin = authorizationService.getCurrentUserAndValidate();
+            String status = user.isActive() ? "kích hoạt" : "vô hiệu hóa";
+            String content = String.format("Tài khoản của bạn đã được quản trị viên %s.", status);
+            String link = "/profile"; // Link to user's own profile
+
+            notificationService.createAndSendNotification(user.getEmail(), content, link, admin.getEmail());
+            log.info("Requested to send account status change notification to user: {}", user.getEmail());
+        } catch (Exception e) {
+            log.error("Error while sending notification for account status change for user ID {}: {}", user.getUserId(), e.getMessage(), e);
+        }
     }
 
     private String generateRandomPassword() {

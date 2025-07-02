@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
-@ConfigurationProperties(prefix = "app.admin") // Giữ nguyên prefix
+@ConfigurationProperties(prefix = "app.admin")
 @Validated
 public record AdminProperties(
         @NotBlank String
@@ -14,5 +14,4 @@ public record AdminProperties(
         password,
         @NotBlank @Email
         String email
-
 ) {}

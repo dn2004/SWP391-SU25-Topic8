@@ -197,4 +197,50 @@ public class CloudinaryStorageService implements FileStorageService {
             throw new FileStorageException("Không thể tạo chữ ký để tải lên: " + e.getMessage(), e);
         }
     }
+
+    @Override
+    public String uploadEditorImage(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new FileStorageException("Không thể tải lên file rỗng hoặc file không tồn tại.");
+        }
+
+        String originalFilename = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
+        String folderPath = cloudinaryProperties.baseFolder() + "/editor-images";
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("folder", folderPath);
+        params.put("resource_type", "image"); // Chỉ cho phép ảnh
+        params.put("type", "upload"); // `upload` là mặc định cho public
+
+        try {
+            Map uploadResult = cloudinary.uploader().upload(file.getBytes(), params);
+            log.info("Ảnh từ editor '{}' đã được tải lên Cloudinary. Upload result: {}", originalFilename, uploadResult);
+
+            // Trả về URL an toàn của ảnh
+            return uploadResult.get("secure_url").toString();
+
+        } catch (IOException e) {
+            throw new FileStorageException("Lỗi khi tải ảnh editor '" + originalFilename + "' lên Cloudinary.", e);
+        } catch (Exception e) {
+            throw new FileStorageException("Lỗi không xác định khi tải ảnh editor '" + originalFilename + "' lên Cloudinary: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public void deleteEditorImage(String publicId) {
+        try {
+            if (publicId == null || publicId.isEmpty()) return;
+
+            // Đối với ảnh từ editor, chúng ta mặc định resource_type là 'image' và type là 'upload' (public)
+            Map params = ObjectUtils.asMap(
+                    "resource_type", "image"
+            );
+            cloudinary.uploader().destroy(publicId, params);
+            log.info("Đã xóa ảnh công khai (editor) với public_id '{}' từ Cloudinary.", publicId);
+        } catch (IOException e) {
+            throw new FileStorageException("Lỗi IO khi xóa ảnh editor '" + publicId + "' từ Cloudinary.", e);
+        } catch (Exception e) {
+            throw new FileStorageException("Lỗi không xác định khi xóa ảnh editor '" + publicId + "' từ Cloudinary: " + e.getMessage(), e);
+        }
+    }
 }

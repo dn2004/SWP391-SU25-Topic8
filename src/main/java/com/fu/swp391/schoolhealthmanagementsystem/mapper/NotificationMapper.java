@@ -8,11 +8,7 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface NotificationMapper {
 
-    @Mapping(target = "id", source = "id")
-    @Mapping(target = "content", source = "content")
-    @Mapping(target = "isRead", source = "read")
-    @Mapping(target = "link", source = "link")
-    @Mapping(target = "createdAt", source = "createdAt")
+    @Mapping(source = "read", target = "read")
     NotificationResponseDto toDto(Notification notification);
 }
 

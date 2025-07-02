@@ -48,6 +48,7 @@ public class StudentMedicationService {
     private final ScheduledTaskGenerationService scheduledTaskGenerationService; // Inject để trigger tạo task
     private final StudentMedicationSpecification studentMedicationSpecification   ;
     private final StudentMedicationTransactionSpecification studentMedicationTransactionSpecification;
+    private final NotificationService notificationService;
 
     /**
      * NVYT tạo mới StudentMedication khi nhận thuốc trực tiếp từ phụ huynh.
@@ -117,7 +118,31 @@ public class StudentMedicationService {
                 savedMedication.getStudentMedicationId(), currentStaff.getEmail(), savedMedication.getMedicationName(),
                 savedMedication.getTotalDosesProvided(), savedMedication.getRemainingDoses(), savedMedication.getStatus());
 
+        // Gửi thông báo cho phụ huynh
+        sendMedicationReceivedNotification(savedMedication);
+
         return studentMedicationMapper.entityToResponseDto(savedMedication);
+    }
+
+    private void sendMedicationReceivedNotification(StudentMedication medication) {
+        try {
+            Student student = medication.getStudent();
+            User parent = medication.getSubmittedByParent();
+            if (student == null || parent == null) {
+                log.warn("Không thể gửi thông báo nhận thuốc. Thiếu thông tin học sinh hoặc phụ huynh cho StudentMedication ID: {}", medication.getStudentMedicationId());
+                return;
+            }
+
+            String content = String.format("Nhà trường đã nhận thuốc '%s' cho học sinh %s.",
+                    medication.getMedicationName(), student.getFullName());
+            String link = "/student-medications/" + medication.getStudentMedicationId();
+            String sender = medication.getCreatedByUser() != null ? medication.getCreatedByUser().getEmail() : "system";
+
+            notificationService.createAndSendNotification(parent.getEmail(), content, link, sender);
+            log.info("Đã gửi thông báo nhận thuốc ID {} tới phụ huynh: {}", medication.getStudentMedicationId(), parent.getEmail());
+        } catch (Exception e) {
+            log.error("Lỗi khi gửi thông báo nhận thuốc cho StudentMedication ID {}: {}", medication.getStudentMedicationId(), e.getMessage(), e);
+        }
     }
 
     /**
@@ -202,7 +227,27 @@ public class StudentMedicationService {
                 log.info("StudentMedication ID {} schedule updated, but conditions not met for immediate task regeneration (e.g. no remaining doses or missing schedule info).", updatedMedication.getStudentMedicationId());
             }
         }
+
+        // Gửi thông báo cho phụ huynh
+        sendScheduleUpdateNotification(updatedMedication);
+
         return studentMedicationMapper.entityToResponseDto(updatedMedication);
+    }
+
+    private void sendScheduleUpdateNotification(StudentMedication medication) {
+        try {
+            Student student = medication.getStudent();
+            if (student == null) return;
+
+            String content = String.format("Lịch uống thuốc cho '%s' của học sinh %s vừa được cập nhật.",
+                    medication.getMedicationName(), student.getFullName());
+            String link = "/student-medications/" + medication.getStudentMedicationId();
+            String sender = authorizationService.tryGetCurrentUser().map(User::getEmail).orElse("system");
+
+            sendNotificationToParents(student, content, link, sender, "cập nhật lịch uống thuốc");
+        } catch (Exception e) {
+            log.error("Lỗi khi gửi thông báo cập nhật lịch uống thuốc cho ID {}: {}", medication.getStudentMedicationId(), e.getMessage(), e);
+        }
     }
 
     @Transactional(readOnly = true)
@@ -328,6 +373,10 @@ public class StudentMedicationService {
 
         log.info("StudentMedication ID {} reported as LOST by {}. Remaining doses set to 0. Future tasks cancelled.",
                 updatedMedication.getStudentMedicationId(), currentStaff.getEmail());
+
+        // Send notification to parent
+        sendMedicationLostNotification(updatedMedication);
+
         return studentMedicationMapper.entityToResponseDto(updatedMedication);
     }
 
@@ -379,9 +428,28 @@ public class StudentMedicationService {
 
         log.info("StudentMedication ID {} marked as RETURNED_TO_PARENT by {}. Remaining doses set to 0. Future tasks cancelled.",
                 updatedMedication.getStudentMedicationId(), currentStaff.getEmail());
+
+        // Gửi thông báo cho phụ huynh
+        sendMedicationReturnedNotification(updatedMedication);
+
         return studentMedicationMapper.entityToResponseDto(updatedMedication);
     }
 
+    private void sendMedicationReturnedNotification(StudentMedication medication) {
+        try {
+            Student student = medication.getStudent();
+            if (student == null) return;
+
+            String content = String.format("Thuốc '%s' của học sinh %s đã được trả lại cho phụ huynh.",
+                    medication.getMedicationName(), student.getFullName());
+            String link = "/student-medications/" + medication.getStudentMedicationId();
+            String sender = authorizationService.tryGetCurrentUser().map(User::getEmail).orElse("system");
+
+            sendNotificationToParents(student, content, link, sender, "trả thuốc");
+        } catch (Exception e) {
+            log.error("Lỗi khi gửi thông báo trả thuốc cho ID {}: {}", medication.getStudentMedicationId(), e.getMessage(), e);
+        }
+    }
 
     /**
      * NVYT hủy một StudentMedication (thu hồi) với điều kiện chưa được lên lịch.
@@ -450,7 +518,55 @@ public class StudentMedicationService {
         log.info("StudentMedication ID {} successfully cancelled by {}. Cancellation reason: {}",
                 cancelledMedication.getStudentMedicationId(), currentStaff.getEmail(), requestDto.cancellationReason());
 
+        // Gửi thông báo cho phụ huynh
+        sendMedicationCancelledNotification(cancelledMedication, requestDto.cancellationReason());
+
         return studentMedicationMapper.entityToResponseDto(cancelledMedication);
+    }
+
+    private void sendMedicationCancelledNotification(StudentMedication medication, String reason) {
+        try {
+            Student student = medication.getStudent();
+            if (student == null) return;
+
+            String content = String.format("Hồ sơ thuốc '%s' của học sinh %s đã bị hủy. Lý do: %s",
+                    medication.getMedicationName(), student.getFullName(), reason);
+            String link = "/student-medications/" + medication.getStudentMedicationId();
+            String sender = authorizationService.tryGetCurrentUser().map(User::getEmail).orElse("system");
+
+            sendNotificationToParents(student, content, link, sender, "hủy hồ sơ thuốc");
+        } catch (Exception e) {
+            log.error("Lỗi khi gửi thông báo hủy hồ sơ thuốc cho ID {}: {}", medication.getStudentMedicationId(), e.getMessage(), e);
+        }
+    }
+
+    private void sendNotificationToParents(Student student, String content, String link, String sender, String logContext) {
+        if (student == null || student.getParentLinks() == null || student.getParentLinks().isEmpty()) {
+            log.warn("Cannot send {} notification. No parent info for student ID: {}", logContext, student != null ? student.getId() : "null");
+            return;
+        }
+
+        student.getParentLinks().forEach(parentLink -> {
+            User parent = parentLink.getParent();
+            if (parent != null && parent.getEmail() != null) {
+                notificationService.createAndSendNotification(parent.getEmail(), content, link, sender);
+                log.info("Requested to send {} notification to parent: {}", logContext, parent.getEmail());
+            }
+        });
+    }
+
+    private void sendMedicationLostNotification(StudentMedication medication) {
+        try {
+            Student student = medication.getStudent();
+            String content = String.format("[CẢNH BÁO] Thuốc '%s' của học sinh %s đã được báo cáo là thất lạc. Vui lòng liên hệ với nhà trường.",
+                    medication.getMedicationName(), student.getFullName());
+            String link = "/student-medications/" + medication.getStudentMedicationId();
+            String sender = authorizationService.tryGetCurrentUser().map(User::getEmail).orElse("system");
+
+            sendNotificationToParents(student, content, link, sender, "medication lost");
+        } catch (Exception e) {
+            log.error("Error sending medication lost notification for medication ID {}: {}", medication.getStudentMedicationId(), e.getMessage(), e);
+        }
     }
 
     /**

@@ -39,7 +39,7 @@ public class StudentVaccinationService {
     private final StudentVaccinationMapper vaccinationMapper;
     private final AuthorizationService authorizationService;
     private final StudentVaccinationSpecification vaccinationSpecification;
-    private final NotificationService notificationService; // Sử dụng NotificationService
+    private final NotificationService notificationService;
 
     // Phương thức này vẫn giữ studentId vì nó tạo mới cho một student cụ thể
     @Transactional
@@ -50,16 +50,21 @@ public class StudentVaccinationService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy học sinh với ID: " + studentId));
 
         StudentVaccinationStatus vaccinationStatus = StudentVaccinationStatus.PENDING;
+        User approvedByUser = null; // Mặc định không có người duyệt
 
         if (currentUser.getRole() == UserRole.Parent) {
             authorizationService.authorizeParentAction(currentUser, student, "thêm thông tin tiêm chủng");
         } else {
             vaccinationStatus = StudentVaccinationStatus.APPROVE;
+            approvedByUser = currentUser; // Nếu là nhân viên/admin, gán người duyệt là người hiện tại
         }
 
         StudentVaccination vaccinationEntity = vaccinationMapper.requestDtoToEntity(dto);
         vaccinationEntity.setStudent(student);
         vaccinationEntity.setStatus(vaccinationStatus);
+        vaccinationEntity.setCreatedByUser(currentUser); // Gán người tạo
+        vaccinationEntity.setApprovedByUser(approvedByUser);
+
         log.info("Gán trạng thái mặc định PENDING cho bản ghi tiêm chủng mới của học sinh ID: {}", studentId);
 
         MultipartFile proofFile = dto.proofFile();
@@ -70,6 +75,15 @@ public class StudentVaccinationService {
 
         StudentVaccination savedEntity = vaccinationRepository.save(vaccinationEntity);
         log.info("Đã lưu bản ghi tiêm chủng với ID: {} và trạng thái: {}", savedEntity.getStudentVaccinationId(), savedEntity.getStatus());
+
+        // Gửi thông báo cho MedicalStaff nếu người tạo là phụ huynh
+        if (currentUser.getRole() == UserRole.Parent) {
+            String content = String.format("Có hồ sơ tiêm chủng mới cho học sinh '%s' cần được duyệt.", student.getFullName());
+            String link = "/admin/vaccinations/pending"; // Link tới trang duyệt của admin/staff
+            notificationService.createAndSendNotificationToRole(UserRole.MedicalStaff, content, link, currentUser.getEmail());
+            log.info("Đã gửi thông báo cho MedicalStaff về hồ sơ tiêm chủng mới của học sinh ID: {}", studentId);
+        }
+
         return vaccinationMapper.toDto(savedEntity);
     }
 
@@ -196,41 +210,69 @@ public class StudentVaccinationService {
         }
         Long studentId = studentOfRecord.getId(); // Lấy studentId từ bản ghi
 
-        // Kiểm tra quyền cập nhật
+        // Kiểm tra quyền cập nhật dựa trên vai trò
         if (currentUser.getRole() == UserRole.Parent) {
             authorizationService.authorizeParentAction(currentUser, studentOfRecord, "cập nhật thông tin tiêm chủng");
+            // Phụ huynh chỉ được cập nhật khi trạng thái là PENDING
             if (existingVaccination.getStatus() != StudentVaccinationStatus.PENDING) {
                 throw new AccessDeniedException("Bạn chỉ có thể cập nhật thông tin tiêm chủng khi đang ở trạng thái 'Chờ xử lý'.");
             }
+        } else {
+            // Nhân viên không được cập nhật hồ sơ PENDING, họ phải dùng chức năng duyệt
+            if (existingVaccination.getStatus() == StudentVaccinationStatus.PENDING) {
+                throw new AccessDeniedException("Nhân viên không thể cập nhật hồ sơ đang ở trạng thái 'Chờ xử lý'. Vui lòng sử dụng chức năng duyệt.");
+            }
         }
 
-        StudentVaccinationStatus currentStatusBeforeUpdate = existingVaccination.getStatus();
+        // Cập nhật thông tin từ DTO vào entity
         vaccinationMapper.updateEntityFromRequestDto(dto, existingVaccination);
+        existingVaccination.setUpdatedByUser(currentUser);
 
+        // Xử lý file bằng chứng nếu có file mới
         MultipartFile newProofFile = dto.proofFile();
         if (newProofFile != null && !newProofFile.isEmpty()) {
+            // Xóa file cũ nếu tồn tại
             if (existingVaccination.getProofPublicId() != null && !existingVaccination.getProofPublicId().isEmpty()) {
                 try {
                     fileStorageService.deleteFile(existingVaccination.getProofPublicId(), existingVaccination.getProofResourceType());
                     vaccinationMapper.clearProofFileDetails(existingVaccination);
-                } catch (Exception e) { log.error("Lỗi xóa file cũ trên Cloudinary: {}", e.getMessage());}
+                } catch (Exception e) {
+                    log.error("Lỗi xóa file cũ trên Cloudinary: {}", e.getMessage());
+                }
             }
+            // Tải file mới lên
             CloudinaryUploadResponse uploadResult = fileStorageService.uploadFile(newProofFile, "vaccinations/student_" + studentId, "student_" + studentId + "_vacc_proof_updated");
             vaccinationMapper.updateProofFileDetailsFromUploadResult(uploadResult, existingVaccination);
         }
 
-        if (currentStatusBeforeUpdate != StudentVaccinationStatus.PENDING) {
+        // Thiết lập trạng thái và thông tin duyệt dựa trên vai trò người dùng
+        if (currentUser.getRole() == UserRole.Parent) {
+            // Nếu là phụ huynh, trạng thái luôn là PENDING, reset thông tin duyệt
             existingVaccination.setStatus(StudentVaccinationStatus.PENDING);
             existingVaccination.setApprovedByUser(null);
             existingVaccination.setApprovedAt(null);
             existingVaccination.setApproverNotes(null);
-            log.info("Bản ghi ID {} có trạng thái '{}', chuyển về PENDING sau cập nhật.", vaccinationId, currentStatusBeforeUpdate);
+            log.info("Bản ghi ID {} được cập nhật bởi phụ huynh, giữ/chuyển về trạng thái PENDING.", vaccinationId);
         } else {
-            log.info("Bản ghi ID {} đang PENDING, giữ nguyên trạng thái PENDING sau cập nhật.", vaccinationId);
+            // Nếu là nhân viên/admin, trạng thái luôn là APPROVE, cập nhật thông tin duyệt
+            existingVaccination.setStatus(StudentVaccinationStatus.APPROVE);
+            existingVaccination.setApprovedByUser(currentUser);
+            existingVaccination.setApprovedAt(LocalDateTime.now());
+            existingVaccination.setApproverNotes("Cập nhật và duyệt tự động bởi nhân viên.");
+            log.info("Bản ghi ID {} được cập nhật bởi nhân viên, tự động chuyển sang trạng thái APPROVE.", vaccinationId);
         }
 
         StudentVaccination updatedEntity = vaccinationRepository.save(existingVaccination);
         log.info("Đã cập nhật bản ghi tiêm chủng ID: {}, trạng thái mới: {}", updatedEntity.getStudentVaccinationId(), updatedEntity.getStatus());
+
+        // Gửi thông báo cho nhân viên y tế nếu phụ huynh cập nhật
+        if (currentUser.getRole() == UserRole.Parent) {
+            String content = String.format("Phụ huynh vừa cập nhật hồ sơ tiêm chủng cho học sinh '%s'. Hồ sơ cần được duyệt lại.", studentOfRecord.getFullName());
+            String link = "/admin/vaccinations/pending"; // Link tới trang duyệt của admin/staff
+            notificationService.createAndSendNotificationToRole(UserRole.MedicalStaff, content, link, currentUser.getEmail());
+            log.info("Đã gửi thông báo cho MedicalStaff về việc cập nhật hồ sơ tiêm chủng của học sinh ID: {}", studentId);
+        }
+
         return vaccinationMapper.toDto(updatedEntity);
     }
 
@@ -257,6 +299,7 @@ public class StudentVaccinationService {
         vaccination.setApproverNotes(statusUpdateRequestDto.approverNotes());
         vaccination.setApprovedByUser(currentUser);
         vaccination.setApprovedAt(LocalDateTime.now());
+        vaccination.setUpdatedByUser(currentUser); // Ghi nhận người duyệt cũng là người cập nhật cuối cùng
 
         StudentVaccination updatedVaccination = vaccinationRepository.save(vaccination);
         log.info("Đã cập nhật trạng thái cho bản ghi tiêm chủng ID {} thành {}. Duyệt bởi: {}. Ghi chú: {}",
@@ -290,6 +333,8 @@ public class StudentVaccinationService {
 
                 // Tạo link để điều hướng khi người dùng nhấp vào thông báo
                 String linkToResource = "/vaccinations/" + vaccination.getStudentVaccinationId();
+                // Lấy thông tin người gửi từ người duyệt, hoặc dùng "system" nếu không có
+                String sender = vaccination.getApprovedByUser() != null ? vaccination.getApprovedByUser().getEmail() : "system";
 
                 student.getParentLinks().forEach(link -> {
                     User parent = link.getParent();
@@ -297,7 +342,7 @@ public class StudentVaccinationService {
                         String parentUsername = parent.getEmail();
 
                         // Gọi service mới để tạo, lưu và gửi thông báo
-                        notificationService.createAndSendNotification(parentUsername, notificationContent, linkToResource);
+                        notificationService.createAndSendNotification(parentUsername, notificationContent, linkToResource, sender);
 
                         log.info("Đã yêu cầu gửi thông báo (và lưu vào DB) về hồ sơ tiêm chủng ID {} tới phụ huynh: {}", vaccination.getStudentVaccinationId(), parentUsername);
                     }
@@ -307,7 +352,6 @@ public class StudentVaccinationService {
             log.error("Lỗi khi chuẩn bị và yêu cầu gửi thông báo WebSocket đến phụ huynh: {}", e.getMessage(), e);
         }
     }
-
     @Transactional
     public void deleteVaccinationForCurrentUser(Long vaccinationId) {
         log.info("Bắt đầu yêu cầu xóa bản ghi tiêm chủng ID: {} bởi người dùng hiện tại.", vaccinationId);
@@ -380,4 +424,3 @@ public class StudentVaccinationService {
         return signedUrl;
     }
 }
-

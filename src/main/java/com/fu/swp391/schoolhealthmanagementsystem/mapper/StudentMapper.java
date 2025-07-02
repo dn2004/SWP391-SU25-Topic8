@@ -2,11 +2,13 @@ package com.fu.swp391.schoolhealthmanagementsystem.mapper;
 
 import com.fu.swp391.schoolhealthmanagementsystem.dto.student.CreateStudentRequestDto;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.student.StudentDto; // Bạn cần tạo DTO này
+import com.fu.swp391.schoolhealthmanagementsystem.dto.student.UpdateStudentRequestDto;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.Student;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.Gender;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentStatus;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 
 @Mapper(componentModel = "spring")
@@ -23,6 +25,15 @@ public interface StudentMapper {
     @Mapping(source = "gender", target = "gender", qualifiedByName = "genderToDisplayNameString")
     @Mapping(source = "status", target = "status", qualifiedByName = "statusToDisplayNameString")
     StudentDto studentToStudentDto(Student student);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "parentLinks", ignore = true)
+    @Mapping(target = "invitationCode", ignore = true)
+    @Mapping(target = "vaccinations", ignore = true)
+    @Mapping(target = "healthIncidents", ignore = true)
+    void updateStudentFromDto(UpdateStudentRequestDto dto, @MappingTarget Student student);
 
     // This custom mapping method handles the Gender enum to its Vietnamese display name String conversion.
     @Named("genderToDisplayNameString")

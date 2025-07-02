@@ -8,13 +8,15 @@ import lombok.Getter;
 @Getter
 @Schema(description = "Trạng thái của bài đăng blog")
 public enum BlogStatus {
-    PUBLIC("Công khai"),
-    PRIVATE("Riêng tư");
+    PUBLIC("Công khai", "#4CAF50"), // Xanh lá
+    PRIVATE("Riêng tư", "#f44336"); // Đỏ
 
     private final String displayName;
+    private final String backgroundColor;
 
-    BlogStatus(String displayName) {
+    BlogStatus(String displayName, String backgroundColor) {
         this.displayName = displayName;
+        this.backgroundColor = backgroundColor;
     }
 
     @JsonValue

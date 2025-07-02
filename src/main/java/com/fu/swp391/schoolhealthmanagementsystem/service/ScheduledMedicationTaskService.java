@@ -42,6 +42,7 @@ public class ScheduledMedicationTaskService {
     private final UserRepository userRepository;
     private final ParentStudentLinkRepository parentStudentLinkRepository;
     private final ScheduledMedicationTaskSpecification scheduledMedicationTaskSpecification;
+    private final NotificationService notificationService;
     // ParentStudentLinkRepository sẽ được gọi qua AuthorizationService
 
     /**
@@ -210,6 +211,10 @@ public class ScheduledMedicationTaskService {
         log.info("Medication administered successfully for ScheduledTask ID {} by staff {}. Remaining doses for {} : {}",
                 taskId, currentStaff.getEmail(), medication.getMedicationName(), newRemainingDoses);
 
+        // Send notifications
+        sendMedicationAdministeredNotification(updatedTask);
+        checkAndSendLowDoseNotification(medication);
+
         return taskMapper.toDto(updatedTask);
     }
 
@@ -252,6 +257,9 @@ public class ScheduledMedicationTaskService {
             default:
                 break;
         }
+
+        // Send notification
+        sendMedicationSkippedNotification(updatedTask);
 
         return taskMapper.toDto(updatedTask);
     }
@@ -333,6 +341,73 @@ public class ScheduledMedicationTaskService {
         log.info("Rescheduled task for Medication ID {}. New task ID: {}, Scheduled for: {} {}",
                 medication.getStudentMedicationId(), rescheduledTask.getScheduledTaskId(),
                 rescheduledTask.getScheduledDate(), rescheduledTask.getScheduledTimeText());
+    }
+
+    private void sendNotificationToParents(Student student, String content, String link, String sender, String logContext) {
+        if (student == null || student.getParentLinks() == null || student.getParentLinks().isEmpty()) {
+            log.warn("Cannot send {} notification. No parent info for student ID: {}", logContext, student != null ? student.getId() : "null");
+            return;
+        }
+
+        student.getParentLinks().forEach(parentLink -> {
+            User parent = parentLink.getParent();
+            if (parent != null && parent.getEmail() != null) {
+                notificationService.createAndSendNotification(parent.getEmail(), content, link, sender);
+                log.info("Requested to send {} notification to parent: {} from sender: {}", logContext, parent.getEmail(), sender);
+            }
+        });
+    }
+
+    private void sendMedicationAdministeredNotification(ScheduledMedicationTask task) {
+        try {
+            Student student = task.getStudentMedication().getStudent();
+            String medicationName = task.getStudentMedication().getMedicationName();
+            String administeredTime = task.getAdministeredAt().toLocalTime().toString();
+            User staff = task.getAdministeredByStaff();
+            String sender = (staff != null) ? staff.getEmail() : "system";
+
+            String content = String.format("Học sinh %s đã được cho uống thuốc '%s' vào lúc %s.",
+                    student.getFullName(), medicationName, administeredTime);
+            String link = "/scheduled-medication-tasks/" + task.getScheduledTaskId();
+
+            sendNotificationToParents(student, content, link, sender, "medication administered");
+        } catch (Exception e) {
+            log.error("Error sending medication administered notification for task ID {}: {}", task.getScheduledTaskId(), e.getMessage(), e);
+        }
+    }
+
+    private void checkAndSendLowDoseNotification(StudentMedication medication) {
+        final int LOW_DOSE_THRESHOLD = 3;
+        if (medication.getRemainingDoses() > 0 && medication.getRemainingDoses() <= LOW_DOSE_THRESHOLD) {
+            try {
+                Student student = medication.getStudent();
+                String content = String.format("Thuốc '%s' của học sinh %s sắp hết. Số liều còn lại: %d. Vui lòng gửi thêm.",
+                        medication.getMedicationName(), student.getFullName(), medication.getRemainingDoses());
+                String link = "/student-medications/" + medication.getStudentMedicationId();
+
+                sendNotificationToParents(student, content, link, "system", "low dose");
+            } catch (Exception e) {
+                log.error("Error sending low dose notification for medication ID {}: {}", medication.getStudentMedicationId(), e.getMessage(), e);
+            }
+        }
+    }
+
+    private void sendMedicationSkippedNotification(ScheduledMedicationTask task) {
+        try {
+            Student student = task.getStudentMedication().getStudent();
+            String medicationName = task.getStudentMedication().getMedicationName();
+            String reason = task.getStatus().getDisplayName();
+            User staff = task.getAdministeredByStaff();
+            String sender = (staff != null) ? staff.getEmail() : "system";
+
+            String content = String.format("Lịch uống thuốc '%s' của học sinh %s đã bị bỏ qua. Lý do: %s.",
+                    medicationName, student.getFullName(), reason);
+            String link = "/scheduled-medication-tasks/" + task.getScheduledTaskId();
+
+            sendNotificationToParents(student, content, link, sender, "medication skipped");
+        } catch (Exception e) {
+            log.error("Error sending medication skipped notification for task ID {}: {}", task.getScheduledTaskId(), e.getMessage(), e);
+        }
     }
 
     @Transactional(readOnly = true)

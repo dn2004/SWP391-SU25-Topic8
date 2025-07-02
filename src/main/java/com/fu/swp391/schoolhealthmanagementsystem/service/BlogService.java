@@ -3,8 +3,10 @@ package com.fu.swp391.schoolhealthmanagementsystem.service;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.blog.BlogResponseDto;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.blog.CreateBlogRequestDto;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.blog.UpdateBlogRequestDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.blog.UpdateBlogStatusRequestDto;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.Blog;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.User;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.BlogCategory;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.BlogStatus;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.UserRole;
 import com.fu.swp391.schoolhealthmanagementsystem.exception.ResourceNotFoundException;
@@ -12,6 +14,7 @@ import com.fu.swp391.schoolhealthmanagementsystem.mapper.BlogMapper;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.BlogRepository;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.specification.BlogSpecification;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -24,12 +27,14 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class BlogService {
 
     private final BlogRepository blogRepository;
     private final BlogMapper blogMapper;
     private final AuthorizationService authorizationService;
     private final BlogSpecification blogSpecification;
+    private final NotificationService notificationService;
 
     @Transactional
     public BlogResponseDto createBlog(CreateBlogRequestDto createDto) {
@@ -40,12 +45,13 @@ public class BlogService {
     }
 
     @Transactional(readOnly = true)
-    public Page<BlogResponseDto> getAllBlogs(String title, Long authorId, BlogStatus status, LocalDate startDate, LocalDate endDate, Pageable pageable) {
+    public Page<BlogResponseDto> getAllBlogs(String title, Long authorId, BlogStatus status, BlogCategory category, LocalDate startDate, LocalDate endDate, Pageable pageable) {
         Optional<User> currentUserOpt = authorizationService.tryGetCurrentUser();
 
         Specification<Blog> spec = Specification.allOf(blogSpecification.titleContains(title))
                 .and(blogSpecification.hasAuthorId(authorId))
                 .and(blogSpecification.hasStatus(status))
+                .and(blogSpecification.hasCategory(category))
                 .and(blogSpecification.updatedBetween(startDate, endDate));
 
         // Nếu người dùng không đăng nhập hoặc không phải admin/manager, chỉ hiển thị các bài PUBLIC
@@ -107,17 +113,6 @@ public class BlogService {
     }
 
     @Transactional
-    public BlogResponseDto updateBlogStatus(Long blogId, BlogStatus newStatus) {
-        // Quyền admin đã được kiểm tra ở controller
-        Blog blog = blogRepository.findById(blogId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bài đăng với ID: " + blogId));
-
-        blog.setStatus(newStatus);
-        Blog updatedBlog = blogRepository.save(blog);
-        return blogMapper.toResponseDto(updatedBlog);
-    }
-
-    @Transactional
     public void deleteBlog(Long blogId) {
         User currentUser = authorizationService.getCurrentUserAndValidate();
         Blog blog = blogRepository.findById(blogId)
@@ -131,6 +126,25 @@ public class BlogService {
         }
 
         blogRepository.delete(blog);
+    }
+
+    @Transactional
+    public BlogResponseDto updateBlogStatus(Long blogId, UpdateBlogStatusRequestDto updateDto) {
+        User currentUser = authorizationService.getCurrentUserAndValidate();
+        // This action is restricted to Admins and Managers
+        if (!hasAdminOrManagerRole(currentUser)) {
+            throw new AccessDeniedException("Bạn không có quyền cập nhật trạng thái bài đăng.");
+        }
+
+        Blog blog = blogRepository.findById(blogId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bài đăng với ID: " + blogId));
+
+        blog.setStatus(updateDto.status());
+        Blog updatedBlog = blogRepository.save(blog);
+
+        log.info("Trạng thái của bài đăng ID {} đã được cập nhật thành {} bởi người dùng {}", blogId, updateDto.status(), currentUser.getEmail());
+
+        return blogMapper.toResponseDto(updatedBlog);
     }
 
     private boolean hasAdminOrManagerRole(User user) {

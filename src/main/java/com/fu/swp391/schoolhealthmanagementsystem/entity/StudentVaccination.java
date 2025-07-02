@@ -3,7 +3,8 @@ package com.fu.swp391.schoolhealthmanagementsystem.entity;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentVaccinationStatus;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.UpdateTimestamp; // Đảm bảo import đúng
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -48,8 +49,9 @@ public class StudentVaccination {
     private String proofPublicId;
 
     @Column(name = "ProofResourceType", length = 50)
-    private String proofResourceType;
+    private String proofResourceType; // e.g., "image", "video", "raw"
 
+    @CreationTimestamp
     @Column(name = "CreatedAt", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -71,14 +73,12 @@ public class StudentVaccination {
     @Column(name = "ApproverNotes", length = 500)
     private String approverNotes;
 
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        // updatedAt = LocalDateTime.now(); // Không cần thiết ở đây, @UpdateTimestamp sẽ xử lý
-    }
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "CreatedByUserId", updatable = false)
+    private User createdByUser;
 
-    @PreUpdate
-    protected void onUpdate() {
-        // updatedAt = LocalDateTime.now(); // @UpdateTimestamp sẽ tự động xử lý việc này
-    }
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "UpdatedByUserId")
+    private User updatedByUser;
+
 }

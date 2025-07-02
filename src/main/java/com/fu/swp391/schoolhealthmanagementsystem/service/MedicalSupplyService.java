@@ -231,7 +231,7 @@ public class MedicalSupplyService {
     }
 
     @Transactional
-    public void disposeMedicalSupply(Long supplyId) { // Soft delete -> chuyển trạng thái thành ARCHIVED
+    public void disposeMedicalSupply(Long supplyId) { // Soft delete -> chuyển trạng thái thành DISPOSE
         User currentUser = authorizationService.getCurrentUserAndValidate();
         log.info("Người dùng {} đang yêu cầu lưu trữ vật tư y tế ID: {}", currentUser.getEmail(), supplyId);
 
@@ -250,7 +250,7 @@ public class MedicalSupplyService {
     }
 
     @Transactional
-    public void deleteMedicalSupply(Long supplyId) { //xóa cứng
+    public void deleteMedicalSupply(Long supplyId) {
         User currentUser = authorizationService.getCurrentUserAndValidate();
         log.info("Người dùng {} đang yêu cầu xóa cứng vật tư y tế ID: {}", currentUser.getEmail(), supplyId);
 

@@ -10,4 +10,8 @@ public interface FileStorageService {
     String generateSignedUrl(String publicId, String resourceType, int durationInSeconds);
 
     UploadSignatureResponse getUploadSignature(String folder);
+
+    String uploadEditorImage(MultipartFile file);
+
+    void deleteEditorImage(String publicId);
 }

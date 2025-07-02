@@ -18,7 +18,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     @Query("UPDATE Notification n SET n.read = true WHERE n.recipient.userId = :userId AND n.read = false")
     void markAllAsReadByUserId(@Param("userId") Long userId);
 
-    long countByRecipient_UserIdAndIsReadFalse(Long userId);
+    long countByRecipient_UserIdAndReadFalse(Long userId);
 
     void deleteByCreatedAtBefore(LocalDateTime dateTime);
 }

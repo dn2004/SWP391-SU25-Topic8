@@ -1,5 +1,6 @@
 package com.fu.swp391.schoolhealthmanagementsystem.entity;
 
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.BlogCategory;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.BlogStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -38,6 +39,9 @@ public class Blog {
 
     @Column(name = "Status", nullable = false)
     private BlogStatus status;
+
+    @Column(name = "Category", nullable = false)
+    private BlogCategory category;
 
     @CreationTimestamp
     @Column(name = "CreatedAt", nullable = false, updatable = false)
