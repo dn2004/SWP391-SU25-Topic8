@@ -18,6 +18,7 @@ public interface BlogMapper {
     BlogResponseDto toResponseDto(Blog blog);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "slug", ignore = true) // Slug sẽ được tự động tạo trong @PrePersist
     @Mapping(target = "author", source = "author")
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
@@ -25,6 +26,7 @@ public interface BlogMapper {
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "slug", ignore = true) // Slug sẽ được tự động cập nhật trong @PreUpdate
     @Mapping(target = "author", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)

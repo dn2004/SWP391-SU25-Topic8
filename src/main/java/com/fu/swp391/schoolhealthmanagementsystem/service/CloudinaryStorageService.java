@@ -1,6 +1,7 @@
 package com.fu.swp391.schoolhealthmanagementsystem.service;
 
 import com.cloudinary.Cloudinary;
+import com.cloudinary.Transformation;
 import com.cloudinary.utils.ObjectUtils;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.cloudinary.CloudinaryUploadResponse;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.cloudinary.UploadSignatureResponse;
@@ -223,6 +224,59 @@ public class CloudinaryStorageService implements FileStorageService {
             throw new FileStorageException("Lỗi khi tải ảnh editor '" + originalFilename + "' lên Cloudinary.", e);
         } catch (Exception e) {
             throw new FileStorageException("Lỗi không xác định khi tải ảnh editor '" + originalFilename + "' lên Cloudinary: " + e.getMessage(), e);
+        }
+    }
+
+    public String uploadBlogThumbnail(MultipartFile file) {
+        // 1. Validation: Giữ nguyên, rất tốt
+        if (file == null || file.isEmpty()) {
+            throw new FileStorageException("Không thể tải lên file rỗng hoặc file không tồn tại.");
+        }
+
+        String originalFilename = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
+        String folderPath = cloudinaryProperties.baseFolder() + "/blog-thumbnails";
+
+        // 2. Public ID: Giữ nguyên, rất tốt
+        String publicId = "thumbnail_" + System.currentTimeMillis() + "_" + UUID.randomUUID().toString().substring(0, 8);
+
+        // 3. Tối ưu Transformation: Sửa lỗi quan trọng nhất
+        // Tạo đối tượng Transformation thay vì Map
+        Transformation transformation = new Transformation<>()
+                .width(800)
+                .height(600)
+                .crop("limit")       // Giới hạn kích thước mà không làm méo ảnh
+                .quality("auto:good"); // Tối ưu chất lượng tự động
+
+        try {
+            // 4. Tối ưu cách tạo params và cách upload
+            Map<String, Object> params = ObjectUtils.asMap(
+                    "folder", folderPath,
+                    "resource_type", "image",
+                    "public_id", publicId,
+                    "overwrite", false,
+                    "transformation", transformation // Truyền thẳng đối tượng Transformation
+            );
+
+            // Sử dụng file.getInputStream() để hiệu quả hơn về bộ nhớ
+            Map uploadResult = cloudinary.uploader().upload(file.getBytes(), params);
+
+            // 5. Logging: Giữ nguyên, rất tốt
+            log.info("Thumbnail '{}' đã được tải lên Cloudinary. Public ID: {}. URL: {}",
+                    originalFilename,
+                    uploadResult.get("public_id"),
+                    uploadResult.get("secure_url"));
+
+            return uploadResult.get("secure_url").toString();
+
+        } catch (IOException e) {
+            // Bắt lỗi IO cụ thể khi đọc file
+            log.error("Lỗi IO khi đọc file '{}'.", originalFilename, e);
+            throw new FileStorageException("Lỗi khi đọc file để tải lên Cloudinary: " + originalFilename, e);
+        } catch (Exception e) {
+            // 6. Cải thiện xử lý lỗi chung
+            // Log đầy đủ stack trace để dễ debug
+            log.error("Lỗi không xác định khi tải thumbnail '{}' lên Cloudinary.", originalFilename, e);
+            throw new FileStorageException("Lỗi không xác định khi tải thumbnail lên Cloudinary: " + e.getMessage(), e);
         }
     }
 

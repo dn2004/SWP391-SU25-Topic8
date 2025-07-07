@@ -1,5 +1,7 @@
 package com.fu.swp391.schoolhealthmanagementsystem.entity;
 
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.ClassGroup;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.Class;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.Gender;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentStatus;
 import jakarta.persistence.*;
@@ -37,8 +39,13 @@ public class Student {
     @Column(name = "Gender", nullable = false, length = 10)
     private Gender gender;
 
-    @Column(name = "ClassName", nullable = false, length = 50)
-    private String className;
+    @Column(name = "ClassGroup", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private ClassGroup classGroup;
+
+    @Column(name = "ClassValue", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Class classValue;
 
     @Column(name = "Status", nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
@@ -63,4 +70,16 @@ public class Student {
 
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<HealthIncident> healthIncidents = new ArrayList<>();
+
+    /**
+     * Trả về tên lớp đầy đủ bằng cách kết hợp khối và lớp
+     * Ví dụ: "Mầm A", "Chồi B", "Lá C"
+     */
+    @Transient
+    public String getClassName() {
+        if (classGroup == null || classValue == null) {
+            return null;
+        }
+        return classGroup.getDisplayName() + " " + classValue;
+    }
 }

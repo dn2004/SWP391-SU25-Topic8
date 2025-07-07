@@ -8,6 +8,9 @@ import java.time.LocalDateTime;
 public record BlogResponseDto(
         Long id,
         String title,
+        String slug,
+        String thumbnail,
+        String description,
         String content,
         String authorName,
         BlogStatus status,

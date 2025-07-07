@@ -2,6 +2,8 @@ package com.fu.swp391.schoolhealthmanagementsystem.controller;
 
 import com.fu.swp391.schoolhealthmanagementsystem.dto.student.StudentDto;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.student.UpdateStudentRequestDto;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.Class;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.ClassGroup;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentStatus;
 import com.fu.swp391.schoolhealthmanagementsystem.service.StudentService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,8 +25,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/students") // Hoặc một base path chung hơn
@@ -55,23 +60,38 @@ public class StudentController {
             @Parameter(description = "Tên học sinh")
             @RequestParam(required = false) String fullName,
 
-            @Parameter(description = "Ngày sinh")
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateOfBirth,
+            @Parameter(description = "Khối lớp (MAM, CHOI, LA)")
+            @RequestParam(required = false) ClassGroup classGroup,
 
-            @Parameter(description = "Lớp học")
-            @RequestParam(required = false) String className,
+            @Parameter(description = "Lớp (A, B, C, D...)")
+            @RequestParam(required = false) Class classValue,
 
             @Parameter(description = "Trạng thái")
             @RequestParam(required = false) StudentStatus status,
 
+            @Parameter(description = "Ngày sinh chính xác (định dạng: yyyy-MM-dd)")
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateOfBirth,
+
             @ParameterObject
             @PageableDefault(size = 10, sort = "fullName") Pageable pageable) {
 
-        log.info("API: Yêu cầu lấy danh sách học sinh - fullName: {}, dateOfBirth: {}, className: {}, status: {}, page: {}, size: {}",
-                fullName, dateOfBirth, className, status, pageable.getPageNumber(), pageable.getPageSize());
+        log.info("API: Yêu cầu lấy danh sách học sinh - fullName: {}, classGroup: {}, classValue: {}, status: {}, dateOfBirth: {}, page: {}, size: {}",
+                fullName, classGroup, classValue, status, dateOfBirth, pageable.getPageNumber(), pageable.getPageSize());
 
-        Page<StudentDto> studentPage = studentService.getAllStudents(fullName, className, status, pageable);
+        Page<StudentDto> studentPage = studentService.getAllStudents(fullName, classGroup, classValue, status, dateOfBirth, pageable);
         return ResponseEntity.ok(studentPage);
+    }
+
+    @GetMapping("/by-class-group-and-class/{classGroup}/{classValue}")
+    @Operation(summary = "Lấy danh sách học sinh theo khối lớp và lớp cụ thể")
+    @PreAuthorize("hasAnyRole('SchoolAdmin', 'StaffManager', 'MedicalStaff')")
+    public ResponseEntity<List<StudentDto>> getStudentsByClassGroupAndClass(
+            @Parameter(description = "Khối lớp (MAM, CHOI, LA)") @PathVariable ClassGroup classGroup,
+            @Parameter(description = "Lớp (A, B, C, D...)") @PathVariable Class classValue) {
+
+        log.info("API: Yêu cầu lấy danh sách học sinh theo khối {} và lớp {}", classGroup, classValue);
+        List<StudentDto> students = studentService.findStudentsByClassGroupAndClass(classGroup, classValue);
+        return ResponseEntity.ok(students);
     }
 
     @PutMapping("/{studentId}")

@@ -56,5 +56,22 @@ public class MedicalSupplySpecification {
         return (root, query, criteriaBuilder) ->
             criteriaBuilder.greaterThan(root.get("currentStock"), quantity);
     }
-}
 
+    public Specification<MedicalSupply> hasExpiredDateFrom(LocalDate from) {
+        return (root, query, criteriaBuilder) -> {
+            if (from == null) {
+                return criteriaBuilder.conjunction();
+            }
+            return criteriaBuilder.greaterThanOrEqualTo(root.get("expiredDate"), from);
+        };
+    }
+
+    public Specification<MedicalSupply> hasExpiredDateTo(LocalDate to) {
+        return (root, query, criteriaBuilder) -> {
+            if (to == null) {
+                return criteriaBuilder.conjunction();
+            }
+            return criteriaBuilder.lessThanOrEqualTo(root.get("expiredDate"), to);
+        };
+    }
+}

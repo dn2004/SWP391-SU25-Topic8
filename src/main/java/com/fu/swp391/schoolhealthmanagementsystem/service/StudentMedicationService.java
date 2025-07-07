@@ -346,7 +346,7 @@ public class StudentMedicationService {
         int dosesLost = medication.getRemainingDoses() != null ? medication.getRemainingDoses() : 0;
 
         medication.setStatus(MedicationStatus.LOST);
-        medication.setRemainingDoses(0); // Khi th��t lạc, coi như mất hết số liều còn lại
+        medication.setRemainingDoses(0); // Khi thất lạc, coi như mất hết số liều còn lại
         medication.setUpdatedByUser(currentStaff);
         // Ghi chú về việc thất lạc có thể thêm vào medication.setNotes() hoặc chỉ trong transaction
         if (requestDto.staffNotes() != null && !requestDto.staffNotes().isBlank()) {

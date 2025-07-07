@@ -24,6 +24,9 @@ public record StudentDto(
         @Schema(description = "Lớp học")
         String className,
 
+        @Schema(description = "Khối lớp (Mầm, Chồi, Lá)")
+        String classGroup,
+
         @Schema(description = "Tên hiển thị của trạng thái")
         String status,
 

@@ -23,6 +23,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+
 @RestController
 @RequestMapping("/api/medical-supplies")
 @RequiredArgsConstructor
@@ -106,8 +108,11 @@ public class MedicalSupplyController {
             @Parameter(description = "Lọc theo tên vật tư (tìm kiếm một phần)") @RequestParam(required = false) String name,
             @Parameter(description = "Lọc theo danh mục vật tư") @RequestParam(required = false) String category,
             @Parameter(description = "Lọc theo trạng thái vật tư") @RequestParam(required = false) MedicalSupplyStatus status,
+            @Parameter(description = "Lọc theo ngày hết hạn từ (YYYY-MM-DD)") @RequestParam(required = false) LocalDate expiredDateFrom,
+            @Parameter(description = "Lọc theo ngày hết hạn đến (YYYY-MM-DD)") @RequestParam(required = false) LocalDate expiredDateTo,
             @PageableDefault(size = 10, sort = "name") Pageable pageable) {
-        Page<MedicalSupplyResponseDto> suppliesPage = medicalSupplyService.getAllMedicalSupplies(name, category, status, pageable);
+        Page<MedicalSupplyResponseDto> suppliesPage = medicalSupplyService.getAllMedicalSupplies(
+            name, category, status, expiredDateFrom, expiredDateTo, pageable);
         return ResponseEntity.ok(suppliesPage);
     }
 
@@ -187,3 +192,4 @@ public class MedicalSupplyController {
         return ResponseEntity.ok().body("Vật tư y tế đã được xóa cứng thành công");
     }
 }
+

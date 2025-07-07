@@ -26,6 +26,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -108,6 +110,27 @@ public class MedicalSupplyService {
         return medicalSuppliesPage.map(medicalSupplyMapper::entityToResponseDto);
     }
 
+    @Transactional(readOnly = true)
+    public Page<MedicalSupplyResponseDto> getAllMedicalSupplies(String name, String category,
+                                                               MedicalSupplyStatus status,
+                                                               LocalDate expiredDateFrom,
+                                                               LocalDate expiredDateTo,
+                                                               Pageable pageable) {
+        User currentUser = authorizationService.getCurrentUserAndValidate();
+        log.info("Người dùng {} đang lấy danh sách vật tư y tế với các bộ lọc: name={}, category={}, status={}, expiredDateFrom={}, expiredDateTo={}",
+                 currentUser.getEmail(), name, category, status, expiredDateFrom, expiredDateTo);
+
+        Specification<MedicalSupply> spec = Specification.allOf(medicalSupplySpecification.hasNameContaining(name))
+                .and(medicalSupplySpecification.hasCategory(category))
+                .and(medicalSupplySpecification.hasStatus(status))
+                .and(medicalSupplySpecification.hasExpiredDateFrom(expiredDateFrom))
+                .and(medicalSupplySpecification.hasExpiredDateTo(expiredDateTo));
+
+        Page<MedicalSupply> medicalSuppliesPage = medicalSupplyRepository.findAll(spec, pageable);
+
+        return medicalSuppliesPage.map(medicalSupplyMapper::entityToResponseDto);
+    }
+
     @Transactional
     public MedicalSupplyResponseDto updateMedicalSupply(Long supplyId, MedicalSupplyUpdateDto updateDto) {
         User currentUser = authorizationService.getCurrentUserAndValidate();
@@ -119,6 +142,19 @@ public class MedicalSupplyService {
         if (existingSupply.getStatus() == MedicalSupplyStatus.DISPOSE) {
             log.warn("Không thể cập nhật vật tư y tế ID: {} vì nó đã được lưu trữ.", supplyId);
             throw new IllegalStateException("Không thể cập nhật vật tư y tế đã được lưu trữ.");
+        }
+
+        // Kiểm tra ngày hết hạn phải lớn hơn ngày tạo vật tư ít nhất 30 ngày
+        if (updateDto.expiredDate() != null) {
+            LocalDate creationDate = existingSupply.getCreatedAt().toLocalDate();
+            LocalDate minValidDate = creationDate.plusDays(30);
+
+            if (updateDto.expiredDate().isBefore(minValidDate)) {
+                throw new IllegalArgumentException(
+                    "Ngày hết hạn phải lớn hơn ngày tạo vật tư (" +
+                    creationDate.toString() + ") ít nhất 30 ngày"
+                );
+            }
         }
 
         medicalSupplyMapper.updateEntityFromUpdateDto(updateDto, existingSupply);

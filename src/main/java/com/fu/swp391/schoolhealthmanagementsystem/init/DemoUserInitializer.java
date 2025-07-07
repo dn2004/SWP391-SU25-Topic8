@@ -4,6 +4,7 @@ import com.fu.swp391.schoolhealthmanagementsystem.entity.ParentStudentLink;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.Student;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.User;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.*;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.Class;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.ParentStudentLinkRepository;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.StudentRepository;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.UserRepository;
@@ -63,7 +64,8 @@ public class DemoUserInitializer implements ApplicationRunner {
             student1.setFullName(studentFullName);
             student1.setDateOfBirth(studentDob);
             student1.setGender(Gender.FEMALE);
-            student1.setClassName("Class 3A");
+            student1.setClassGroup(ClassGroup.LA); // Sử dụng enum ClassGroup
+            student1.setClassValue(Class.A); // Sử dụng enum Class
             student1.setInvitationCode(generateInvitationCode());
             student1.setStatus(StudentStatus.ACTIVE);
             student1 = studentRepository.save(student1);
@@ -120,9 +122,7 @@ public class DemoUserInitializer implements ApplicationRunner {
         } else {
             log.info("Tài khoản Nurse Manager {} đã tồn tại.", nurseManagerEmail);
         }
-
-
-        log.info("Hoàn tất khởi tạo dữ liệu.");
+                log.info("Hoàn tất khởi tạo dữ liệu.");
     }
 
     private String generateInvitationCode() {

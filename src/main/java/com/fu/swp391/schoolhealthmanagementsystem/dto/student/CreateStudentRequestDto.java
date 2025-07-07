@@ -1,5 +1,7 @@
 package com.fu.swp391.schoolhealthmanagementsystem.dto.student;
 
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.ClassGroup;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.Class;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.Gender;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -14,20 +16,23 @@ public record CreateStudentRequestDto(
 
         @NotBlank(message = "Họ và tên không được để trống")
         @Size(max = 100, message = "Họ và tên tối đa 100 ký tự")
-        @Schema(description = "Họ và tên đầy đủ của học sinh", example = "Nguyễn Thị C")
+        @Schema(description = "Họ và tên đầy đủ của học sinh", example = "Nguyễn Văn A")
         String fullName,
 
         @NotNull(message = "Ngày sinh không được để trống")
         @PastOrPresent(message = "Ngày sinh phải là một ngày trong quá khứ hoặc hiện tại")
-        @Schema(description = "Ngày sinh của học sinh", example = "2015-08-20")
+        @Schema(description = "Ngày sinh của học sinh", example = "2020-08-20")
         LocalDate dateOfBirth,
 
         @NotNull(message = "Giới tính không được để trống")
         @Schema(description = "Giá trị giới tính bao gồm: Nam/Nữ", example = "Nam")
         Gender gender,
 
-        @NotBlank(message = "Tên lớp không được để trống")
-        @Size(max = 50, message = "Tên lớp tối đa 50 ký tự")
-        @Schema(description = "Lớp học của học sinh (ví dụ: 1A, 2B)", example = "3C")
-        String className
+        @NotNull(message = "Khối lớp không được để trống")
+        @Schema(description = "Khối lớp (MAM, CHOI, LA)", example = "MAM")
+        ClassGroup classGroup,
+
+        @NotNull(message = "Lớp không được để trống")
+        @Schema(description = "Lớp (A, B, C, D, E, F, G, H)", example = "A")
+        Class classValue
 ) {}

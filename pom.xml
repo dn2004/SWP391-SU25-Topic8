@@ -121,7 +121,14 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-websocket</artifactId>
         </dependency>
+        <!--Slug url-->
+        <dependency>
+            <groupId>com.github.slugify</groupId>
+            <artifactId>slugify</artifactId>
+            <version>3.0.7</version> <!-- Bạn có thể kiểm tra phiên bản mới nhất -->
+        </dependency>
     </dependencies>
+
 
     <build>
         <finalName>be</finalName>

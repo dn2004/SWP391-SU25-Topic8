@@ -47,7 +47,7 @@ public interface MedicalSupplyRepository extends JpaRepository<MedicalSupply, Lo
 
     /**
      * Kiểm tra xem vật tư y tế có bất kỳ giao dịch nào liên quan đến sự cố y tế không
-     * @param supplyId ID của vật tư y tế cần ki���m tra
+     * @param supplyId ID của vật tư y tế cần kiểm tra
      * @return true nếu có liên quan đến sự cố y tế, false nếu không
      */
     @Query("SELECT CASE WHEN COUNT(st) > 0 THEN true ELSE false END FROM SupplyTransaction st WHERE st.medicalSupply.supplyId = :supplyId AND st.healthIncident IS NOT NULL")

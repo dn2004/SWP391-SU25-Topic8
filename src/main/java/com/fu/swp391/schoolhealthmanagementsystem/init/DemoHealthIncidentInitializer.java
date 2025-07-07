@@ -38,8 +38,8 @@ public class DemoHealthIncidentInitializer implements ApplicationRunner {
         Optional<MedicalSupply> paracetamolOpt = medicalSupplyRepository.findFirstByName("Thuốc hạ sốt Paracetamol 500mg");
         Optional<MedicalSupply> bandageOpt = medicalSupplyRepository.findFirstByName("Băng gạc y tế tiệt trùng");
 
-        if (studentOpt.isEmpty() || nurseOpt.isEmpty()) {
-            log.warn("Không tìm thấy học sinh Alice Student hoặc y tá nurse@example.com. Bỏ qua khởi tạo sự cố sức khỏe.");
+        if (studentOpt.isEmpty() || nurseOpt.isEmpty() || paracetamolOpt.isEmpty() || bandageOpt.isEmpty()) {
+            log.warn("Không tìm thấy học sinh, y tá hoặc vật tư y tế cần thiết. Bỏ qua khởi tạo sự cố sức khỏe.");
             return;
         }
 

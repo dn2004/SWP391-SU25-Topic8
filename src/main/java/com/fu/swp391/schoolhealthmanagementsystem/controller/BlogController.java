@@ -57,7 +57,9 @@ public class BlogController {
     @ApiResponse(responseCode = "200", description = "Thành công")
     @GetMapping
     public ResponseEntity<Page<BlogResponseDto>> getAllBlogs(
+            @Parameter(description = "Tìm kiếm tổng hợp trong tiêu đề, mô tả và nội dung") @RequestParam(required = false) String search,
             @Parameter(description = "Lọc theo tiêu đề bài đăng") @RequestParam(required = false) String title,
+            @Parameter(description = "Lọc theo mô tả") @RequestParam(required = false) String description,
             @Parameter(description = "(Admin/Manager) Lọc theo ID của tác giả") @RequestParam(required = false) Long authorId,
             @Parameter(description = "(Admin/Manager) Lọc theo trạng thái") @RequestParam(required = false) BlogStatus status,
             @Parameter(description = "Lọc theo danh mục") @RequestParam(required = false) BlogCategory category,
@@ -65,7 +67,7 @@ public class BlogController {
             @Parameter(description = "Lọc đến ngày cập nhật (YYYY-MM-DD)") @RequestParam(required = false) LocalDate endDate,
             @ParameterObject @PageableDefault(size = 10, sort = "updatedAt", direction = Sort.Direction.DESC) Pageable pageable) {
         log.info("API GET /api/blogs (phân trang) được gọi với pageable: {}", pageable);
-        Page<BlogResponseDto> blogsPage = blogService.getAllBlogs(title, authorId, status, category, startDate, endDate, pageable);
+        Page<BlogResponseDto> blogsPage = blogService.getAllBlogs(search, title, description, authorId, status, category, startDate, endDate, pageable);
         return ResponseEntity.ok(blogsPage);
     }
 
@@ -93,7 +95,7 @@ public class BlogController {
             @ParameterObject @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         log.info("API GET /api/blogs/author/{} được gọi", authorId);
         // Tái sử dụng phương thức getAllBlogs với bộ lọc authorId
-        Page<BlogResponseDto> blogsPage = blogService.getAllBlogs(null, authorId, null, null, null, null, pageable);
+        Page<BlogResponseDto> blogsPage = blogService.getAllBlogs(null, null, null, authorId, null, null, null, null, pageable);
         return ResponseEntity.ok(blogsPage);
     }
 
@@ -107,6 +109,19 @@ public class BlogController {
             @Parameter(description = "ID của bài đăng") @PathVariable Long blogId) {
         log.info("API GET /api/blogs/{} được gọi", blogId);
         BlogResponseDto blogDto = blogService.getBlogById(blogId);
+        return ResponseEntity.ok(blogDto);
+    }
+
+    @Operation(summary = "Lấy thông tin chi tiết một bài blog bằng slug (công khai)",
+            description = "Bất kỳ ai cũng có thể xem chi tiết một bài đăng PUBLIC bằng slug. Các bài đăng không công khai yêu cầu quyền truy cập.")
+    @ApiResponse(responseCode = "200", description = "Thành công")
+    @ApiResponse(responseCode = "403", description = "Không có quyền xem bài đăng này", content = @Content)
+    @ApiResponse(responseCode = "404", description = "Không tìm thấy bài đăng", content = @Content)
+    @GetMapping("/slug/{slug}")
+    public ResponseEntity<BlogResponseDto> getBlogBySlug(
+            @Parameter(description = "Slug của bài đăng") @PathVariable String slug) {
+        log.info("API GET /api/blogs/slug/{} được gọi", slug);
+        BlogResponseDto blogDto = blogService.getBlogBySlug(slug);
         return ResponseEntity.ok(blogDto);
     }
 

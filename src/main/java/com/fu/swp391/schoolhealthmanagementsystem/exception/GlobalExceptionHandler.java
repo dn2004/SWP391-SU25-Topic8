@@ -213,4 +213,15 @@ public class GlobalExceptionHandler {
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
+    @ExceptionHandler(InvalidOperationException.class)
+    public ResponseEntity<ErrorResponseDto> handleInvalidOperationException(InvalidOperationException ex, HttpServletRequest request) {
+        log.warn("Thao tác không hợp lệ (InvalidOperationException): {} tại {}", ex.getMessage(), request.getRequestURI());
+        ErrorResponseDto errorResponse = ErrorResponseDto.of(
+                HttpStatus.BAD_REQUEST,
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
 }

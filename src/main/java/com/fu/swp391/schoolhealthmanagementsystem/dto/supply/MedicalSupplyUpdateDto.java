@@ -26,8 +26,5 @@ public record MedicalSupplyUpdateDto(
         String description,
 
         @Schema(description = "Ngày hết hạn của vật tư", example = "2026-01-15")
-        LocalDate expiredDate,
-
-        @Schema(description = "Trạng thái của vật tư y tế", example = "AVAILABLE")
-        MedicalSupplyStatus status
+        LocalDate expiredDate
 ) {}

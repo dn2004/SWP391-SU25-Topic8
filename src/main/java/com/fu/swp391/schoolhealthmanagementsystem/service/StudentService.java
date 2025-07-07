@@ -6,6 +6,8 @@ import com.fu.swp391.schoolhealthmanagementsystem.dto.student.UpdateStudentReque
 import com.fu.swp391.schoolhealthmanagementsystem.entity.ParentStudentLink;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.Student;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.User;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.Class;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.ClassGroup;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentStatus;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.UserRole;
 import com.fu.swp391.schoolhealthmanagementsystem.exception.AppException;
@@ -24,6 +26,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -32,7 +37,7 @@ public class StudentService {
 
     private final StudentRepository studentRepository;
     private final StudentMapper studentMapper;
-    private final ParentStudentLinkRepository parentStudentLinkRepository; // Inject
+    private final ParentStudentLinkRepository parentStudentLinkRepository;
     private final UserService userService;
     private final StudentSpecification studentSpecification;
     private final NotificationService notificationService;
@@ -116,9 +121,69 @@ public class StudentService {
         throw new AppException(HttpStatus.FORBIDDEN, "Bạn không có quyền xem thông tin học sinh này.");
     }
 
+    /**
+     * Tìm kiếm học sinh theo khối lớp
+     * @param classGroup Khối lớp (Mầm/Chồi/Lá)
+     * @param status Trạng thái học sinh
+     * @return Danh sách học sinh thuộc khối và có trạng thái tương ứng
+     */
     @Transactional(readOnly = true)
-    public Page<StudentDto> getAllStudents(String fullName, String className, StudentStatus status, Pageable pageable) {
-        User currentUser = userService.getCurrentAuthenticatedUser(); // Lấy user từ service đã có
+    public List<StudentDto> findStudentsByClassGroup(ClassGroup classGroup, StudentStatus status) {
+        List<Student> students;
+
+        if (status != null) {
+            students = studentRepository.findByClassGroupAndStatus(classGroup, status);
+        } else {
+            students = studentRepository.findByClassGroup(classGroup);
+        }
+
+        return students.stream()
+                .map(studentMapper::studentToStudentDto)
+                .collect(Collectors.toList());
+    }
+
+
+    @Transactional(readOnly = true)
+    public List<StudentDto> findStudentsByClassGroups(Collection<ClassGroup> classGroups, StudentStatus status) {
+        List<Student> students;
+
+        if (status != null) {
+            students = studentRepository.findByClassGroupInAndStatus(classGroups, status);
+        } else {
+            students = studentRepository.findByClassGroupIn(classGroups);
+        }
+
+        return students.stream()
+                .map(studentMapper::studentToStudentDto)
+                .collect(Collectors.toList());
+    }
+
+
+    @Transactional(readOnly = true)
+    public List<StudentDto> findStudentsByClass(Class classValue) {
+        List<Student> students = studentRepository.findByClassValue(classValue);
+
+        return students.stream()
+                .map(studentMapper::studentToStudentDto)
+                .collect(Collectors.toList());
+    }
+
+
+    @Transactional(readOnly = true)
+    public List<StudentDto> findStudentsByClassGroupAndClass(ClassGroup classGroup, Class classValue) {
+        List<Student> students = studentRepository.findByClassGroupAndClassValue(classGroup, classValue);
+
+        return students.stream()
+                .map(studentMapper::studentToStudentDto)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public Page<StudentDto> getAllStudents(String fullName, ClassGroup classGroup,
+                                          Class classValue, StudentStatus status,
+                                          LocalDate dateOfBirth,
+                                          Pageable pageable) {
+        User currentUser = userService.getCurrentAuthenticatedUser();
 
         if (!(currentUser.getRole() == UserRole.SchoolAdmin ||
                 currentUser.getRole() == UserRole.StaffManager ||
@@ -127,8 +192,10 @@ public class StudentService {
         }
 
         Specification<Student> spec = studentSpecification.hasFullName(fullName)
-                .and(studentSpecification.hasClassName(className))
-                .and(studentSpecification.hasStatus(status));
+                .and(studentSpecification.hasClassGroup(classGroup))
+                .and(studentSpecification.hasClassValue(classValue))
+                .and(studentSpecification.hasStatus(status))
+                .and(studentSpecification.hasDateOfBirth(dateOfBirth));
 
         Page<Student> studentPage = studentRepository.findAll(spec, pageable);
         return studentPage.map(studentMapper::studentToStudentDto);

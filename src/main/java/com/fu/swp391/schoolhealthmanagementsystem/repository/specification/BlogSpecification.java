@@ -49,12 +49,53 @@ public class BlogSpecification {
         };
     }
 
+    public Specification<Blog> hasSlug(String slug) {
+        return (root, query, criteriaBuilder) -> {
+            if (slug == null || slug.isBlank()) {
+                return criteriaBuilder.conjunction();
+            }
+            return criteriaBuilder.equal(root.get("slug"), slug);
+        };
+    }
+
     public Specification<Blog> titleContains(String title) {
         return (root, query, criteriaBuilder) -> {
             if (title == null || title.isBlank()) {
                 return criteriaBuilder.conjunction();
             }
             return criteriaBuilder.like(criteriaBuilder.lower(root.get("title")), "%" + title.toLowerCase() + "%");
+        };
+    }
+
+    public Specification<Blog> descriptionContains(String description) {
+        return (root, query, criteriaBuilder) -> {
+            if (description == null || description.isBlank()) {
+                return criteriaBuilder.conjunction();
+            }
+            return criteriaBuilder.like(criteriaBuilder.lower(root.get("description")), "%" + description.toLowerCase() + "%");
+        };
+    }
+
+    public Specification<Blog> contentContains(String content) {
+        return (root, query, criteriaBuilder) -> {
+            if (content == null || content.isBlank()) {
+                return criteriaBuilder.conjunction();
+            }
+            return criteriaBuilder.like(criteriaBuilder.lower(root.get("content")), "%" + content.toLowerCase() + "%");
+        };
+    }
+
+    public Specification<Blog> searchInTitleDescriptionContent(String keyword) {
+        return (root, query, criteriaBuilder) -> {
+            if (keyword == null || keyword.isBlank()) {
+                return criteriaBuilder.conjunction();
+            }
+            String searchPattern = "%" + keyword.toLowerCase() + "%";
+            return criteriaBuilder.or(
+                criteriaBuilder.like(criteriaBuilder.lower(root.get("title")), searchPattern),
+                criteriaBuilder.like(criteriaBuilder.lower(root.get("description")), searchPattern),
+                criteriaBuilder.like(criteriaBuilder.lower(root.get("content")), searchPattern)
+            );
         };
     }
 
