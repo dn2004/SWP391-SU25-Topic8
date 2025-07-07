@@ -27,7 +27,12 @@ public class EnumController {
     @GetMapping("/blog-categories")
     public ResponseEntity<List<CategoryResponseDto>> getAllBlogCategories() {
         List<CategoryResponseDto> categories = Arrays.stream(BlogCategory.values())
-                .map(category -> new CategoryResponseDto(category.name(), category.getDisplayName(), category.getColor()))
+                .map(category -> new CategoryResponseDto(
+                        category.name(),
+                        category.getDisplayName(),
+                        category.getColor(),
+                        category.getBackgroundColor()
+                ))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(categories);
     }
@@ -38,7 +43,12 @@ public class EnumController {
     @GetMapping("/blog-statuses")
     public ResponseEntity<List<StatusResponseDto>> getAllBlogStatuses() {
         List<StatusResponseDto> statuses = Arrays.stream(BlogStatus.values())
-                .map(status -> new StatusResponseDto(status.name(), status.getDisplayName(), status.getBackgroundColor()))
+                .map(status -> new StatusResponseDto(
+                        status.name(),
+                        status.getDisplayName(),
+                        status.getColor(),
+                        status.getBackgroundColor()
+                ))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(statuses);
     }

@@ -8,20 +8,30 @@ import lombok.Getter;
 @Getter
 @Schema(description = "Trạng thái của bài đăng blog")
 public enum BlogStatus {
-    PUBLIC("Công khai", "#4CAF50"), // Xanh lá
-    PRIVATE("Riêng tư", "#f44336"); // Đỏ
+    PUBLIC("Công khai", "#389e0d", "#f6ffed"), // Xanh lá Ant Design
+    PRIVATE("Riêng tư", "#cf1322", "#fff1f0"); // Đỏ Ant Design
 
     private final String displayName;
+    private final String color;
     private final String backgroundColor;
 
-    BlogStatus(String displayName, String backgroundColor) {
+    BlogStatus(String displayName, String color, String backgroundColor) {
         this.displayName = displayName;
+        this.color = color;
         this.backgroundColor = backgroundColor;
     }
 
     @JsonValue
     public String getDisplayName() {
         return displayName;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public String getBackgroundColor() {
+        return backgroundColor;
     }
 
     @JsonCreator
