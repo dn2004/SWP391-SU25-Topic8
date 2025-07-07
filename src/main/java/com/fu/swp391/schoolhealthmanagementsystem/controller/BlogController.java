@@ -43,7 +43,7 @@ public class BlogController {
     @ApiResponse(responseCode = "201", description = "Tạo thành công",
             content = @Content(mediaType = "application/json", schema = @Schema(implementation = BlogResponseDto.class)))
     @SecurityRequirement(name = "bearerAuth")
-    @PreAuthorize("hasAnyRole('SchoolAdmin', 'MedicalStaff')")
+    @PreAuthorize("hasAnyRole('SchoolAdmin', 'MedicalStaff', 'NurseManager')")
     @PostMapping
     public ResponseEntity<BlogResponseDto> createBlog(@Valid @RequestBody CreateBlogRequestDto createBlogRequestDto) {
         log.info("API POST /api/blogs được gọi để tạo bài đăng mới với tiêu đề: '{}'", createBlogRequestDto.title());
