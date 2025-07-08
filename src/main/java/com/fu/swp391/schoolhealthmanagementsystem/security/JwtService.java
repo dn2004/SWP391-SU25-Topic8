@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class JwtService {
 
-    private JwtProperties jwt;
+    private final JwtProperties jwt;
 
 
     public String generateToken(User user) {
