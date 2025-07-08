@@ -22,4 +22,6 @@ public interface SupplyTransactionRepository extends JpaRepository<SupplyTransac
      * @return true nếu có giao dịch liên quan đến sự cố y tế, false nếu không
      */
     boolean existsByMedicalSupplyAndHealthIncidentNotNull(MedicalSupply medicalSupply);
+
+    long countBySupplyTransactionType(com.fu.swp391.schoolhealthmanagementsystem.entity.enums.SupplyTransactionType type);
 }

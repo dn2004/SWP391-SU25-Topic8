@@ -52,4 +52,7 @@ public interface MedicalSupplyRepository extends JpaRepository<MedicalSupply, Lo
      */
     @Query("SELECT CASE WHEN COUNT(st) > 0 THEN true ELSE false END FROM SupplyTransaction st WHERE st.medicalSupply.supplyId = :supplyId AND st.healthIncident IS NOT NULL")
     boolean hasTransactionsRelatedToHealthIncident(@Param("supplyId") Long supplyId);
+
+    long countByStatus(MedicalSupplyStatus status);
+    long countByCurrentStockLessThanEqual(int threshold);
 }

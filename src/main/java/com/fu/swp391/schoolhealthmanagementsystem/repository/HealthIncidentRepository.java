@@ -27,4 +27,7 @@ public interface HealthIncidentRepository extends JpaRepository<HealthIncident, 
     // Trong HealthIncidentRepository.java
     @Query("SELECT DISTINCT hi FROM HealthIncident hi LEFT JOIN FETCH hi.supplyUsages su LEFT JOIN FETCH su.medicalSupply WHERE hi.incidentId = :incidentId")
     Optional<HealthIncident> findIncidentEvenIfDeletedWithUsages(@Param("incidentId") Long incidentId);
+
+    long countByIncidentType(com.fu.swp391.schoolhealthmanagementsystem.entity.enums.HealthIncidentType type);
+    long countByCreatedAtAfter(java.time.LocalDateTime dateTime);
 }

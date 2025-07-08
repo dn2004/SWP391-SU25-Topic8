@@ -14,4 +14,10 @@ public interface BlogRepository extends JpaRepository<Blog, Long>, JpaSpecificat
     Page<Blog> findByTitleContainingIgnoreCase(String title, Pageable pageable);
 
     Optional<Blog> findBySlug(String slug);
+
+    long countByStatus(com.fu.swp391.schoolhealthmanagementsystem.entity.enums.BlogStatus status);
+
+    long countByCategory(com.fu.swp391.schoolhealthmanagementsystem.entity.enums.BlogCategory category);
+
+    long countByCreatedAtAfter(java.time.LocalDateTime dateTime);
 }

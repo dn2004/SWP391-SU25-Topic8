@@ -20,4 +20,7 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     List<User> findAllByRole(UserRole role);
 
     Optional<User> findFirstByRole(UserRole roleAdmin);
+
+    long countByRole(UserRole role);
+    long countByActive(boolean active);
 }

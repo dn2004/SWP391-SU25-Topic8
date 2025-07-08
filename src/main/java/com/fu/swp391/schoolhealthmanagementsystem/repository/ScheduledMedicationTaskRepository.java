@@ -108,4 +108,6 @@ public interface ScheduledMedicationTaskRepository extends JpaRepository<Schedul
             @Param("endDate") LocalDateTime endDate,
             Pageable pageable
     );
+
+    long countByStatus(com.fu.swp391.schoolhealthmanagementsystem.entity.enums.ScheduledMedicationTaskStatus status);
 }

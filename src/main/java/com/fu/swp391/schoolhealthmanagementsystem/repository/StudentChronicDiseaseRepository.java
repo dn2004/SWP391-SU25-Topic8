@@ -1,4 +1,4 @@
-        package com.fu.swp391.schoolhealthmanagementsystem.repository;
+package com.fu.swp391.schoolhealthmanagementsystem.repository;
 
 import com.fu.swp391.schoolhealthmanagementsystem.entity.Student;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.StudentChronicDisease;
@@ -13,5 +13,6 @@ public interface StudentChronicDiseaseRepository extends JpaRepository<StudentCh
 
     Page<StudentChronicDisease> findByStudent_Id(Long studentId, Pageable pageable);
 
-}
+    long countByStatus(com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentChronicDiseaseStatus status);
 
+}

@@ -3,6 +3,7 @@ package com.fu.swp391.schoolhealthmanagementsystem.repository;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.Student;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.Class;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.ClassGroup;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.Gender;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -37,4 +38,12 @@ public interface StudentRepository extends JpaRepository<Student, Long>, JpaSpec
     Optional<Student> findByInvitationCode(String invitationCode);
 
     Optional<Student> findByFullNameAndDateOfBirth(String fullName, LocalDate dateOfBirth);
+
+    long countByClassGroup(ClassGroup classGroup);
+
+    long countByClassValue(Class classValue);
+
+    long countByStatus(StudentStatus status);
+
+    Long countByGender(Gender gender);
 }

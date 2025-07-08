@@ -50,4 +50,6 @@ public interface VaccinationConsentRepository extends JpaRepository<VaccinationC
     List<VaccinationConsent> findPendingConsentsWithNoReminder(@Param("campaignId") Long campaignId);
 
     List<VaccinationConsent> findByStatus(ConsentStatus consentStatus);
+
+    Long countByStatus(ConsentStatus status);
 }

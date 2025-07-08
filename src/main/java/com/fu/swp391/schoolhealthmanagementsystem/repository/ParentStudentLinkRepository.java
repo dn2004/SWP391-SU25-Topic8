@@ -24,4 +24,6 @@ public interface ParentStudentLinkRepository extends JpaRepository<ParentStudent
     boolean existsByParentAndStudentAndStatus(User currentUser, Student student, LinkStatus linkStatus);
 
     boolean existsByStudent(Student student);
+    long countByStatus(com.fu.swp391.schoolhealthmanagementsystem.entity.enums.LinkStatus status);
+    long countByRelationshipType(com.fu.swp391.schoolhealthmanagementsystem.entity.enums.RelationshipType relationshipType);
 }

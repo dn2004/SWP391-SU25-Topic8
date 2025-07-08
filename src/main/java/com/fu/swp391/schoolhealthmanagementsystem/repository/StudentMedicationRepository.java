@@ -56,4 +56,6 @@ public interface StudentMedicationRepository extends JpaRepository<StudentMedica
     Optional<StudentMedication> findWithMedicationTimeSlotsByStudentMedicationId(@Param("id") Long id);
 
     int countByStudent(Student student);
+
+    long countByStatus(MedicationStatus status);
 }

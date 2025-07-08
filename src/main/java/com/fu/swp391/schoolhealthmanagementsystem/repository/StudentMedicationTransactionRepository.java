@@ -11,4 +11,6 @@ public interface StudentMedicationTransactionRepository extends JpaRepository<St
         JpaSpecificationExecutor<StudentMedicationTransaction> {
 
     Page<StudentMedicationTransaction> findByStudentMedication(StudentMedication studentMedication, Pageable pageable);
+
+    long countByTransactionType(com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentMedicationTransactionType transactionType);
 }

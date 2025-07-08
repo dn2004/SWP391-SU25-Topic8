@@ -32,4 +32,6 @@ public interface PostVaccinationMonitoringRepository extends JpaRepository<PostV
             @Param("campaignId") Long campaignId,
             @Param("startTime") LocalDateTime startTime,
             @Param("endTime") LocalDateTime endTime);
+
+    long countByHasSideEffectsTrue();
 }

@@ -47,4 +47,6 @@ public interface SchoolVaccinationRepository extends JpaRepository<SchoolVaccina
             @Param("date") LocalDate date);
 
     List<SchoolVaccination> findByStatus(SchoolVaccinationStatus schoolVaccinationStatus);
+
+    long countByStatus(SchoolVaccinationStatus status);
 }

@@ -43,4 +43,6 @@ public interface VaccinationCampaignRepository extends JpaRepository<Vaccination
     Integer countDeclinedConsentsForCampaign(@Param("campaignId") Long campaignId);
 
     Page<VaccinationCampaign> findByStatus(VaccinationCampaignStatus status, Pageable pageable);
+
+    Long countByStatus(VaccinationCampaignStatus status);
 }

@@ -39,7 +39,7 @@ public class BlogController {
     private final BlogService blogService;
 
     @Operation(summary = "Tạo một bài blog mới",
-            description = "Chỉ Nhân viên y tế hoặc Quản trị viên mới có thể tạo bài đăng. Người dùng hiện tại sẽ được gán làm tác giả.")
+            description = "Cho phép người dùng có vai trò Quản trị viên trường, Nhân viên y tế hoặc Quản lý y tế tạo bài đăng blog mới. Người dùng hiện tại sẽ được gán làm tác giả bài viết.")
     @ApiResponse(responseCode = "201", description = "Tạo thành công",
             content = @Content(mediaType = "application/json", schema = @Schema(implementation = BlogResponseDto.class)))
     @SecurityRequirement(name = "bearerAuth")
