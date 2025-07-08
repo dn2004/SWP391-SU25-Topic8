@@ -37,22 +37,7 @@ public class OpenApiConfig {
                                                 .scheme("bearer")
                                                 .bearerFormat("JWT")
                                 )
-                                // Parent API Authentication
-                                .addSecuritySchemes("parent-api",
-                                        new SecurityScheme()
-                                                .name("parent-api")
-                                                .type(SecurityScheme.Type.HTTP)
-                                                .scheme("bearer")
-                                                .in(SecurityScheme.In.HEADER)
-                                )
-                                // Admin API Authentication
-                                .addSecuritySchemes("admin-api",
-                                        new SecurityScheme()
-                                                .name("admin-api")
-                                                .type(SecurityScheme.Type.HTTP)
-                                                .scheme("bearer")
-                                                .in(SecurityScheme.In.HEADER)
-                                )
+
                 );
     }
 }

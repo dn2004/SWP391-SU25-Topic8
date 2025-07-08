@@ -35,14 +35,19 @@ public class MedicalSupplyController {
     private final MedicalSupplyService medicalSupplyService;
 
     @Operation(summary = "Tạo mới một vật tư y tế",
-            description = "Tạo mới một vật tư y tế. Yêu cầu vai trò MedicalStaff hoặc StaffManager.")
+            description = """
+### Mô tả
+Tạo mới một vật tư y tế trong kho.
+- **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
+"""
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Vật tư y tế được tạo thành công",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = MedicalSupplyResponseDto.class))),
-            @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ"),
-            @ApiResponse(responseCode = "401", description = "Chưa xác thực"),
-            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập")
+            @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
     })
     @PostMapping
     @PreAuthorize("hasAnyRole('MedicalStaff', 'StaffManager')")
@@ -53,14 +58,19 @@ public class MedicalSupplyController {
     }
 
     @Operation(summary = "Lấy thông tin vật tư y tế theo ID",
-            description = "Lấy thông tin chi tiết của một vật tư y tế dựa trên ID. Yêu cầu vai trò SchoolAdmin, StaffManager, hoặc MedicalStaff.")
+            description = """
+### Mô tả
+Lấy thông tin chi tiết của một vật tư y tế dựa trên ID.
+- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`, `StaffManager`, hoặc `MedicalStaff`.
+"""
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Tìm thấy vật tư y tế",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = MedicalSupplyResponseDto.class))),
-            @ApiResponse(responseCode = "401", description = "Chưa xác thực"),
-            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập"),
-            @ApiResponse(responseCode = "404", description = "Không tìm thấy vật tư y tế")
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy vật tư y tế", content = @Content)
     })
     @GetMapping("/{supplyId}")
     @PreAuthorize("hasAnyRole('SchoolAdmin', 'StaffManager', 'MedicalStaff')")
@@ -71,14 +81,19 @@ public class MedicalSupplyController {
     }
 
     @Operation(summary = "Lấy lịch sử giao dịch của một vật tư y tế (phân trang)",
-            description = "Trả về danh sách các giao dịch (nhập, xuất, điều chỉnh) của một vật tư y tế cụ thể dựa trên ID. Yêu cầu vai trò SchoolAdmin, StaffManager, hoặc MedicalStaff.")
+            description = """
+### Mô tả
+Trả về danh sách các giao dịch (nhập, xuất, điều chỉnh) của một vật tư y tế cụ thể.
+- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`, `StaffManager`, hoặc `MedicalStaff`.
+"""
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lấy danh sách giao dịch thành công",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = Page.class))),
-            @ApiResponse(responseCode = "401", description = "Chưa xác thực"),
-            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập"),
-            @ApiResponse(responseCode = "404", description = "Không tìm thấy vật tư y tế")
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy vật tư y tế", content = @Content)
     })
     @GetMapping("/{supplyId}/transactions")
     @PreAuthorize("hasAnyRole('SchoolAdmin', 'StaffManager', 'MedicalStaff')")
@@ -94,13 +109,18 @@ public class MedicalSupplyController {
     }
 
     @Operation(summary = "Lấy danh sách tất cả vật tư y tế (phân trang)",
-            description = "Trả về một trang danh sách các vật tư y tế trong hệ thống. Có thể lọc theo trạng thái hoạt động (active). Yêu cầu vai trò SchoolAdmin, StaffManager, hoặc MedicalStaff.")
+            description = """
+### Mô tả
+Trả về một trang danh sách các vật tư y tế trong hệ thống, hỗ trợ lọc và tìm kiếm.
+- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`, `StaffManager`, hoặc `MedicalStaff`.
+"""
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lấy danh sách vật tư y tế thành công",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = Page.class))), // Lưu ý: Schema cho Page<MedicalSupplyResponseDto>
-            @ApiResponse(responseCode = "401", description = "Chưa xác thực"),
-            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập")
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
     })
     @GetMapping
     @PreAuthorize("hasAnyRole('SchoolAdmin', 'StaffManager', 'MedicalStaff')")
@@ -117,15 +137,20 @@ public class MedicalSupplyController {
     }
 
     @Operation(summary = "Cập nhật thông tin (metadata) của một vật tư y tế",
-            description = "Cập nhật các thông tin như tên, loại, đơn vị của một vật tư y tế đã có. Số lượng tồn kho được quản lý qua API điều chỉnh tồn kho. Yêu cầu vai trò MedicalStaff hoặc StaffManager.")
+            description = """
+### Mô tả
+Cập nhật các thông tin mô tả như tên, loại, đơn vị của một vật tư. Không dùng để thay đổi số lượng tồn kho.
+- **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
+"""
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Vật tư y tế được cập nhật thành công",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = MedicalSupplyResponseDto.class))),
-            @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ hoặc cố gắng cập nhật vật tư không hoạt động"),
-            @ApiResponse(responseCode = "401", description = "Chưa xác thực"),
-            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập"),
-            @ApiResponse(responseCode = "404", description = "Không tìm thấy vật tư y tế")
+            @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ hoặc cố gắng cập nhật vật tư không hoạt động", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy vật tư y tế", content = @Content)
     })
     @PutMapping("/{supplyId}")
     @PreAuthorize("hasAnyRole('MedicalStaff', 'StaffManager')")
@@ -137,15 +162,20 @@ public class MedicalSupplyController {
     }
 
     @Operation(summary = "Điều chỉnh số lượng tồn kho của vật tư y tế",
-            description = "Điều chỉnh số lượng tồn kho (nhập kho, điều chỉnh tăng/giảm). Yêu cầu vai trò MedicalStaff hoặc StaffManager.")
+            description = """
+### Mô tả
+Thực hiện điều chỉnh số lượng tồn kho (nhập kho, xuất kho, kiểm kê).
+- **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
+"""
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Điều chỉnh tồn kho thành công",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = MedicalSupplyResponseDto.class))),
-            @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ, không đủ tồn kho, hoặc cố gắng điều chỉnh vật tư không hoạt động"),
-            @ApiResponse(responseCode = "401", description = "Chưa xác thực"),
-            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập"),
-            @ApiResponse(responseCode = "404", description = "Không tìm thấy vật tư y tế")
+            @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ, không đủ tồn kho, hoặc cố gắng điều chỉnh vật tư không hoạt động", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy vật tư y tế", content = @Content)
     })
     @PostMapping("/{supplyId}/stock-adjustment")
     @PreAuthorize("hasAnyRole('MedicalStaff', 'StaffManager')")
@@ -158,13 +188,18 @@ public class MedicalSupplyController {
 
 
     @Operation(summary = "Xóa mềm một vật tư y tế (đặt trạng thái không hoạt động)",
-            description = "Đánh dấu một vật tư y tế là không hoạt động. Đây là hình thức xóa mềm. Yêu cầu vai trò StaffManager.")
+            description = """
+### Mô tả
+Đánh dấu một vật tư y tế là không hoạt động (DISPOSED). Đây là hình thức xóa mềm.
+- **Phân quyền:** Yêu cầu vai trò `StaffManager`.
+"""
+    )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "Vật tư y tế được xóa mềm thành công"),
-            @ApiResponse(responseCode = "400", description = "Vật tư đã ở trạng thái không hoạt động"),
-            @ApiResponse(responseCode = "401", description = "Chưa xác thực"),
-            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập"),
-            @ApiResponse(responseCode = "404", description = "Không tìm thấy vật tư y tế")
+            @ApiResponse(responseCode = "204", description = "Vật tư y tế được xóa mềm thành công", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Vật tư đã ở trạng thái không hoạt động", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy vật tư y tế", content = @Content)
     })
     @PostMapping("/{supplyId}/dispose")
     @PreAuthorize("hasRole('StaffManager')") // Chỉ StaffManager mới có quyền xóa
@@ -175,14 +210,19 @@ public class MedicalSupplyController {
     }
 
     @Operation(summary = "Xóa cứng một vật tư y tế",
-            description = "Xóa hoàn toàn một vật tư y tế khỏi hệ thống. Chỉ có thể thực hiện nếu vật tư không có giao dịch liên quan đến sự cố y tế. " +
-                    "Người thực hiện phải là người tạo vật tư hoặc có quyền StaffManager/Admin.")
+            description = """
+### Mô tả
+Xóa hoàn toàn một vật tư y tế khỏi hệ thống.
+- **Điều kiện:** Chỉ có thể thực hiện nếu vật tư không có giao dịch liên quan đến sự cố y tế.
+- **Phân quyền:** Người tạo vật tư, `StaffManager`, hoặc `SchoolAdmin`.
+"""
+    )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Vật tư y tế đã được xóa cứng thành công"),
-            @ApiResponse(responseCode = "400", description = "Không thể xóa cứng vật tư này vì nó có giao dịch liên quan đến sự cố y tế"),
-            @ApiResponse(responseCode = "401", description = "Chưa xác thực"),
-            @ApiResponse(responseCode = "403", description = "Không có quyền xóa cứng vật tư này"),
-            @ApiResponse(responseCode = "404", description = "Không tìm thấy vật tư y tế")
+            @ApiResponse(responseCode = "200", description = "Vật tư y tế đã được xóa cứng thành công", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Không thể xóa cứng vật tư này vì nó có giao dịch liên quan đến sự cố y tế", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền xóa cứng vật tư này", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy vật tư y tế", content = @Content)
     })
     @DeleteMapping("/{supplyId}/delete")
     @PreAuthorize("hasAnyRole('MedicalStaff','StaffManager', 'SchoolAdmin')")
@@ -192,4 +232,3 @@ public class MedicalSupplyController {
         return ResponseEntity.ok().body("Vật tư y tế đã được xóa cứng thành công");
     }
 }
-

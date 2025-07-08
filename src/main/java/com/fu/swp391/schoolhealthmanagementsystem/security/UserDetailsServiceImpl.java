@@ -20,7 +20,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     private UserRepository userRepository;
 
     @Override
-    @Transactional(readOnly = true) // readOnly = true vẫn cho phép khởi tạo lazy loading
+    @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         log.debug("Đang tải thông tin người dùng cho email: {}", email);
         User user = userRepository.findByEmail(email) // Giả sử findByEmail đã có @EntityGraph hoặc bạn dùng cách này
@@ -32,7 +32,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         // Khởi tạo childLinks một cách tường minh bên trong transaction
         if (user.getRole() == UserRole.Parent) {
             // Cách 1: "Chạm" vào collection
-            // user.getChildLinks().size(); // Hoặc user.getChildLinks().isEmpty();
+//             user.getChildLinks().size(); // Hoặc user.getChildLinks().isEmpty();
             // Cách 2: Dùng Hibernate.initialize (an toàn hơn và rõ ràng hơn)
             Hibernate.initialize(user.getChildLinks());
         }

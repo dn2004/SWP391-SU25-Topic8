@@ -39,14 +39,20 @@ public class StudentMedicationController {
     private final StudentMedicationService studentMedicationService;
 
     @Operation(summary = "NVYT tạo bản ghi thuốc và lịch trình ban đầu cho học sinh",
-            description = "Nhân viên y tế nhập thông tin thuốc do phụ huynh gửi, bao gồm tên thuốc, số liều, hướng dẫn và lịch trình uống thuốc (ngày bắt đầu, các cữ uống trong ngày). Trạng thái thuốc mặc định là AVAILABLE. Yêu cầu vai trò MedicalStaff hoặc StaffManager.")
+            description = """
+### Mô tả
+Nhân viên y tế nhập thông tin thuốc do phụ huynh gửi, bao gồm tên thuốc, số liều, hướng dẫn và lịch trình uống thuốc. Trạng thái thuốc mặc định là `AVAILABLE`.
+- **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
+- **Thông báo:** Gửi thông báo đến phụ huynh khi tạo thành công.
+"""
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Tạo bản ghi thuốc thành công",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = StudentMedicationResponseDto.class))),
-            @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ"),
-            @ApiResponse(responseCode = "401", description = "Chưa xác thực"),
-            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập (vai trò không phù hợp hoặc phụ huynh không liên kết với học sinh)"),
-            @ApiResponse(responseCode = "404", description = "Không tìm thấy học sinh hoặc phụ huynh")
+            @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập (vai trò không phù hợp hoặc phụ huynh không liên kết với học sinh)", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy học sinh hoặc phụ huynh", content = @Content)
     })
     @PostMapping("/staff-create")
     @PreAuthorize("hasAnyRole('MedicalStaff', 'StaffManager')")
@@ -57,13 +63,20 @@ public class StudentMedicationController {
     }
 
     @Operation(summary = "Lấy thông tin chi tiết một bản ghi thuốc của học sinh",
-            description = "Lấy thông tin chi tiết của một bản ghi thuốc dựa trên ID. Phụ huynh chỉ xem được của con mình. NVYT, Quản lý NVYT, Admin trường có thể xem bất kỳ.")
+            description = """
+### Mô tả
+Lấy thông tin chi tiết của một bản ghi thuốc dựa trên ID.
+- **Phân quyền:** 
+    - `Parent`: Chỉ xem được của con mình.
+    - `MedicalStaff`, `StaffManager`, `SchoolAdmin`: Có thể xem của bất kỳ ai.
+"""
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Tìm thấy thông tin thuốc",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = StudentMedicationResponseDto.class))),
-            @ApiResponse(responseCode = "401", description = "Chưa xác thực"),
-            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập"),
-            @ApiResponse(responseCode = "404", description = "Không tìm thấy thông tin thuốc")
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy thông tin thuốc", content = @Content)
     })
     @GetMapping("/{studentMedicationId}")
     @PreAuthorize("isAuthenticated()")
@@ -74,13 +87,20 @@ public class StudentMedicationController {
     }
 
     @Operation(summary = "Lấy lịch sử giao dịch của một đơn thuốc",
-            description = "Lấy danh sách (phân trang) các giao dịch liên quan đến một đơn thuốc cụ thể (nhập, dùng, hủy, hết hạn, v.v.). Có thể lọc theo loại giao dịch và khoảng thời gian. Phụ huynh chỉ xem được của con mình. NVYT, Quản lý NVYT, Admin trường có thể xem bất kỳ.")
+            description = """
+### Mô tả
+Lấy danh sách các giao dịch liên quan đến một đơn thuốc cụ thể (nhập, dùng, hủy,...).
+- **Phân quyền:** 
+    - `Parent`: Chỉ xem được của con mình.
+    - `MedicalStaff`, `StaffManager`, `SchoolAdmin`: Có thể xem của bất kỳ ai.
+"""
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lấy lịch sử giao dịch thành công",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
-            @ApiResponse(responseCode = "401", description = "Chưa xác thực"),
-            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập"),
-            @ApiResponse(responseCode = "404", description = "Không tìm thấy đơn thuốc")
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy đơn thuốc", content = @Content)
     })
     @GetMapping("/{studentMedicationId}/transactions")
     @PreAuthorize("isAuthenticated()")
@@ -104,8 +124,20 @@ public class StudentMedicationController {
     }
 
     @Operation(summary = "NVYT cập nhật thông tin cơ bản của thuốc học sinh",
-            description = "Cập nhật các thông tin mô tả như tên thuốc, liều dùng (text), ngày hết hạn, ghi chú, hướng dẫn sử dụng. Không dùng để cập nhật số liều hoặc lịch trình. Yêu cầu vai trò MedicalStaff hoặc StaffManager.")
-    @ApiResponses(value = { /* ... (Tương tự các API khác) ... */})
+            description = """
+### Mô tả
+Cập nhật các thông tin mô tả như tên thuốc, liều dùng (text), ngày hết hạn, ghi chú. Không dùng để cập nhật số liều hoặc lịch trình.
+- **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
+"""
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Cập nhật thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = StudentMedicationResponseDto.class))),
+            @ApiResponse(responseCode = "400", description = "Dữ liệu không hợp lệ", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy bản ghi thuốc", content = @Content)
+    })
     @PutMapping("/{studentMedicationId}/info")
     @PreAuthorize("hasAnyRole('MedicalStaff', 'StaffManager')")
     public ResponseEntity<StudentMedicationResponseDto> updateStudentMedicationInfo(
@@ -116,8 +148,21 @@ public class StudentMedicationController {
     }
 
     @Operation(summary = "Cập nhật thông tin lịch trình cho thuốc của học sinh",
-            description = "NVYT cập nhật ngày bắt đầu, các cữ uống trong ngày. Các task cũ trong tương lai (nếu có) sẽ bị hủy và task mới sẽ được tạo. Yêu cầu vai trò MedicalStaff hoặc StaffManager.")
-    @ApiResponses(value = { /* ... (Tương tự các API khác) ... */})
+            description = """
+### Mô tả
+Cập nhật ngày bắt đầu, các cữ uống trong ngày. Các task cũ trong tương lai sẽ bị hủy và task mới sẽ được tạo.
+- **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
+- **Thông báo:** Gửi thông báo đến phụ huynh khi cập nhật lịch trình.
+"""
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Cập nhật thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = StudentMedicationResponseDto.class))),
+            @ApiResponse(responseCode = "400", description = "Dữ liệu không hợp lệ", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy bản ghi thuốc", content = @Content)
+    })
     @PutMapping("/{studentMedicationId}/schedule")
     @PreAuthorize("hasAnyRole('MedicalStaff', 'StaffManager')")
     public ResponseEntity<StudentMedicationResponseDto> updateMedicationSchedule(
@@ -128,8 +173,21 @@ public class StudentMedicationController {
     }
 
     @Operation(summary = "Báo cáo thuốc của học sinh bị thất lạc",
-            description = "NVYT báo cáo thuốc bị thất lạc. Trạng thái thuốc sẽ thành LOST, số liều còn lại về 0, các lịch trình tương lai bị hủy. Yêu cầu vai trò MedicalStaff hoặc StaffManager.")
-    @ApiResponses(value = { /* ... (Tương tự các API khác) ... */})
+            description = """
+### Mô tả
+Báo cáo thuốc bị thất lạc. Trạng thái thuốc sẽ thành `LOST`, số liều về 0, các lịch trình tương lai bị hủy.
+- **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
+- **Thông báo:** Gửi thông báo đến phụ huynh về việc thuốc bị thất lạc.
+"""
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Báo cáo thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = StudentMedicationResponseDto.class))),
+            @ApiResponse(responseCode = "400", description = "Dữ liệu không hợp lệ", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy bản ghi thuốc", content = @Content)
+    })
     @PostMapping("/{studentMedicationId}/report-lost")
     @PreAuthorize("hasAnyRole('MedicalStaff', 'StaffManager')")
     public ResponseEntity<StudentMedicationResponseDto> reportLostMedication(
@@ -140,8 +198,21 @@ public class StudentMedicationController {
     }
 
     @Operation(summary = "Xác nhận trả thuốc lại cho phụ huynh",
-            description = "NVYT xác nhận đã trả lại thuốc cho phụ huynh. Trạng thái thuốc sẽ thành RETURNED_TO_PARENT, số liều còn lại về 0, các lịch trình tương lai bị hủy. Yêu cầu vai trò MedicalStaff hoặc StaffManager.")
-    @ApiResponses(value = { /* ... (Tương tự các API khác) ... */})
+            description = """
+### Mô tả
+Xác nhận đã trả lại thuốc cho phụ huynh. Trạng thái thuốc sẽ thành `RETURNED_TO_PARENT`, số liều về 0, các lịch trình tương lai bị hủy.
+- **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
+- **Thông báo:** Gửi thông báo đến phụ huynh về việc đã trả thuốc.
+"""
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Xác nhận thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = StudentMedicationResponseDto.class))),
+            @ApiResponse(responseCode = "400", description = "Dữ liệu không hợp lệ", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy bản ghi thuốc", content = @Content)
+    })
     @PostMapping("/{studentMedicationId}/return-to-parent")
     @PreAuthorize("hasAnyRole('MedicalStaff', 'StaffManager')")
     public ResponseEntity<StudentMedicationResponseDto> returnMedicationToParent(
@@ -153,13 +224,22 @@ public class StudentMedicationController {
 
 
     @Operation(summary = "Hủy bỏ thuốc đã nhập",
-            description = "Cho phép nhân viên y tế hủy bỏ thuốc đã nhập (chỉ người tạo mới được hủy và thuốc chưa được lên lịch). " +
-                    "Trạng thái sẽ được đổi thành CANCELED và tạo transaction CANCELLATION_REVERSAL.")
+            description = """
+### Mô tả
+Hủy bỏ một đơn thuốc đã nhập.
+- **Điều kiện:** Chỉ người tạo mới được hủy và thuốc chưa được lên lịch.
+- **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
+- **Thông báo:** Gửi thông báo đến phụ huynh về việc hủy thuốc.
+"""
+    )
+    @ApiResponses(value = {
     @ApiResponse(responseCode = "200", description = "Hủy thuốc thành công",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = StudentMedicationResponseDto.class)))
-    @ApiResponse(responseCode = "400", description = "Không thể hủy (thuốc đã có lịch hoặc không ở trạng thái cho phép)")
-    @ApiResponse(responseCode = "403", description = "Không có quyền hủy (không phải người tạo thuốc)")
-    @ApiResponse(responseCode = "404", description = "Không tìm thấy thuốc với ID cung cấp")
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = StudentMedicationResponseDto.class))),
+    @ApiResponse(responseCode = "400", description = "Không thể hủy (thuốc đã có lịch hoặc không ở trạng thái cho phép)", content = @Content),
+    @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+    @ApiResponse(responseCode = "403", description = "Không có quyền hủy (không phải người tạo thuốc)", content = @Content),
+    @ApiResponse(responseCode = "404", description = "Không tìm thấy thuốc với ID cung cấp", content = @Content)
+    })
     @PostMapping("/{studentMedicationId}/cancel")
     @PreAuthorize("hasAnyRole('MedicalStaff', 'StaffManager')")
     public ResponseEntity<StudentMedicationResponseDto> cancelStudentMedication(
@@ -171,8 +251,21 @@ public class StudentMedicationController {
     }
 
     @Operation(summary = "Lấy danh sách thuốc của một học sinh cụ thể",
-            description = "Lấy danh sách (phân trang) tất cả các loại thuốc đã được gửi cho một học sinh. Phụ huynh chỉ xem được của con mình. NVYT, Quản lý NVYT, Admin trường có thể xem.")
-    @ApiResponses(value = { /* ... (Tương tự các API khác) ... */})
+            description = """
+### Mô tả
+Lấy danh sách tất cả các loại thuốc đã được gửi cho một học sinh.
+- **Phân quyền:** 
+    - `Parent`: Chỉ xem được của con mình.
+    - `MedicalStaff`, `StaffManager`, `SchoolAdmin`: Có thể xem của bất kỳ ai.
+"""
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy học sinh", content = @Content)
+    })
     @GetMapping("/student/{studentId}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Page<StudentMedicationResponseDto>> getMedicationsByStudent(
@@ -189,7 +282,18 @@ public class StudentMedicationController {
     }
 
     @Operation(summary = "Lấy tất cả bản ghi thuốc của học sinh trong hệ thống (cho nhân viên)",
-            description = "Lấy danh sách (phân trang) tất cả các StudentMedication. Có thể lọc theo trạng thái và khoảng thời gian. Yêu cầu vai trò MedicalStaff, StaffManager, hoặc SchoolAdmin.")
+            description = """
+### Mô tả
+Lấy danh sách tất cả các đơn thuốc của học sinh trong hệ thống.
+- **Phân quyền:** Yêu cầu vai trò `MedicalStaff`, `StaffManager`, hoặc `SchoolAdmin`.
+"""
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
+    })
     @GetMapping
     @PreAuthorize("hasAnyRole('MedicalStaff', 'StaffManager', 'SchoolAdmin')")
     public ResponseEntity<Page<StudentMedicationResponseDto>> getAllStudentMedications(
@@ -211,3 +315,4 @@ public class StudentMedicationController {
         return ResponseEntity.ok(response);
     }
 }
+

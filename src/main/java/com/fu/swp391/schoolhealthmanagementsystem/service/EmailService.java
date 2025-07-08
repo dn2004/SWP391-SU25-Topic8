@@ -1,6 +1,8 @@
 package com.fu.swp391.schoolhealthmanagementsystem.service;
 
 import com.fu.swp391.schoolhealthmanagementsystem.entity.User;
+import com.fu.swp391.schoolhealthmanagementsystem.prop.FrontEndProperties;
+import com.fu.swp391.schoolhealthmanagementsystem.prop.LogoProperties;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -22,21 +24,11 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
     private final SpringTemplateEngine thymeleafTemplateEngine;
+    private final FrontEndProperties frontEndProperties;
+    private final LogoProperties logoProperties;
 
     @Value("${spring.mail.username}")
     private String senderEmail;
-
-    @Value("${app.frontend.base-url}") // Add a base URL for links
-    private String applicationBaseUrl;
-
-    @Value("${app.email.logo.path}") // Default logo path
-    private String logoImagePath;
-
-    @Value("${app.email.logo.cid}") // CID for inline image
-    private String logoImageCid;
-
-    @Value("${app.frontend.login-path}")
-    private String loginPath;
 
     @Value("${otp.expiry.minutes}")
     private int otpExpiryMinutes;
@@ -50,8 +42,8 @@ public class EmailService {
         thymeleafContext.setVariable("fullName", staff.getFullName());
         thymeleafContext.setVariable("email", staff.getEmail());
         thymeleafContext.setVariable("password", rawPassword);
-        thymeleafContext.setVariable("loginUrl", applicationBaseUrl + loginPath); // Hoặc trang đăng nhập cụ thể
-        thymeleafContext.setVariable("logoImage", logoImageCid); // CID for inline image
+        thymeleafContext.setVariable("loginUrl", frontEndProperties.baseUrl() + frontEndProperties.loginPath());
+        thymeleafContext.setVariable("logoImage", logoProperties.cid());
         thymeleafContext.setVariable("otpExpiryMinutes", otpExpiryMinutes);
 
         String htmlBody = thymeleafTemplateEngine.process("emails/new-staff-credentials-email", thymeleafContext);
@@ -73,7 +65,7 @@ public class EmailService {
 
         Context thymeleafContext = new Context();
         thymeleafContext.setVariable("otp", otp);
-        thymeleafContext.setVariable("logoImage", logoImageCid);
+        thymeleafContext.setVariable("logoImage", logoProperties.cid());
         thymeleafContext.setVariable("otpExpiryMinutes", otpExpiryMinutes);
 
         String htmlBody = thymeleafTemplateEngine.process("emails/otp-email", thymeleafContext);
@@ -95,9 +87,9 @@ public class EmailService {
             helper.setSubject(subject);
             helper.setText(htmlBody, true); // true for HTML
 
-            ClassPathResource logoResource = new ClassPathResource(logoImagePath);
+            ClassPathResource logoResource = new ClassPathResource(logoProperties.path());
             if (logoResource.exists()) {
-                helper.addInline(logoImageCid, logoResource, "image/png");
+                helper.addInline(logoProperties.cid(), logoResource, "image/png");
             } else {
                 log.warn("Không tìm thấy file logo tại: static/images/logo.png");
             }

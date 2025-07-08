@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
+@Schema(description = "Thông tin cữ uống thuốc trong ngày")
 public record MedicationTimeSlotDto(
         @NotBlank(message = "Thời điểm uống thuốc không được để trống")
         @Pattern(regexp = "^([01]?[0-9]|2[0-3]):[0-5][0-9]$", message = "Thời điểm phải có định dạng HH:mm")

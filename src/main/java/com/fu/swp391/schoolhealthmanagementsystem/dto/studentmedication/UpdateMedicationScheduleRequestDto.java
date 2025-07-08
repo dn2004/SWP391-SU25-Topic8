@@ -1,4 +1,4 @@
- package com.fu.swp391.schoolhealthmanagementsystem.dto.studentmedication;
+package com.fu.swp391.schoolhealthmanagementsystem.dto.studentmedication;
 
 import com.fu.swp391.schoolhealthmanagementsystem.validation.IsWorkday;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -12,6 +12,7 @@ import java.util.List;
 
 // DTO để NVYT cập nhật/thiết lập thông tin lịch trình cho StudentMedication
 @Slf4j
+@Schema(description = "Thông tin yêu cầu cập nhật lịch trình uống thuốc cho học sinh")
 public record UpdateMedicationScheduleRequestDto(
         @NotNull(message = "Ngày bắt đầu lịch trình không được để trống")
         @IsWorkday

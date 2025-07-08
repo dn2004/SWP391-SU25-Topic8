@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+@Schema(description = "Thông tin vật tư y tế trả về")
 public record MedicalSupplyResponseDto(
         @Schema(description = "ID của vật tư y tế", example = "1")
         Long supplyId,
@@ -34,7 +35,7 @@ public record MedicalSupplyResponseDto(
         @Schema(description = "Ngày cập nhật cuối cùng", example = "2025-06-14T12:00:00")
         LocalDateTime lastUpdatedAt,
 
-        @Schema(description = "Email của người tạo", example = "admin@example.com")
+        @Schema(description = "Email của người t��o", example = "admin@example.com")
         String createdByUserEmail,
 
         @Schema(description = "Email của người cập nhật", example = "manager@example.com")

@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -39,9 +40,23 @@ public class StudentChronicDiseaseController {
     private final StudentChronicDiseaseService chronicDiseaseService;
 
     @Operation(summary = "Thêm mới một bản ghi bệnh mãn tính cho học sinh",
-            description = "Người dùng đã xác thực có thể thêm. Phụ huynh thêm sẽ ở trạng thái PENDING, nhân viên thêm sẽ tự động APPROVE.")
-    @ApiResponse(responseCode = "201", description = "Tạo thành công",
-            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = StudentChronicDiseaseResponseDto.class)))
+            description = """
+### Mô tả
+Thêm một bản ghi bệnh mãn tính cho học sinh, có thể đính kèm file chứng nhận.
+- **Phân quyền:**
+    - `Parent`: Thêm cho con mình, trạng thái mặc định là `PENDING`.
+    - `MedicalStaff`, `StaffManager`, `SchoolAdmin`: Thêm cho bất kỳ học sinh nào, trạng thái mặc định là `APPROVED`.
+- **Thông báo:** Nếu phụ huynh thêm, hệ thống sẽ gửi thông báo đến nhân viên y tế để duyệt.
+"""
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Tạo thành công",
+                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = StudentChronicDiseaseResponseDto.class))),
+        @ApiResponse(responseCode = "400", description = "Dữ liệu không hợp lệ", content = @Content),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Không tìm thấy học sinh", content = @Content)
+    })
     @PreAuthorize("isAuthenticated()")
     @PostMapping(path = "/students/{studentId}/chronic-diseases", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<StudentChronicDiseaseResponseDto> addChronicDisease(
@@ -53,7 +68,21 @@ public class StudentChronicDiseaseController {
     }
 
     @Operation(summary = "Lấy thông tin bệnh mãn tính theo ID",
-            description = "Người dùng đã xác thực có thể lấy thông tin. Service sẽ kiểm tra quyền truy cập chi tiết.")
+            description = """
+### Mô tả
+Lấy thông tin chi tiết của một bản ghi bệnh mãn tính.
+- **Phân quyền:** 
+    - `Parent`: Chỉ xem được của con mình.
+    - `MedicalStaff`, `StaffManager`, `SchoolAdmin`: Có thể xem của bất kỳ ai.
+"""
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lấy thông tin thành công",
+                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = StudentChronicDiseaseResponseDto.class))),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Không tìm thấy bản ghi", content = @Content)
+    })
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/chronic-diseases/{chronicDiseaseId}")
     public ResponseEntity<StudentChronicDiseaseResponseDto> getChronicDiseaseById(
@@ -64,7 +93,18 @@ public class StudentChronicDiseaseController {
     }
 
     @Operation(summary = "Lấy danh sách tất cả bệnh mãn tính (phân trang, có bộ lọc)",
-            description = "Chỉ Nhân viên y tế, Quản lý hoặc Admin có thể truy cập.")
+            description = """
+### Mô tả
+Lấy danh sách tất cả các bản ghi bệnh mãn tính trong hệ thống.
+- **Phân quyền:** Yêu cầu vai trò `MedicalStaff`, `StaffManager`, hoặc `SchoolAdmin`.
+"""
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công",
+                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = Page.class))),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
+    })
     @PreAuthorize("hasAnyRole('MedicalStaff', 'StaffManager', 'SchoolAdmin')")
     @GetMapping("/chronic-diseases")
     public ResponseEntity<Page<StudentChronicDiseaseResponseDto>> getAllChronicDiseases(
@@ -78,7 +118,21 @@ public class StudentChronicDiseaseController {
     }
 
     @Operation(summary = "Lấy danh sách bệnh mãn tính của một học sinh (phân trang)",
-            description = "Người dùng đã xác thực có thể lấy thông tin. Service sẽ kiểm tra quyền truy cập chi tiết.")
+            description = """
+### Mô tả
+Lấy danh sách các bản ghi bệnh mãn tính của một học sinh cụ thể.
+- **Phân quyền:** 
+    - `Parent`: Chỉ xem được của con mình.
+    - `MedicalStaff`, `StaffManager`, `SchoolAdmin`: Có thể xem của bất kỳ ai.
+"""
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công",
+                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = Page.class))),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Không tìm thấy học sinh", content = @Content)
+    })
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/students/{studentId}/chronic-diseases")
     public ResponseEntity<Page<StudentChronicDiseaseResponseDto>> getAllChronicDiseasesByStudent(
@@ -92,7 +146,22 @@ public class StudentChronicDiseaseController {
     }
 
     @Operation(summary = "Cập nhật thông tin bệnh mãn tính",
-            description = "Người dùng đã xác thực có thể cập nhật. Phụ huynh chỉ sửa được hồ sơ PENDING. Nhân viên không sửa được hồ sơ PENDING (phải duyệt). File đính kèm mới sẽ thay thế file cũ.")
+            description = """
+### Mô tả
+Cập nhật thông tin của một bản ghi bệnh mãn tính. File đính kèm mới sẽ thay thế file cũ.
+- **Phân quyền:**
+    - `Parent`: Chỉ sửa được hồ sơ `PENDING` của con mình.
+    - `MedicalStaff`, `StaffManager`, `SchoolAdmin`: Không sửa được hồ sơ `PENDING` (phải duyệt), chỉ sửa được các hồ sơ đã được duyệt.
+"""
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Cập nhật thành công",
+                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = StudentChronicDiseaseResponseDto.class))),
+        @ApiResponse(responseCode = "400", description = "Dữ liệu không hợp lệ", content = @Content),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Không tìm thấy bản ghi", content = @Content)
+    })
     @PreAuthorize("isAuthenticated()")
     @PutMapping(value = "/chronic-diseases/{chronicDiseaseId}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<StudentChronicDiseaseResponseDto> updateChronicDisease(
@@ -104,7 +173,21 @@ public class StudentChronicDiseaseController {
     }
 
     @Operation(summary = "Duyệt (chấp nhận/từ chối) một hồ sơ bệnh mãn tính",
-            description = "Chỉ Nhân viên y tế, Quản lý hoặc Admin có thể duyệt các hồ sơ đang ở trạng thái PENDING.")
+            description = """
+### Mô tả
+Duyệt một hồ sơ bệnh mãn tính đang ở trạng thái `PENDING`.
+- **Phân quyền:** Yêu cầu vai trò `MedicalStaff`, `StaffManager`, hoặc `SchoolAdmin`.
+- **Thông báo:** Gửi thông báo đến phụ huynh về kết quả duyệt.
+"""
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Duyệt thành công",
+                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = StudentChronicDiseaseResponseDto.class))),
+        @ApiResponse(responseCode = "400", description = "Trạng thái không hợp lệ", content = @Content),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Không tìm thấy bản ghi", content = @Content)
+    })
     @PreAuthorize("hasAnyRole('MedicalStaff', 'StaffManager', 'SchoolAdmin')")
     @PatchMapping("/chronic-diseases/{chronicDiseaseId}/mediate")
     public ResponseEntity<StudentChronicDiseaseResponseDto> mediateChronicDiseaseStatus(
@@ -116,8 +199,20 @@ public class StudentChronicDiseaseController {
     }
 
     @Operation(summary = "Xóa một bản ghi bệnh mãn tính",
-            description = "Người dùng đã xác thực có thể xóa. Phụ huynh chỉ xóa được hồ sơ PENDING. Nhân viên có thể xóa bất kỳ hồ sơ nào.")
-    @ApiResponse(responseCode = "204", description = "Xóa thành công")
+            description = """
+### Mô tả
+Xóa một bản ghi bệnh mãn tính.
+- **Phân quyền:**
+    - `Parent`: Chỉ xóa được hồ sơ `PENDING` của con mình.
+    - `MedicalStaff`, `StaffManager`, `SchoolAdmin`: Có thể xóa bất kỳ hồ sơ nào.
+"""
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Xóa thành công", content = @Content),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Không tìm thấy bản ghi", content = @Content)
+    })
     @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/chronic-diseases/{chronicDiseaseId}")
     public ResponseEntity<Void> deleteChronicDisease(
@@ -128,7 +223,19 @@ public class StudentChronicDiseaseController {
     }
 
     @Operation(summary = "Lấy URL truy cập (đã ký) cho file đính kèm",
-            description = "Người dùng đã xác thực và có quyền sẽ nhận được một URL tạm thời để truy cập file.")
+            description = """
+### Mô tả
+Nhận một URL tạm thời (đã ký) để truy cập file đính kèm của một bản ghi bệnh mãn tính.
+- **Phân quyền:** Người dùng đã xác thực và có quyền xem bản ghi tương ứng.
+"""
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lấy URL thành công",
+                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = "{\"url\": \"SIGNED_URL\"}"))),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Không tìm thấy file đính kèm", content = @Content)
+    })
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/chronic-diseases/{chronicDiseaseId}/file-access-url")
     public ResponseEntity<Map<String, String>> getAttachmentAccessUrl(

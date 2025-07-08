@@ -39,14 +39,19 @@ public class HealthIncidentController {
     private final HealthIncidentService healthIncidentService;
 
     @Operation(summary = "Tạo mới một sự cố sức khỏe",
-            description = "Ghi nhận một sự cố sức khỏe mới cho học sinh. Yêu cầu vai trò MedicalStaff hoặc StaffManager.")
+            description = """
+Ghi nhận một sự cố sức khỏe mới cho học sinh.
+- **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
+- **Thông báo:** Gửi thông báo đến phụ huynh của học sinh khi tạo thành công.
+""")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Sự cố sức khỏe được tạo thành công",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = HealthIncidentResponseDto.class))),
-            @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ"),
-            @ApiResponse(responseCode = "401", description = "Chưa xác thực"),
-            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập")
+            @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy học sinh", content = @Content)
     })
     @PostMapping
     @PreAuthorize("hasAnyRole('MedicalStaff', 'StaffManager')")
@@ -57,13 +62,18 @@ public class HealthIncidentController {
     }
 
     @Operation(summary = "Lấy thông tin sự cố sức khỏe theo ID",
-            description = "Lấy thông tin chi tiết của một sự cố sức khỏe. Parent chỉ xem được của con mình. MedicalStaff, StaffManager, SchoolAdmin có thể xem bất kỳ sự cố nào (chưa bị xóa mềm).")
+            description = """
+Lấy thông tin chi tiết của một sự cố sức khỏe (chưa bị xóa mềm).
+- **Phân quyền:**
+    - `Parent`: Chỉ có thể xem sự cố của con mình.
+    - `MedicalStaff`, `StaffManager`, `SchoolAdmin`: Có thể xem bất kỳ sự cố nào.
+""")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Tìm thấy sự cố sức khỏe",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = HealthIncidentResponseDto.class))),
-            @ApiResponse(responseCode = "401", description = "Chưa xác thực"),
-            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập"),
-            @ApiResponse(responseCode = "404", description = "Không tìm thấy sự cố sức khỏe (hoặc đã bị xóa mềm)")
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy sự cố sức khỏe (hoặc đã bị xóa mềm)", content = @Content)
     })
     @GetMapping("/{incidentId}")
     @PreAuthorize("isAuthenticated()") // Logic phân quyền chi tiết hơn (Parent vs Staff) nằm trong service
@@ -73,13 +83,18 @@ public class HealthIncidentController {
     }
 
     @Operation(summary = "Lấy danh sách sự cố sức khỏe của một học sinh",
-            description = "Lấy danh sách (phân trang) các sự cố sức khỏe (chưa bị xóa mềm) của một học sinh cụ thể. Parent chỉ xem được của con mình. Hỗ trợ lọc theo loại, địa điểm và khoảng thời gian.")
+            description = """
+Lấy danh sách (phân trang) các sự cố sức khỏe (chưa bị xóa mềm) của một học sinh cụ thể. Hỗ trợ lọc theo loại, địa điểm và khoảng thời gian.
+- **Phân quyền:**
+    - `Parent`: Chỉ có thể xem danh sách sự cố của con mình.
+    - `MedicalStaff`, `StaffManager`, `SchoolAdmin`: Có thể xem của bất kỳ học sinh nào.
+""")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
-            @ApiResponse(responseCode = "401", description = "Chưa xác thực"),
-            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập"),
-            @ApiResponse(responseCode = "404", description = "Không tìm thấy học sinh")
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy học sinh", content = @Content)
     })
     @GetMapping("/student/{studentId}")
     @PreAuthorize("isAuthenticated()")
@@ -100,11 +115,14 @@ public class HealthIncidentController {
     }
 
     @Operation(summary = "Lấy tất cả sự cố sức khỏe (cho nhân viên)",
-            description = "Lấy danh sách (phân trang) tất cả các sự cố sức khỏe (chưa bị xóa mềm). Hỗ trợ lọc theo nhiều tiêu chí. Yêu cầu vai trò MedicalStaff, StaffManager, hoặc SchoolAdmin.")
+            description = """
+Lấy danh sách (phân trang) tất cả các sự cố sức khỏe (chưa bị xóa mềm). Hỗ trợ lọc theo nhiều tiêu chí.
+- **Phân quyền:** Yêu cầu vai trò `MedicalStaff`, `StaffManager`, hoặc `SchoolAdmin`.
+""")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công"),
-            @ApiResponse(responseCode = "401", description = "Chưa xác thực"),
-            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập")
+            @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
     })
     @GetMapping
     @PreAuthorize("hasAnyRole('MedicalStaff', 'StaffManager', 'SchoolAdmin')")
@@ -120,7 +138,7 @@ public class HealthIncidentController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @Parameter(description = "Lọc theo tên học sinh (một phần hoặc toàn bộ)")
             @RequestParam(required = false) String studentName,
-            @Parameter(description = "Lọc theo tên người ghi nhận (một phần hoặc toàn bộ)")
+            @Parameter(description = "Lọc theo t��n người ghi nhận (một phần hoặc toàn bộ)")
             @RequestParam(required = false) String recordedByName,
             @Parameter(description = "Lọc theo địa điểm")
             @RequestParam(required = false) String location,
@@ -130,11 +148,14 @@ public class HealthIncidentController {
     }
 
     @Operation(summary = "Lấy danh sách sự cố sức khỏe của tôi (cho nhân viên y tế)",
-            description = "Lấy danh sách (phân trang) các sự cố sức khỏe do chính nhân viên y tế đang đăng nhập ghi nhận. Hỗ trợ lọc theo nhiều tiêu chí. Yêu cầu vai trò MedicalStaff.")
+            description = """
+Lấy danh sách (phân trang) các sự cố sức khỏe do chính nhân viên y tế/quản lý đang đăng nhập ghi nhận. Hỗ trợ lọc theo nhiều tiêu chí.
+- **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
+""")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công"),
-            @ApiResponse(responseCode = "401", description = "Chưa xác thực"),
-            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập (chỉ dành cho MedicalStaff)")
+            @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập (chỉ dành cho MedicalStaff)", content = @Content)
     })
     @GetMapping("/me")
     @PreAuthorize("hasAnyRole('MedicalStaff', 'StaffManager')")
@@ -158,14 +179,21 @@ public class HealthIncidentController {
     }
 
     @Operation(summary = "Cập nhật một sự cố sức khỏe",
-            description = "Cập nhật thông tin của một sự cố sức khỏe (chưa bị xóa mềm). Chỉ có thể cập nhật trong vòng 1 ngày kể từ khi tạo. Người tạo hoặc StaffManager/SchoolAdmin mới có quyền.")
+            description = """
+Cập nhật thông tin của một sự cố sức khỏe (chưa bị xóa mềm).
+- **Điều kiện:** Chỉ có thể cập nhật trong vòng 1 ngày kể từ khi tạo.
+- **Phân quyền:**
+    - Người tạo sự cố (`MedicalStaff`).
+    - `StaffManager`, `SchoolAdmin`.
+- **Thông báo:** Gửi thông báo đến phụ huynh của học sinh khi cập nhật thành công.
+""")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Cập nhật thành công",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = HealthIncidentResponseDto.class))),
-            @ApiResponse(responseCode = "400", description = "Dữ liệu không hợp lệ hoặc không thể cập nhật (ví dụ: quá hạn)"),
-            @ApiResponse(responseCode = "401", description = "Chưa xác thực"),
-            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập"),
-            @ApiResponse(responseCode = "404", description = "Không tìm thấy sự cố sức khỏe (hoặc đã bị xóa mềm)")
+            @ApiResponse(responseCode = "400", description = "Dữ liệu không hợp lệ hoặc không thể cập nhật (ví dụ: quá hạn)", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy sự cố sức khỏe (hoặc đã bị xóa mềm)", content = @Content)
     })
     @PutMapping("/{incidentId}")
     // Phân quyền trong PreAuthorize có thể chỉ là bước đầu, service sẽ check kỹ hơn ai là người tạo
@@ -177,13 +205,19 @@ public class HealthIncidentController {
     }
 
     @Operation(summary = "Xóa mềm một sự cố sức khỏe",
-            description = "Đánh dấu một sự cố sức khỏe là đã xóa. Yêu cầu vai trò StaffManager hoặc SchoolAdmin.")
+            description = """
+Đánh dấu một sự cố sức khỏe là đã xóa và hoàn trả lại số lượng vật tư y tế đã sử dụng.
+- **Điều kiện:** Chỉ có thể xóa trong ngày tạo sự cố.
+- **Phân quyền:**
+    - Người tạo sự cố (`MedicalStaff`).
+    - `StaffManager`, `SchoolAdmin`.
+""")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "Xóa mềm thành công"),
-            @ApiResponse(responseCode = "400", description = "Sự cố đã bị xóa trước đó"),
-            @ApiResponse(responseCode = "401", description = "Chưa xác thực"),
-            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập"),
-            @ApiResponse(responseCode = "404", description = "Không tìm thấy sự cố sức khỏe")
+            @ApiResponse(responseCode = "204", description = "Xóa mềm thành công", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Sự cố đã bị xóa trước đó", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy sự cố sức khỏe", content = @Content)
     })
     @DeleteMapping("/{incidentId}")
     @PreAuthorize("hasAnyRole('StaffManager', 'SchoolAdmin')")

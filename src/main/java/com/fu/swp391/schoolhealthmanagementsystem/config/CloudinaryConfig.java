@@ -1,7 +1,8 @@
 package com.fu.swp391.schoolhealthmanagementsystem.config;
 
 import com.cloudinary.Cloudinary;
-import org.springframework.beans.factory.annotation.Value;
+import com.fu.swp391.schoolhealthmanagementsystem.prop.CloudinaryProperties;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -11,21 +12,19 @@ import java.util.Map;
 @Configuration
 public class CloudinaryConfig {
 
-    @Value("${cloudinary.cloud_name}")
-    private String cloudName;
+    private final CloudinaryProperties cloudinaryProperties;
 
-    @Value("${cloudinary.api_key}")
-    private String apiKey;
-
-    @Value("${cloudinary.api_secret}")
-    private String apiSecret;
+    @Autowired
+    public CloudinaryConfig(CloudinaryProperties cloudinaryProperties) {
+        this.cloudinaryProperties = cloudinaryProperties;
+    }
 
     @Bean
     public Cloudinary cloudinary() {
         Map<String, String> config = new HashMap<>();
-        config.put("cloud_name", cloudName);
-        config.put("api_key", apiKey);
-        config.put("api_secret", apiSecret);
+        config.put("cloud_name", cloudinaryProperties.cloudName());
+        config.put("api_key", cloudinaryProperties.apiKey());
+        config.put("api_secret", cloudinaryProperties.apiSecret());
         config.put("secure", "true");
         return new Cloudinary(config);
     }

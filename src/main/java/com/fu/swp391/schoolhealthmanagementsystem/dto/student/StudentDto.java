@@ -11,31 +11,22 @@ import java.time.LocalDateTime;
 public record StudentDto(
         @Schema(description = "ID học sinh")
         Long id,
-
         @Schema(description = "Họ tên đầy đủ")
         String fullName,
-
         @Schema(description = "Ngày sinh")
         LocalDate dateOfBirth,
-
         @Schema(description = "Giới tính")
         String gender,
-
         @Schema(description = "Lớp học")
         String className,
-
         @Schema(description = "Khối lớp (Mầm, Chồi, Lá)")
         String classGroup,
-
         @Schema(description = "Tên hiển thị của trạng thái")
         String status,
-
         @Schema(description = "Mã mời cho phụ huynh")
         String invitationCode,
-
         @Schema(description = "Ngày tạo")
         LocalDateTime createdAt,
-
         @Schema(description = "Ngày cập nhật")
         LocalDateTime updatedAt
 ) {}

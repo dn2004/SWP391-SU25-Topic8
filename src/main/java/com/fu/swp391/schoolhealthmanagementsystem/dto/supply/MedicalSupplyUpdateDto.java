@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
 
+@Schema(description = "Thông tin cập nhật vật tư y tế")
 public record MedicalSupplyUpdateDto(
         @Schema(description = "Tên vật tư y tế", example = "Khẩu trang y tế")
         @NotBlank(message = "Tên vật tư không được để trống")

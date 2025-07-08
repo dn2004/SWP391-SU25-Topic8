@@ -30,7 +30,7 @@ public record ErrorResponseDto(
         Map<String, List<String>> validationErrors
 ) {
     public static ErrorResponseDto of(HttpStatus status, String message, String path) {
-        return new ErrorResponseDto(
+        return new ErrorResponseDto( // áp dụng khi không có lỗi validation
                 LocalDateTime.now(),
                 status.value(),
                 status.getReasonPhrase(),
@@ -41,7 +41,7 @@ public record ErrorResponseDto(
     }
 
     public static ErrorResponseDto of(HttpStatus status, String message, String path, Map<String, List<String>> validationErrors) {
-        return new ErrorResponseDto(
+        return new ErrorResponseDto( //áp dụng khi có lỗi validation
                 LocalDateTime.now(),
                 status.value(),
                 status.getReasonPhrase(),

@@ -9,11 +9,18 @@ public record LoginRequestDto(
 
         @NotBlank(message = "Email không được để trống")
         @Email(message = "Email không đúng định dạng")
-        @Schema(example = "user@example.com")
+        @Schema(
+                example = "user@example.com",
+                description = "Email của người dùng"
+        )
         String email,
 
         @NotBlank(message = "Mật khẩu không được để trống")
-        @Schema(example = "password123")
+        @Schema(
+                example = "password123",
+                description = "Mật khẩu của người dùng"
+        )
         String password
 
-) {}
+) {
+}

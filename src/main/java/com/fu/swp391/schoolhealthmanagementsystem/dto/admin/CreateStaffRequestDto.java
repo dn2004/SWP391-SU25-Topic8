@@ -3,10 +3,7 @@ package com.fu.swp391.schoolhealthmanagementsystem.dto.admin;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.UserRole;
 import com.fu.swp391.schoolhealthmanagementsystem.validation.ValidStaffRole;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 
 @Schema(description = "Yêu cầu tạo tài khoản nhân viên (Y tế, Quản lý Y tế)")
 public record CreateStaffRequestDto(
@@ -22,7 +19,7 @@ public record CreateStaffRequestDto(
         @Schema(description = "Địa chỉ email", example = "staff@school.edu.vn")
         String email,
 
-        @Size(max = 20)
+        @Pattern(regexp = "^(0[35789])([0-9]{8})$", message = "Số điện thoại không đúng định dạng Việt Nam")
         @Schema(description = "Số điện thoại (tùy chọn)", example = "0987654321")
         String phoneNumber,
 

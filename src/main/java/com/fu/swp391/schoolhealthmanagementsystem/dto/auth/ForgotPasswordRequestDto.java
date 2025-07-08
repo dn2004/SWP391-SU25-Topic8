@@ -11,5 +11,4 @@ public record ForgotPasswordRequestDto(
         @Email(message = "Email không đúng định dạng")
         @Schema(description = "Email đã đăng ký để nhận OTP", example = "user@example.com")
         String email
-
 ) {}

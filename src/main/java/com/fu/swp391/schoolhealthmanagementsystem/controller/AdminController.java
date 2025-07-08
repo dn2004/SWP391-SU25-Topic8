@@ -10,6 +10,10 @@ import com.fu.swp391.schoolhealthmanagementsystem.service.AdminService;
 import com.fu.swp391.schoolhealthmanagementsystem.service.StudentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -29,15 +33,31 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/admin/users")
 @RequiredArgsConstructor
 @Tag(name = "Admin - User Management", description = "APIs quản lý người dùng cho Admin")
-@SecurityRequirement(name = "admin-api")
-@PreAuthorize("hasRole('SchoolAdmin')") // All methods here require SchoolAdmin role
+@SecurityRequirement(name = "bearerAuth")
+@PreAuthorize("hasRole('SchoolAdmin')")
 @Slf4j
 public class AdminController {
     private final AdminService adminService;
     private final StudentService studentService;
 
     @PostMapping("/staff")
-    @Operation(summary = "Tạo tài khoản nhân viên mới (MedicalStaff, StaffManager)")
+    @Operation(
+        summary = "Tạo tài khoản nhân viên mới (MedicalStaff, StaffManager)",
+        description = """
+### Mô tả
+Tạo tài khoản nhân viên mới với vai trò `MedicalStaff` hoặc `StaffManager`.
+- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`.
+- **Thông báo:** Mật khẩu ngẫu nhiên sẽ được tạo và gửi đến email của nhân viên mới.
+"""
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Tạo tài khoản thành công",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserDto.class))),
+        @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ", content = @Content),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+        @ApiResponse(responseCode = "409", description = "Email đã tồn tại", content = @Content)
+    })
     public ResponseEntity<UserDto> createStaffAccount(@Valid @RequestBody CreateStaffRequestDto requestDto) {
         log.info("API Admin: Yêu cầu tạo tài khoản nhân viên - email: {}, role: {}", requestDto.email(), requestDto.role());
         UserDto createdStaff = adminService.createStaffAccount(requestDto);
@@ -45,7 +65,23 @@ public class AdminController {
     }
 
     @PutMapping("/{userId}/activation")
-    @Operation(summary = "Kích hoạt hoặc vô hiệu hóa tài khoản người dùng")
+    @Operation(
+        summary = "Kích hoạt hoặc vô hiệu hóa tài khoản người dùng",
+        description = """
+### Mô tả
+Cập nhật trạng thái kích hoạt (active/inactive) cho một tài khoản người dùng.
+- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`.
+- **Thông báo:** Gửi thông báo đến người dùng bị ảnh hưởng về việc tài khoản của họ đã được kích hoạt hoặc vô hiệu hóa.
+"""
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Cập nhật trạng thái thành công",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserDto.class))),
+        @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ", content = @Content),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Không tìm thấy người dùng", content = @Content)
+    })
     public ResponseEntity<UserDto> updateUserActivationStatus(
             @Parameter(description = "ID của người dùng cần cập nhật") @PathVariable Long userId,
             @Valid @RequestBody UserActivationRequestDto requestDto) {
@@ -54,8 +90,21 @@ public class AdminController {
         return ResponseEntity.ok(updatedUser);
     }
 
+    @Operation(
+        summary = "Tìm kiếm và lấy danh sách phụ huynh (phân trang)",
+        description = """
+### Mô tả
+Lấy danh sách phụ huynh có phân trang và hỗ trợ lọc theo nhiều tiêu chí.
+- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`.
+"""
+    )
     @GetMapping("/parents")
-    @Operation(summary = "Tìm kiếm và lấy danh sách phụ huynh (phân trang)")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
+    })
     public ResponseEntity<Page<UserDto>> getParents(
             @Parameter(description = "Tên phụ huynh")
             @RequestParam(required = false) String fullName,
@@ -78,8 +127,21 @@ public class AdminController {
         return ResponseEntity.ok(parents);
     }
 
+    @Operation(
+        summary = "Tìm kiếm và lấy danh sách nhân viên y tế (phân trang)",
+        description = """
+### Mô tả
+Lấy danh sách nhân viên y tế có phân trang và hỗ trợ lọc theo nhiều tiêu chí.
+- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`.
+"""
+    )
     @GetMapping("/medical-staff")
-    @Operation(summary = "Tìm kiếm và lấy danh sách nhân viên y tế (phân trang)")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
+    })
     public ResponseEntity<Page<UserDto>> getMedicalStaff(
             @Parameter(description = "Tên nhân viên y tế")
             @RequestParam(required = false) String fullName,
@@ -102,8 +164,21 @@ public class AdminController {
         return ResponseEntity.ok(medicalStaff);
     }
 
+    @Operation(
+        summary = "Tìm kiếm và lấy danh sách quản lý y tế (phân trang)",
+        description = """
+### Mô tả
+Lấy danh sách quản lý y tế có phân trang và hỗ trợ lọc theo nhiều tiêu chí.
+- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`.
+"""
+    )
     @GetMapping("/staff-managers")
-    @Operation(summary = "Tìm kiếm và lấy danh sách quản lý y tế (phân trang)")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
+    })
     public ResponseEntity<Page<UserDto>> getStaffManagers(
             @Parameter(description = "Tên quản lý y tế")
             @RequestParam(required = false) String fullName,
@@ -126,17 +201,44 @@ public class AdminController {
         return ResponseEntity.ok(staffManagers);
     }
 
-    @PostMapping("/students") // Hoặc một đường dẫn phù hợp hơn trong context admin
-    @Operation(summary = "Admin tạo hồ sơ học sinh mới")
-    // @PreAuthorize("hasRole('SchoolAdmin')") // Đã có ở class level
+    @Operation(
+        summary = "Admin tạo hồ sơ học sinh mới",
+        description = """
+### Mô tả
+Tạo một hồ sơ học sinh mới trong hệ thống.
+- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`.
+"""
+    )
+    @PostMapping("/students")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Tạo hồ sơ học sinh thành công",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = StudentDto.class))),
+        @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ", content = @Content),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+        @ApiResponse(responseCode = "409", description = "Học sinh đã tồn tại", content = @Content)
+    })
     public ResponseEntity<StudentDto> createStudentProfile(@Valid @RequestBody CreateStudentRequestDto requestDto) {
         StudentDto createdStudent = studentService.createStudent(requestDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdStudent);
     }
 
+    @Operation(
+        summary = "Admin lấy thông tin chi tiết một người dùng bằng ID",
+        description = """
+### Mô tả
+Lấy thông tin chi tiết của bất kỳ người dùng nào trong hệ thống bằng ID của họ.
+- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`.
+"""
+    )
     @GetMapping("/{userId}")
-    @Operation(summary = "Admin lấy thông tin chi tiết một người dùng bằng ID")
-    // @PreAuthorize("hasRole('SchoolAdmin')") // Đã có ở class level
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lấy thông tin thành công",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserDto.class))),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Không tìm thấy người dùng", content = @Content)
+    })
     public ResponseEntity<UserDto> getUserById(
             @Parameter(description = "ID của người dùng cần truy vấn") @PathVariable Long userId) {
         log.info("API Admin: Yêu cầu lấy thông tin user ID: {}", userId);

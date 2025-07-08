@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -32,7 +33,13 @@ public class SchoolVaccinationController {
     private final SchoolVaccinationService schoolVaccinationService;
 
     @Operation(summary = "Ghi nhận kết quả tiêm chủng",
-            description = "Ghi nhận việc học sinh đã tiêm, vắng mặt hoặc từ chối tiêm. Yêu cầu quyền MedicalStaff.")
+            description = """
+### Mô tả
+Ghi nhận việc học sinh đã tiêm, vắng mặt hoặc từ chối tiêm trong một chiến dịch tiêm chủng tại trường.
+- **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
+- **Thông báo:** Gửi thông báo đến phụ huynh về kết quả tiêm chủng của học sinh.
+"""
+    )
     @ApiResponse(responseCode = "200", description = "Ghi nhận thành công",
             content = @Content(schema = @Schema(implementation = SchoolVaccinationResponseDto.class)))
     @PostMapping
@@ -43,9 +50,22 @@ public class SchoolVaccinationController {
     }
 
     @Operation(summary = "Cập nhật trạng thái tiêm chủng",
-            description = "Cập nhật trạng thái của một bản ghi tiêm chủng. Chỉ có thể cập nhật khi campaign đang IN_PROGRESS.")
-    @ApiResponse(responseCode = "200", description = "Cập nhật thành công",
-            content = @Content(schema = @Schema(implementation = SchoolVaccinationResponseDto.class)))
+            description = """
+### Mô tả
+Cập nhật trạng thái của một bản ghi tiêm chủng.
+- **Điều kiện:** Chỉ có thể cập nhật khi chiến dịch đang diễn ra (`IN_PROGRESS`).
+- **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
+- **Thông báo:** Gửi thông báo đến phụ huynh về kết quả cập nhật.
+"""
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Cập nhật thành công",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = SchoolVaccinationResponseDto.class))),
+        @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ", content = @Content),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Không tìm thấy bản ghi tiêm chủng", content = @Content)
+    })
     @PutMapping("/{vaccinationId}")
     @PreAuthorize("hasAnyRole('MedicalStaff', 'StaffManager')")
     public ResponseEntity<SchoolVaccinationResponseDto> updateVaccinationRecord(
@@ -55,9 +75,21 @@ public class SchoolVaccinationController {
     }
 
     @Operation(summary = "Ghi nhận kết quả theo dõi sau tiêm",
-            description = "Ghi nhận dữ liệu theo dõi sau tiêm như nhiệt độ, phản ứng phụ. Yêu cầu quyền MedicalStaff.")
-    @ApiResponse(responseCode = "200", description = "Ghi nhận thành công",
-            content = @Content(schema = @Schema(implementation = PostVaccinationMonitoringResponseDto.class)))
+            description = """
+### Mô tả
+Ghi nhận dữ liệu theo dõi sau tiêm như nhiệt độ, phản ứng phụ.
+- **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
+- **Thông báo:** Gửi thông báo đến phụ huynh về kết quả theo dõi.
+"""
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Ghi nhận thành công",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = PostVaccinationMonitoringResponseDto.class))),
+        @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ", content = @Content),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Không tìm thấy bản ghi tiêm chủng", content = @Content)
+    })
     @PostMapping("/monitoring")
     @PreAuthorize("hasAnyRole('MedicalStaff', 'StaffManager')")
     public ResponseEntity<PostVaccinationMonitoringResponseDto> recordMonitoring(
@@ -66,9 +98,22 @@ public class SchoolVaccinationController {
     }
 
     @Operation(summary = "Cập nhật bản ghi theo dõi sau tiêm",
-            description = "Cập nhật thông tin theo dõi sau tiêm chủng. Chỉ có thể cập nhật khi vaccination đang POST_MONITORING.")
-    @ApiResponse(responseCode = "200", description = "Cập nhật thành công",
-            content = @Content(schema = @Schema(implementation = PostVaccinationMonitoringResponseDto.class)))
+            description = """
+### Mô tả
+Cập nhật thông tin theo dõi sau tiêm chủng.
+- **Điều kiện:** Chỉ có thể cập nhật khi trạng thái tiêm chủng là `POST_MONITORING`.
+- **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
+- **Thông báo:** Gửi thông báo đến phụ huynh về kết quả cập nhật.
+"""
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Cập nhật thành công",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = PostVaccinationMonitoringResponseDto.class))),
+        @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ", content = @Content),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Không tìm thấy bản ghi theo dõi", content = @Content)
+    })
     @PutMapping("/monitoring/{monitoringId}")
     @PreAuthorize("hasAnyRole('MedicalStaff', 'StaffManager')")
     public ResponseEntity<PostVaccinationMonitoringResponseDto> updateMonitoring(
@@ -78,8 +123,19 @@ public class SchoolVaccinationController {
     }
 
     @Operation(summary = "Lấy danh sách tiêm chủng của một chiến dịch",
-            description = "Lấy danh sách các bản ghi tiêm chủng trong một chiến dịch với phân trang.")
-    @ApiResponse(responseCode = "200", description = "Thành công")
+            description = """
+### Mô tả
+Lấy danh sách các bản ghi tiêm chủng trong một chiến dịch với phân trang và bộ lọc.
+- **Phân quyền:** Yêu cầu vai trò `MedicalStaff`, `StaffManager`, hoặc `SchoolAdmin`.
+"""
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Không tìm thấy chiến dịch", content = @Content)
+    })
     @GetMapping("/campaign/{campaignId}")
     @PreAuthorize("hasAnyRole('MedicalStaff', 'StaffManager', 'SchoolAdmin')")
     public ResponseEntity<Page<SchoolVaccinationResponseDto>> getVaccinationsForCampaign(
@@ -93,9 +149,19 @@ public class SchoolVaccinationController {
     }
 
     @Operation(summary = "Lấy chi tiết bản ghi tiêm chủng",
-            description = "Lấy thông tin chi tiết của một bản ghi tiêm chủng theo ID.")
-    @ApiResponse(responseCode = "200", description = "Thành công",
-            content = @Content(schema = @Schema(implementation = SchoolVaccinationResponseDto.class)))
+            description = """
+### Mô tả
+Lấy thông tin chi tiết của một bản ghi tiêm chủng theo ID.
+- **Phân quyền:** Yêu cầu người dùng đã xác thực. Service sẽ kiểm tra quyền truy cập chi tiết (phụ huynh chỉ xem của con mình).
+"""
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lấy thông tin thành công",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = SchoolVaccinationResponseDto.class))),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Không tìm thấy bản ghi tiêm chủng", content = @Content)
+    })
     @GetMapping("/{vaccinationId}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<SchoolVaccinationResponseDto> getVaccinationById(
@@ -104,8 +170,19 @@ public class SchoolVaccinationController {
     }
 
     @Operation(summary = "Lấy danh sách theo dõi sau tiêm",
-            description = "Lấy bản ghi theo dõi sau tiêm cho một bản ghi tiêm chủng cụ thể.")
-    @ApiResponse(responseCode = "200", description = "Thành công")
+            description = """
+### Mô tả
+Lấy bản ghi theo dõi sau tiêm cho một bản ghi tiêm chủng cụ thể.
+- **Phân quyền:** Yêu cầu người dùng đã xác thực. Service sẽ kiểm tra quyền truy cập chi tiết.
+"""
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lấy thông tin thành công",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = PostVaccinationMonitoringResponseDto.class))),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Không tìm thấy bản ghi tiêm chủng", content = @Content)
+    })
     @GetMapping("/{vaccinationId}/monitoring")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<PostVaccinationMonitoringResponseDto> getMonitoringForVaccination(

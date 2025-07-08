@@ -33,5 +33,4 @@ public record RegisterParentRequestDto(
         @Size(max = 20, message = "Số điện thoại tối đa 20 ký tự")
         @Schema(description = "Số điện thoại của phụ huynh (tùy chọn)", example = "0905123456")
         String phoneNumber
-
 ) {}

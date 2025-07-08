@@ -1,6 +1,5 @@
 package com.fu.swp391.schoolhealthmanagementsystem.validation;
 
-import com.fu.swp391.schoolhealthmanagementsystem.validation.validator.SkipStatusValidator;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 import java.lang.annotation.ElementType;

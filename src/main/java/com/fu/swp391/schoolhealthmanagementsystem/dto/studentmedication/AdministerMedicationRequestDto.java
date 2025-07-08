@@ -8,9 +8,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalTime;
 
+@Schema(description = "Thông tin yêu cầu cho nhân viên y tế thực hiện cho uống thuốc")
 public record AdministerMedicationRequestDto(
         @Schema(description = "Thời điểm thực tế cho uống thuốc (HH:mm or HH:mm:ss)", requiredMode = Schema.RequiredMode.REQUIRED, example = "08:30:00")
-        @NotNull(message = "Thời điểm thực tế cho uống thuốc không được để trống")
+        @NotNull(message = "Thời điểm thực tế cho uống thuốc không đ��ợc để trống")
         @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
         LocalTime administeredTime,
 

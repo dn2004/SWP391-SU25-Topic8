@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+@Schema(description = "Thông tin điều chỉnh tồn kho vật tư y tế")
 public record MedicalSupplyStockAdjustmentDto(
         @Schema(description = "Số lượng cần điều chỉnh", example = "10")
         @NotNull(message = "Số lượng không được để trống")

@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -27,7 +28,7 @@ import java.util.UUID;
 @RequestMapping("/api/parent")
 @RequiredArgsConstructor
 @Tag(name = "Parent", description = "APIs cho Phụ huynh")
-@SecurityRequirement(name = "parent-api")
+@SecurityRequirement(name = "bearerAuth")
 @PreAuthorize("hasRole('Parent')")
 @Slf4j
 public class ParentController {
@@ -35,7 +36,21 @@ public class ParentController {
     private final ParentStudentLinkService parentStudentLinkService;
 
     @PostMapping("/link-student")
-    @Operation(summary = "Phụ huynh liên kết với học sinh bằng mã mời")
+    @Operation(summary = "Phụ huynh liên kết với học sinh bằng mã mời",
+            description = """
+### Mô tả
+Cho phép phụ huynh liên kết tài khoản của mình với hồ sơ của một học sinh bằng cách sử dụng mã mời và ngày sinh của học sinh.
+- **Phân quyền:** Yêu cầu vai trò `Parent`.
+"""
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Liên kết thành công", content = @Content),
+        @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ", content = @Content),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Không tìm thấy mã mời hoặc học sinh", content = @Content),
+        @ApiResponse(responseCode = "409", description = "Đã liên kết với học sinh này", content = @Content)
+    })
     public ResponseEntity<String> linkStudent(@Valid @RequestBody LinkStudentRequestDto requestDto) {
         parentStudentLinkService.linkParentToStudentByInvitation(requestDto);
         return ResponseEntity.ok().body("Liên kết thành công với học sinh.");
@@ -44,12 +59,18 @@ public class ParentController {
     @GetMapping("/my-students")
     @Operation(
             summary = "Lấy danh sách các học sinh đã liên kết của phụ huynh hiện tại (phân trang)",
-            description = "Trả về một trang danh sách các học sinh đã được liên kết với tài khoản phụ huynh " +
-                    "đang đăng nhập. " + "Hỗ trợ phân trang và sắp xếp."
+            description = """
+### Mô tả
+Trả về danh sách các học sinh đã được liên kết với tài khoản phụ huynh đang đăng nhập.
+- **Phân quyền:** Yêu cầu vai trò `Parent`.
+"""
     )
-    @ApiResponse(responseCode = "200", description = "Thành công",
-            content = @Content(mediaType = "application/json",
-                    schema = @Schema(implementation = Page.class)))
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
+    })
     public ResponseEntity<Page<StudentDto>> getMyLinkedStudents(
             @RequestParam(required = false) StudentStatus status,
             @ParameterObject

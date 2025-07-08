@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @StartDateBeforeExpiryDate
+@Schema(description = "Thông tin yêu cầu tạo đơn thuốc cho học sinh bởi nhân viên y tế")
 public record CreateStudentMedicationByStaffRequestDto(
         @NotNull(message = "ID Học sinh không được để trống")
         Long studentId,

@@ -1,7 +1,6 @@
-package com.fu.swp391.schoolhealthmanagementsystem.validation.validator;
+package com.fu.swp391.schoolhealthmanagementsystem.validation;
 
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.ScheduledMedicationTaskStatus;
-import com.fu.swp391.schoolhealthmanagementsystem.validation.ValidSkipStatus;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 

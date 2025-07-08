@@ -5,6 +5,11 @@ import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.ClassGroup;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.VaccinationCampaignStatus;
 import com.fu.swp391.schoolhealthmanagementsystem.service.VaccinationService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -22,14 +27,27 @@ import java.time.LocalDate;
 @RestController
 @RequestMapping("/api/vaccination")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "bearerAuth")
 public class VaccinationController {
 
     private final VaccinationService vaccinationService;
 
     @PostMapping("/campaigns")
-    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF_MANAGER', 'MEDICAL_STAFF')")
-    @Operation(summary = "Tạo chiến dịch tiêm chủng mới",
-               description = "Tạo một chiến dịch tiêm chủng mới với thông tin về vaccine, thời gian, đối tượng và người tổ chức. Chỉ admin, quản lý nhân viên và nhân viên y tế mới có quyền thực hiện.")
+    @PreAuthorize("hasAnyRole('SchoolAdmin', 'StaffManager')")
+    @Operation(
+        summary = "Tạo chiến dịch tiêm chủng mới",
+        description = """
+### Mô tả
+Tạo một chiến dịch tiêm chủng mới với thông tin về vaccine, thời gian, đối tượng.
+- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin` hoặc `StaffManager`.
+"""
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Tạo chiến dịch thành công", content = @Content(mediaType = "application/json", schema = @Schema(implementation = VaccinationCampaignResponseDto.class))),
+        @ApiResponse(responseCode = "400", description = "Dữ liệu không hợp lệ", content = @Content),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
+    })
     public ResponseEntity<VaccinationCampaignResponseDto> createVaccinationCampaign(
             @Valid @RequestBody CreateVaccinationCampaignRequestDto requestDto) {
         VaccinationCampaignResponseDto campaign = vaccinationService.createVaccinationCampaign(requestDto);
@@ -37,9 +55,23 @@ public class VaccinationController {
     }
 
     @PutMapping("/campaigns/{campaignId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF_MANAGER', 'MEDICAL_STAFF')")
-    @Operation(summary = "Cập nhật chiến dịch tiêm chủng (chỉ khi ở trạng thái DRAFT)",
-               description = "Cập nhật thông tin chiến dịch tiêm chủng. Chỉ có thể cập nhật khi chiến dịch đang ở trạng thái DRAFT (bản nháp). Sau khi lên lịch sẽ không thể chỉnh sửa.")
+    @PreAuthorize("hasAnyRole('SchoolAdmin ', 'StaffManager')")
+    @Operation(
+        summary = "Cập nhật chiến dịch tiêm chủng (chỉ khi ở trạng thái DRAFT)",
+        description = """
+### Mô tả
+Cập nhật thông tin chiến dịch tiêm chủng.
+- **Điều kiện:** Chỉ có thể cập nhật khi chiến dịch đang ở trạng thái `DRAFT`.
+- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin` hoặc `StaffManager`.
+"""
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Cập nhật thành công", content = @Content(mediaType = "application/json", schema = @Schema(implementation = VaccinationCampaignResponseDto.class))),
+        @ApiResponse(responseCode = "400", description = "Dữ liệu không hợp lệ hoặc không thể cập nhật", content = @Content),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Không tìm thấy chiến dịch", content = @Content)
+    })
     public ResponseEntity<VaccinationCampaignResponseDto> updateVaccinationCampaign(
             @PathVariable Long campaignId,
             @Valid @RequestBody CreateVaccinationCampaignRequestDto requestDto) {
@@ -49,8 +81,20 @@ public class VaccinationController {
 
     @GetMapping("/campaigns/{campaignId}")
     @PreAuthorize("isAuthenticated()")
-    @Operation(summary = "Lấy thông tin chiến dịch tiêm chủng theo ID",
-               description = "Lấy thông tin chi tiết của một chiến dịch tiêm chủng cụ thể bao gồm tên chiến dịch, vaccine, thời gian, trạng thái và người tổ chức.")
+    @Operation(
+        summary = "Lấy thông tin chiến dịch tiêm chủng theo ID",
+        description = """
+### Mô tả
+Lấy thông tin chi tiết của một chiến dịch tiêm chủng cụ thể.
+- **Phân quyền:** Yêu cầu người dùng đã xác thực.
+"""
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lấy thông tin thành công", content = @Content(mediaType = "application/json", schema = @Schema(implementation = VaccinationCampaignResponseDto.class))),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Không tìm thấy chiến dịch", content = @Content)
+    })
     public ResponseEntity<VaccinationCampaignResponseDto> getVaccinationCampaignById(@PathVariable Long campaignId) {
         VaccinationCampaignResponseDto campaign = vaccinationService.getVaccinationCampaignById(campaignId);
         return ResponseEntity.ok(campaign);
@@ -58,8 +102,19 @@ public class VaccinationController {
 
     @GetMapping("/campaigns")
     @PreAuthorize("isAuthenticated()")
-    @Operation(summary = "Lấy danh sách tất cả chiến dịch tiêm chủng có lọc và phân trang",
-               description = "Lấy danh sách chiến dịch tiêm chủng với khả năng lọc theo tên chiến dịch, tên vaccine, trạng thái, thời gian, lớp học và người tổ chức. Hỗ trợ phân trang để hiển thị kết quả.")
+    @Operation(
+        summary = "Lấy danh sách tất cả chiến dịch tiêm chủng có lọc và phân trang",
+        description = """
+### Mô tả
+Lấy danh sách chiến dịch tiêm chủng với khả năng lọc và phân trang.
+- **Phân quyền:** Yêu cầu người dùng đã xác thực.
+"""
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
+    })
     public ResponseEntity<Page<VaccinationCampaignResponseDto>> getAllVaccinationCampaigns(
             @PageableDefault(size = 10, page = 0, sort = "createdAt")
             @ParameterObject
@@ -79,45 +134,114 @@ public class VaccinationController {
     // --- Refactored Status Change Endpoints ---
 
     @PostMapping("/campaigns/{campaignId}/schedule")
-    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF_MANAGER', 'MEDICAL_STAFF')")
-    @Operation(summary = "Lên lịch chiến dịch (DRAFT -> SCHEDULED)",
-               description = "Chuyển trạng thái chiến dịch từ DRAFT (bản nháp) sang SCHEDULED (đã lên lịch). Sau khi lên lịch, chiến dịch sẽ không thể chỉnh sửa thông tin cơ bản nữa.")
+    @PreAuthorize("hasAnyRole('SchoolAdmin', 'StaffManager')")
+    @Operation(
+        summary = "Lên lịch chiến dịch (DRAFT -> SCHEDULED)",
+        description = """
+### Mô tả
+Chuyển trạng thái chiến dịch từ `DRAFT` sang `SCHEDULED`. Sau khi lên lịch, không thể chỉnh sửa thông tin cơ bản nữa.
+- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin` hoặc `StaffManager`.
+- **Thông báo:** Gửi thông báo đến phụ huynh về chiến dịch tiêm chủng sắp tới.
+"""
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lên lịch thành công", content = @Content(mediaType = "application/json", schema = @Schema(implementation = VaccinationCampaignResponseDto.class))),
+        @ApiResponse(responseCode = "400", description = "Không thể lên lịch", content = @Content),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Không tìm thấy chiến dịch", content = @Content)
+    })
     public ResponseEntity<VaccinationCampaignResponseDto> scheduleCampaign(@PathVariable Long campaignId) {
         VaccinationCampaignResponseDto campaign = vaccinationService.scheduleCampaign(campaignId);
         return ResponseEntity.ok(campaign);
     }
 
     @PostMapping("/campaigns/{campaignId}/start")
-    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF_MANAGER', 'MEDICAL_STAFF')")
-    @Operation(summary = "Bắt đầu chiến dịch (PREPARING -> IN_PROGRESS)",
-               description = "Bắt đầu thực hiện chiến dịch tiêm chủng, chuyển trạng thái từ PREPARING (chuẩn bị) sang IN_PROGRESS (đang thực hiện). Sau khi bắt đầu có thể tiến hành tiêm chủng cho học sinh.")
+    @PreAuthorize("hasAnyRole('SchoolAdmin', 'StaffManager')")
+    @Operation(
+        summary = "Bắt đầu chiến dịch (PREPARING -> IN_PROGRESS)",
+        description = """
+### Mô tả
+Bắt đầu thực hiện chiến dịch, chuyển trạng thái từ `PREPARING` sang `IN_PROGRESS`.
+- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin` hoặc `StaffManager`.
+"""
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Bắt đầu thành công", content = @Content(mediaType = "application/json", schema = @Schema(implementation = VaccinationCampaignResponseDto.class))),
+        @ApiResponse(responseCode = "400", description = "Không thể bắt đầu", content = @Content),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Không tìm thấy chiến dịch", content = @Content)
+    })
     public ResponseEntity<VaccinationCampaignResponseDto> startCampaign(@PathVariable Long campaignId) {
         VaccinationCampaignResponseDto campaign = vaccinationService.startCampaign(campaignId);
         return ResponseEntity.ok(campaign);
     }
 
     @PostMapping("/campaigns/{campaignId}/complete")
-    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF_MANAGER', 'MEDICAL_STAFF')")
-    @Operation(summary = "Hoàn thành chiến dịch (IN_PROGRESS -> COMPLETED)",
-               description = "Đánh dấu chiến dịch tiêm chủng đã hoàn thành, chuyển trạng thái từ IN_PROGRESS (đang thực hiện) sang COMPLETED (đã hoàn thành). Chiến dịch đã hoàn thành sẽ không thể thay đổi.")
+    @PreAuthorize("hasAnyRole('SchoolAdmin', 'StaffManager')")
+    @Operation(
+        summary = "Hoàn thành chiến dịch (IN_PROGRESS -> COMPLETED)",
+        description = """
+### Mô tả
+Đánh dấu chiến dịch đã hoàn thành, chuyển trạng thái từ `IN_PROGRESS` sang `COMPLETED`.
+- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin` hoặc `StaffManager`.
+"""
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Hoàn thành thành công", content = @Content(mediaType = "application/json", schema = @Schema(implementation = VaccinationCampaignResponseDto.class))),
+        @ApiResponse(responseCode = "400", description = "Không thể hoàn thành", content = @Content),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Không tìm thấy chiến dịch", content = @Content)
+    })
     public ResponseEntity<VaccinationCampaignResponseDto> completeCampaign(@PathVariable Long campaignId) {
         VaccinationCampaignResponseDto campaign = vaccinationService.completeCampaign(campaignId);
         return ResponseEntity.ok(campaign);
     }
 
     @PostMapping("/campaigns/{campaignId}/cancel")
-    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF_MANAGER', 'MEDICAL_STAFF')")
-    @Operation(summary = "Hủy chiến dịch tiêm chủng",
-               description = "Hủy bỏ chiến dịch tiêm chủng ở bất kỳ trạng thái nào (trừ COMPLETED). Chiến dịch đã hủy sẽ không thể khôi phục và không thể thực hiện tiêm chủng.")
+    @PreAuthorize("hasAnyRole('SchoolAdmin', 'StaffManager')")
+    @Operation(
+        summary = "Hủy chiến dịch tiêm chủng",
+        description = """
+### Mô tả
+Hủy bỏ một chiến dịch tiêm chủng (trừ khi đã `COMPLETED`).
+- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin` hoặc `StaffManager`.
+- **Thông báo:** Gửi thông báo đến phụ huynh về việc hủy chiến dịch.
+"""
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Hủy thành công", content = @Content(mediaType = "application/json", schema = @Schema(implementation = VaccinationCampaignResponseDto.class))),
+        @ApiResponse(responseCode = "400", description = "Không thể hủy", content = @Content),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Không tìm thấy chiến dịch", content = @Content)
+    })
     public ResponseEntity<VaccinationCampaignResponseDto> cancelCampaign(@PathVariable Long campaignId) {
         VaccinationCampaignResponseDto campaign = vaccinationService.cancelCampaign(campaignId);
         return ResponseEntity.ok(campaign);
     }
 
     @PostMapping("/campaigns/{campaignId}/reschedule")
-    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF_MANAGER', 'MEDICAL_STAFF')")
-    @Operation(summary = "Thay đổi lịch chiến dịch (chỉ khi ở trạng thái PREPARING)",
-               description = "Thay đổi thời gian thực hiện chiến dịch tiêm chủng. Chỉ có thể thực hiện khi chiến dịch đang ở trạng thái PREPARING (chuẩn bị). Cần cung cấp ngày và giờ mới.")
+    @PreAuthorize("hasAnyRole('SchoolAdmin', 'StaffManager')")
+    @Operation(
+        summary = "Thay đổi lịch chiến dịch (chỉ khi ở trạng thái PREPARING)",
+        description = """
+### Mô tả
+Thay đổi thời gian thực hiện chiến dịch.
+- **Điều kiện:** Chỉ có thể thực hiện khi chiến dịch đang ở trạng thái `PREPARING`.
+- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin` hoặc `StaffManager`.
+- **Thông báo:** Gửi thông báo đến phụ huynh về lịch tiêm chủng mới.
+"""
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Thay đổi lịch thành công", content = @Content(mediaType = "application/json", schema = @Schema(implementation = VaccinationCampaignResponseDto.class))),
+        @ApiResponse(responseCode = "400", description = "Không thể thay đổi lịch", content = @Content),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Không tìm thấy chiến dịch", content = @Content)
+    })
     public ResponseEntity<VaccinationCampaignResponseDto> rescheduleCampaign(
             @PathVariable Long campaignId,
             @Valid @RequestBody RescheduleCampaignRequestDto requestDto) {
@@ -128,9 +252,20 @@ public class VaccinationController {
     // --- Consent Endpoints ---
 
     @GetMapping("/campaigns/{campaignId}/consents")
-    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF_MANAGER', 'MEDICAL_STAFF')")
-    @Operation(summary = "Lấy tất cả phiếu đồng ý của một chiến dịch",
-               description = "Lấy danh sách tất cả phiếu đồng ý tiêm chủng của học sinh trong một chiến dịch cụ thể. Bao gồm thông tin học sinh, trạng thái đồng ý và ghi chú từ phụ huynh. Có thể lọc theo tên học sinh và lớp học.")
+    @PreAuthorize("hasAnyRole('SchoolAdmin', 'StaffManager', 'MedicalStaff')")
+    @Operation(
+        description = """
+### Mô tả
+Lấy danh sách tất cả phiếu đồng ý tiêm chủng của học sinh trong một chiến dịch.
+- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`, `StaffManager`, hoặc `MedicalStaff`.
+"""
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Không tìm thấy chiến dịch", content = @Content)
+    })
     public ResponseEntity<Page<VaccinationConsentResponseDto>> getConsentsForCampaign(
             @PathVariable Long campaignId,
             @PageableDefault(size = 10, page = 0, sort = "createdAt")
@@ -143,18 +278,42 @@ public class VaccinationController {
     }
 
     @GetMapping("/consents/{consentId}")
-    @PreAuthorize("isAuthenticated()")
-    @Operation(summary = "Lấy thông tin phiếu đồng ý theo ID",
-               description = "Lấy thông tin chi tiết của một phiếu đồng ý tiêm chủng cụ thể bao gồm thông tin học sinh, phụ huynh, trạng thái đồng ý và lý do (nếu có).")
+    @Operation(
+        summary = "Lấy thông tin phiếu đồng ý theo ID",
+        description = """
+### Mô tả
+Lấy thông tin chi tiết của một phiếu đồng ý tiêm chủng.
+- **Phân quyền:** Yêu cầu người dùng đã xác thực. Service sẽ kiểm tra quyền truy cập chi tiết.
+"""
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lấy thông tin thành công", content = @Content(mediaType = "application/json", schema = @Schema(implementation = VaccinationConsentResponseDto.class))),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Không tìm thấy phiếu đồng ý", content = @Content)
+    })
     public ResponseEntity<VaccinationConsentResponseDto> getConsentById(@PathVariable Long consentId) {
         VaccinationConsentResponseDto consent = vaccinationService.getConsentById(consentId);
         return ResponseEntity.ok(consent);
     }
 
     @PutMapping("/consents/{consentId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF_MANAGER', 'MEDICAL_STAFF')")
-    @Operation(summary = "Cập nhật phản hồi phiếu đồng ý (bởi nhân viên)",
-               description = "Cập nhật trạng thái và thông tin phản hồi của phiếu đồng ý tiêm chủng. Chỉ nhân viên y tế có thể cập nhật để ghi nhận kết quả tiêm chủng hoặc lý do không tiêm.")
+    @PreAuthorize("hasAnyRole('MedicalStaff', 'StaffManager', 'SchoolAdmin')")
+    @Operation(
+        summary = "Cập nhật phản hồi phiếu đồng ý (bởi nhân viên)",
+        description = """
+### Mô tả
+Cập nhật trạng thái và thông tin phản hồi của phiếu đồng ý tiêm chủng.
+- **Phân quyền:** Yêu cầu vai trò `MedicalStaff`, `StaffManager`, hoặc `SchoolAdmin`.
+"""
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Cập nhật thành công", content = @Content(mediaType = "application/json", schema = @Schema(implementation = VaccinationConsentResponseDto.class))),
+        @ApiResponse(responseCode = "400", description = "Dữ liệu không hợp lệ", content = @Content),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Không tìm thấy phiếu đồng ý", content = @Content)
+    })
     public ResponseEntity<VaccinationConsentResponseDto> updateConsentResponse(
             @PathVariable Long consentId,
             @Valid @RequestBody UpdateVaccinationConsentRequestDto requestDto) {

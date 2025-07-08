@@ -5,7 +5,13 @@ import jakarta.validation.constraints.NotNull;
 
 @Schema(description = "Yêu cầu (de)activate người dùng")
 public record UserActivationRequestDto(
-        @NotNull(message = "Trạng thái kích hoạt không được để trống")
-        @Schema(description = "Đặt thành true để kích hoạt, false để vô hiệu hóa", example = "true")
+        @NotNull(message = "Trạng thái kích hoạt là bắt buộc")
+        @Schema(
+                description = "Đặt thành true để kích hoạt, false để vô hiệu hóa",
+                example = "true",
+                allowableValues = {"true", "false"},
+                requiredMode = Schema.RequiredMode.REQUIRED
+        )
         Boolean isActive
-) {}
+) {
+}

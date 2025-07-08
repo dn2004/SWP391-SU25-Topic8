@@ -124,10 +124,9 @@ public class AuthService {
         }
 
         try {
-            var claims = jwtService.getClaimsFromToken(jwt); // Use the one that validates
+            var claims = jwtService.getClaimsFromToken(jwt);
             if (claims == null) {
                 log.warn("Không thể lấy claims từ token hợp lệ, không thể blacklist JTI.");
-                // Fallback: blacklist the token string itself if JTI is not available or parsing failed
                 long expiresIn = jwtService.getClaimsToParseForBlacklist(jwt).getExpirationTime().getTime() - System.currentTimeMillis();
                 if (expiresIn > 0) {
                     redisTemplate.opsForValue().set(blacklistPrefix + jwt, "logged_out", expiresIn, TimeUnit.MILLISECONDS);

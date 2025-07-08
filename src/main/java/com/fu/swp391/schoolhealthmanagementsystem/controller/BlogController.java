@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -34,16 +35,27 @@ import java.time.LocalDate;
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Blog Management", description = "API để quản lý các bài đăng trên blog")
+@SecurityRequirement(name = "bearerAuth")
 public class BlogController {
 
     private final BlogService blogService;
 
-    @Operation(summary = "Tạo một bài blog mới",
-            description = "Cho phép người dùng có vai trò Quản trị viên trường, Nhân viên y tế hoặc Quản lý y tế tạo bài đăng blog mới. Người dùng hiện tại sẽ được gán làm tác giả bài viết.")
-    @ApiResponse(responseCode = "201", description = "Tạo thành công",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = BlogResponseDto.class)))
-    @SecurityRequirement(name = "bearerAuth")
-    @PreAuthorize("hasAnyRole('SchoolAdmin', 'MedicalStaff', 'NurseManager')")
+    @Operation(
+        summary = "Tạo một bài blog mới",
+        description = """
+### Mô tả
+Tạo một bài đăng blog mới. Người dùng hiện tại sẽ được gán làm tác giả.
+- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`, `MedicalStaff`, hoặc `StaffManager`.
+"""
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Tạo thành công",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = BlogResponseDto.class))),
+        @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ", content = @Content),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
+    })
+    @PreAuthorize("hasAnyRole('SchoolAdmin', 'MedicalStaff', 'StaffManager')")
     @PostMapping
     public ResponseEntity<BlogResponseDto> createBlog(@Valid @RequestBody CreateBlogRequestDto createBlogRequestDto) {
         log.info("API POST /api/blogs được gọi để tạo bài đăng mới với tiêu đề: '{}'", createBlogRequestDto.title());
@@ -51,10 +63,20 @@ public class BlogController {
         return new ResponseEntity<>(createdBlog, HttpStatus.CREATED);
     }
 
-    @Operation(summary = "Lấy danh sách tất cả bài blog (công khai, có phân trang)",
-            description = "Endpoint công khai để xem các bài đăng. Người dùng chưa đăng nhập chỉ thấy các bài có trạng thái PUBLIC. " +
-                    "Admin và Manager có thể xem tất cả trạng thái và lọc theo ID tác giả.")
-    @ApiResponse(responseCode = "200", description = "Thành công")
+    @Operation(
+        summary = "Lấy danh sách tất cả bài blog (công khai, có phân trang)",
+        description = """
+### Mô tả
+Lấy danh sách các bài đăng trên blog. Hỗ trợ tìm kiếm và lọc theo nhiều tiêu chí.
+- **Phân quyền:** 
+    - **Người dùng công khai:** Chỉ xem được các bài đăng có trạng thái `PUBLIC`.
+    - **`SchoolAdmin`, `StaffManager`:** Có thể xem tất cả các trạng thái và lọc theo ID tác giả.
+"""
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Thành công",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class)))
+    })
     @GetMapping
     public ResponseEntity<Page<BlogResponseDto>> getAllBlogs(
             @Parameter(description = "Tìm kiếm tổng hợp trong tiêu đề, mô tả và nội dung") @RequestParam(required = false) String search,
@@ -71,10 +93,20 @@ public class BlogController {
         return ResponseEntity.ok(blogsPage);
     }
 
-    @Operation(summary = "Lấy danh sách các bài blog của tôi (phân trang)",
-            description = "Lấy danh sách các bài đăng được tạo bởi người dùng hiện tại.")
-    @ApiResponse(responseCode = "200", description = "Thành công")
-    @SecurityRequirement(name = "bearerAuth")
+    @Operation(
+        summary = "Lấy danh sách các bài blog của tôi (phân trang)",
+        description = """
+### Mô tả
+Lấy danh sách các bài đăng được tạo bởi chính người dùng đang đăng nhập.
+- **Phân quyền:** Yêu cầu người dùng đã xác thực.
+"""
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Thành công",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
+    })
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/my-blogs")
     public ResponseEntity<Page<BlogResponseDto>> getMyBlogs(
@@ -84,10 +116,20 @@ public class BlogController {
         return ResponseEntity.ok(blogsPage);
     }
 
-    @Operation(summary = "(Admin/Manager) Lấy danh sách các bài blog của một tác giả",
-            description = "Lấy danh sách các bài đăng được tạo bởi một tác giả cụ thể. Chỉ Admin và Manager có thể sử dụng API này.")
-    @ApiResponse(responseCode = "200", description = "Thành công")
-    @SecurityRequirement(name = "bearerAuth")
+    @Operation(
+        summary = "(Admin/Manager) Lấy danh sách các bài blog của một tác giả",
+        description = """
+### Mô tả
+Lấy danh sách các bài đăng được tạo bởi một tác giả cụ thể.
+- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin` hoặc `StaffManager`.
+"""
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Thành công",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
+    })
     @PreAuthorize("hasAnyRole('SchoolAdmin', 'StaffManager')")
     @GetMapping("/author/{authorId}")
     public ResponseEntity<Page<BlogResponseDto>> getBlogsByAuthor(
@@ -99,11 +141,22 @@ public class BlogController {
         return ResponseEntity.ok(blogsPage);
     }
 
-    @Operation(summary = "Lấy thông tin chi tiết một bài blog bằng ID (công khai)",
-            description = "Bất kỳ ai cũng có thể xem chi tiết một bài đăng PUBLIC. Các bài đăng không công khai yêu cầu quyền truy cập.")
-    @ApiResponse(responseCode = "200", description = "Thành công")
-    @ApiResponse(responseCode = "403", description = "Không có quyền xem bài đăng này", content = @Content)
-    @ApiResponse(responseCode = "404", description = "Không tìm thấy bài đăng", content = @Content)
+    @Operation(
+        summary = "Lấy thông tin chi tiết một bài blog bằng ID (công khai)",
+        description = """
+### Mô tả
+Lấy thông tin chi tiết của một bài đăng bằng ID.
+- **Phân quyền:** 
+    - **Người dùng công khai:** Chỉ xem được bài đăng có trạng thái `PUBLIC`.
+    - **Tác giả, `SchoolAdmin`, `StaffManager`:** Có thể xem các trạng thái khác.
+"""
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Thành công",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = BlogResponseDto.class))),
+        @ApiResponse(responseCode = "403", description = "Không có quyền xem bài đăng này", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Không tìm thấy bài đăng", content = @Content)
+    })
     @GetMapping("/{blogId}")
     public ResponseEntity<BlogResponseDto> getBlogById(
             @Parameter(description = "ID của bài đăng") @PathVariable Long blogId) {
@@ -112,11 +165,22 @@ public class BlogController {
         return ResponseEntity.ok(blogDto);
     }
 
-    @Operation(summary = "Lấy thông tin chi tiết một bài blog bằng slug (công khai)",
-            description = "Bất kỳ ai cũng có thể xem chi tiết một bài đăng PUBLIC bằng slug. Các bài đăng không công khai yêu cầu quyền truy cập.")
-    @ApiResponse(responseCode = "200", description = "Thành công")
-    @ApiResponse(responseCode = "403", description = "Không có quyền xem bài đăng này", content = @Content)
-    @ApiResponse(responseCode = "404", description = "Không tìm thấy bài đăng", content = @Content)
+    @Operation(
+        summary = "Lấy thông tin chi tiết một bài blog bằng slug (công khai)",
+        description = """
+### Mô tả
+Lấy thông tin chi tiết của một bài đăng bằng slug (đường dẫn thân thiện).
+- **Phân quyền:** 
+    - **Người dùng công khai:** Chỉ xem được bài đăng có trạng thái `PUBLIC`.
+    - **Tác giả, `SchoolAdmin`, `StaffManager`:** Có thể xem các trạng thái khác.
+"""
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Thành công",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = BlogResponseDto.class))),
+        @ApiResponse(responseCode = "403", description = "Không có quyền xem bài đăng này", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Không tìm thấy bài đăng", content = @Content)
+    })
     @GetMapping("/slug/{slug}")
     public ResponseEntity<BlogResponseDto> getBlogBySlug(
             @Parameter(description = "Slug của bài đăng") @PathVariable String slug) {
@@ -125,10 +189,22 @@ public class BlogController {
         return ResponseEntity.ok(blogDto);
     }
 
-    @Operation(summary = "Cập nhật một bài blog",
-            description = "Chỉ tác giả của bài đăng mới có thể cập nhật nội dung.")
-    @ApiResponse(responseCode = "200", description = "Cập nhật thành công")
-    @SecurityRequirement(name = "bearerAuth")
+    @Operation(
+        summary = "Cập nhật một bài blog",
+        description = """
+### Mô tả
+Cập nhật nội dung của một bài đăng.
+- **Phân quyền:** Chỉ tác giả của bài đăng mới có thể cập nhật.
+"""
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Cập nhật thành công",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = BlogResponseDto.class))),
+        @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ", content = @Content),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Không tìm thấy bài đăng", content = @Content)
+    })
     @PreAuthorize("hasAnyRole('SchoolAdmin', 'MedicalStaff')") // Vẫn cần quyền cơ bản để viết blog
     @PutMapping("/{blogId}")
     public ResponseEntity<BlogResponseDto> updateBlog(
@@ -139,11 +215,23 @@ public class BlogController {
         return ResponseEntity.ok(updatedBlog);
     }
 
-    @Operation(summary = "(Admin/Manager) Cập nhật trạng thái một bài blog",
-            description = "Chỉ Admin hoặc Manager mới có thể cập nhật trạng thái của bài đăng (ví dụ: duyệt bài).")
-    @ApiResponse(responseCode = "200", description = "Cập nhật trạng thái thành công")
-    @SecurityRequirement(name = "bearerAuth")
-    @PreAuthorize("hasAnyRole('SchoolAdmin', 'StaffManager')")
+    @Operation(
+        summary = "(Admin/Manager) Cập nhật trạng thái một bài blog",
+        description = """
+### Mô tả
+Cập nhật trạng thái của một bài đăng (ví dụ: duyệt bài từ `DRAFT` sang `PUBLIC`).
+- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin` hoặc `StaffManager`.
+"""
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Cập nhật trạng thái thành công",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = BlogResponseDto.class))),
+        @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ", content = @Content),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Không tìm thấy bài đăng", content = @Content)
+    })
+    @PreAuthorize("hasAnyRole('SchoolAdmin', 'StaffManager', 'MedicalStaff')")
     @PatchMapping("/{blogId}/status")
     public ResponseEntity<BlogResponseDto> updateBlogStatus(
             @Parameter(description = "ID của bài đăng cần cập nhật trạng thái") @PathVariable Long blogId,
@@ -153,11 +241,21 @@ public class BlogController {
         return ResponseEntity.ok(updatedBlog);
     }
 
-    @Operation(summary = "Xóa một bài blog",
-            description = "Chỉ tác giả của bài đăng hoặc Admin mới có thể xóa.")
-    @ApiResponse(responseCode = "204", description = "Xóa thành công")
-    @SecurityRequirement(name = "bearerAuth")
-    @PreAuthorize("hasAnyRole('SchoolAdmin', 'MedicalStaff')")
+    @Operation(
+        summary = "Xóa một bài blog",
+        description = """
+### Mô tả
+Xóa một bài đăng.
+- **Phân quyền:** Chỉ tác giả của bài đăng hoặc người dùng có vai trò `SchoolAdmin` mới có thể xóa.
+"""
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Xóa thành công", content = @Content),
+        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Không tìm thấy bài đăng", content = @Content)
+    })
+    @PreAuthorize("hasAnyRole('SchoolAdmin', 'MedicalStaff', 'StaffManager')")
     @DeleteMapping("/{blogId}")
     public ResponseEntity<Void> deleteBlog(
             @Parameter(description = "ID của bài đăng cần xóa") @PathVariable Long blogId) {

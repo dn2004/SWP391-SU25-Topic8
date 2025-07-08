@@ -10,7 +10,7 @@ import jakarta.validation.constraints.Size;
 import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDate;
 
-@Schema(description = "DTO để tạo hoặc cập nhật thông tin tiêm chủng của học sinh")
+@Schema(description = "Yêu cầu tạo hoặc cập nhật thông tin tiêm chủng của học sinh")
 public record StudentVaccinationRequestDto(
         @Schema(description = "Tên vắc-xin", example = "Sởi - Quai bị - Rubella (MMR)", requiredMode = Schema.RequiredMode.REQUIRED)
         @NotBlank(message = "Tên vắc-xin không được để trống")
@@ -31,8 +31,7 @@ public record StudentVaccinationRequestDto(
         @Size(max = 500, message = "Ghi chú tối đa 500 ký tự")
         String notes,
 
-        @Schema(description = "File bằng chứng tiêm chủng (PDF, JPG, PNG). Bắt buộc nếu đây là yêu cầu của trường.",
-                requiredMode = Schema.RequiredMode.REQUIRED)
+        @Schema(description = "File bằng chứng tiêm chủng (PDF, JPG, PNG). Bắt buộc nếu đây là yêu cầu của trường.", requiredMode = Schema.RequiredMode.REQUIRED)
         @ValidFile(required = true, message = "File bằng chứng tiêm chủng không hợp lệ hoặc bị thiếu.")
         MultipartFile proofFile
 ) {

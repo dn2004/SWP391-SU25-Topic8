@@ -8,6 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 
+@Schema(description = "Yêu cầu tạo mới bệnh mãn tính cho học sinh")
 @Builder
 public record StudentChronicDiseaseRequestDto(
         @Schema(description = "Tên bệnh mãn tính", example = "Hen suyễn")
@@ -30,4 +31,3 @@ public record StudentChronicDiseaseRequestDto(
         MultipartFile attachmentFile
 ) {
 }
-
