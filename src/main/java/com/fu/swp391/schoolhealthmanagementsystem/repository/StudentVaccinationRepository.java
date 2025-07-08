@@ -10,10 +10,6 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 public interface StudentVaccinationRepository extends JpaRepository<StudentVaccination, Long>, JpaSpecificationExecutor<StudentVaccination> {
 
-    Page<StudentVaccination> findByStudent(Student student, Pageable pageable);
-
-    Page<StudentVaccination> findByStudent_Id(Long studentId, Pageable pageable);
-
     Page<StudentVaccination> findByStatus(StudentVaccinationStatus status, Pageable pageable);
 
     Page<StudentVaccination> findByStudent_IdAndStatus(Long studentId, StudentVaccinationStatus status, Pageable pageable);

@@ -11,8 +11,6 @@ import java.util.Optional;
 
 @Repository
 public interface BlogRepository extends JpaRepository<Blog, Long>, JpaSpecificationExecutor<Blog> {
-    Page<Blog> findByTitleContainingIgnoreCase(String title, Pageable pageable);
-
     Optional<Blog> findBySlug(String slug);
 
     long countByStatus(com.fu.swp391.schoolhealthmanagementsystem.entity.enums.BlogStatus status);

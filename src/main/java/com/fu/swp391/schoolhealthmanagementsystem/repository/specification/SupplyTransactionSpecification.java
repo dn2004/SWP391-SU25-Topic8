@@ -28,39 +28,12 @@ public class SupplyTransactionSpecification {
         };
     }
 
-    public Specification<SupplyTransaction> forIncident(Long incidentId) {
-        return (root, query, criteriaBuilder) -> {
-            if (incidentId == null) {
-                return criteriaBuilder.conjunction();
-            }
-            return criteriaBuilder.equal(root.get("healthIncident").get("incidentId"), incidentId);
-        };
-    }
-
     public Specification<SupplyTransaction> performedByUser(Long userId) {
         return (root, query, criteriaBuilder) -> {
             if (userId == null) {
                 return criteriaBuilder.conjunction();
             }
             return criteriaBuilder.equal(root.get("performedByUser").get("userId"), userId);
-        };
-    }
-
-    public Specification<SupplyTransaction> happenedOnOrAfter(LocalDateTime startDateTime) {
-        return (root, query, criteriaBuilder) -> {
-            if (startDateTime == null) {
-                return criteriaBuilder.conjunction();
-            }
-            return criteriaBuilder.greaterThanOrEqualTo(root.get("transactionDateTime"), startDateTime);
-        };
-    }
-
-    public Specification<SupplyTransaction> happenedOnOrBefore(LocalDateTime endDateTime) {
-        return (root, query, criteriaBuilder) -> {
-            if (endDateTime == null) {
-                return criteriaBuilder.conjunction();
-            }
-            return criteriaBuilder.lessThanOrEqualTo(root.get("transactionDateTime"), endDateTime);
         };
     }
 }

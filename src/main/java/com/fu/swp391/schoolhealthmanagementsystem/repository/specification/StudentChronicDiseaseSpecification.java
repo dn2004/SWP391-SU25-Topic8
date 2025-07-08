@@ -41,24 +41,6 @@ public class StudentChronicDiseaseSpecification {
         };
     }
 
-    public Specification<StudentChronicDisease> diagnosedOnOrAfter(LocalDate fromDate) {
-        return (root, query, cb) -> {
-            if (fromDate == null) {
-                return cb.isTrue(cb.literal(true));
-            }
-            return cb.greaterThanOrEqualTo(root.get("diagnosedDate"), fromDate);
-        };
-    }
-
-    public Specification<StudentChronicDisease> diagnosedOnOrBefore(LocalDate toDate) {
-        return (root, query, cb) -> {
-            if (toDate == null) {
-                return cb.isTrue(cb.literal(true));
-            }
-            return cb.lessThanOrEqualTo(root.get("diagnosedDate"), toDate);
-        };
-    }
-
     public Specification<StudentChronicDisease> hasStatus(StudentChronicDiseaseStatus status) {
         return (root, query, cb) -> {
             if (status == null) {

@@ -12,16 +12,6 @@ import java.util.Collection;
 @Component
 public class StudentMedicationTransactionSpecification {
 
-    public Specification<StudentMedicationTransaction> belongsToMedication(StudentMedication studentMedication) {
-        return (root, query, criteriaBuilder) -> {
-            if (studentMedication == null) {
-                return criteriaBuilder.conjunction();
-            }
-            return criteriaBuilder.equal(root.get("studentMedication"), studentMedication);
-        };
-    }
-
-
     public Specification<StudentMedicationTransaction> belongsToMedicationId(Long medicationId) {
         return (root, query, criteriaBuilder) -> {
             if (medicationId == null) {
@@ -37,15 +27,6 @@ public class StudentMedicationTransactionSpecification {
                 return criteriaBuilder.conjunction();
             }
             return criteriaBuilder.equal(root.get("transactionType"), transactionType);
-        };
-    }
-
-    public Specification<StudentMedicationTransaction> hasTransactionTypeIn(Collection<StudentMedicationTransactionType> transactionTypes) {
-        return (root, query, criteriaBuilder) -> {
-            if (transactionTypes == null || transactionTypes.isEmpty()) {
-                return criteriaBuilder.conjunction();
-            }
-            return root.get("transactionType").in(transactionTypes);
         };
     }
 

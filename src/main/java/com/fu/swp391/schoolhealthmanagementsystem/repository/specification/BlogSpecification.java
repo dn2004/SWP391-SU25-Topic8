@@ -49,15 +49,6 @@ public class BlogSpecification {
         };
     }
 
-    public Specification<Blog> hasSlug(String slug) {
-        return (root, query, criteriaBuilder) -> {
-            if (slug == null || slug.isBlank()) {
-                return criteriaBuilder.conjunction();
-            }
-            return criteriaBuilder.equal(root.get("slug"), slug);
-        };
-    }
-
     public Specification<Blog> titleContains(String title) {
         return (root, query, criteriaBuilder) -> {
             if (title == null || title.isBlank()) {
@@ -73,15 +64,6 @@ public class BlogSpecification {
                 return criteriaBuilder.conjunction();
             }
             return criteriaBuilder.like(criteriaBuilder.lower(root.get("description")), "%" + description.toLowerCase() + "%");
-        };
-    }
-
-    public Specification<Blog> contentContains(String content) {
-        return (root, query, criteriaBuilder) -> {
-            if (content == null || content.isBlank()) {
-                return criteriaBuilder.conjunction();
-            }
-            return criteriaBuilder.like(criteriaBuilder.lower(root.get("content")), "%" + content.toLowerCase() + "%");
         };
     }
 

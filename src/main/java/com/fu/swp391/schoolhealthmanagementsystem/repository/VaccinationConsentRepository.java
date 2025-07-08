@@ -27,28 +27,12 @@ public interface VaccinationConsentRepository extends JpaRepository<VaccinationC
 
     List<VaccinationConsent> findByCampaignAndStatus(VaccinationCampaign campaign, ConsentStatus status);
 
-    Page<VaccinationConsent> findByCampaignAndStatus(VaccinationCampaign campaign, ConsentStatus status, Pageable pageable);
-
-    List<VaccinationConsent> findByStudent(Student student);
-
-    Page<VaccinationConsent> findByStudent(Student student, Pageable pageable);
-
-    List<VaccinationConsent> findByParent(User parent);
-
-    Page<VaccinationConsent> findByParent(User parent, Pageable pageable);
-
-    @Query("SELECT vc FROM VaccinationConsent vc WHERE vc.campaign.campaignId = :campaignId AND vc.status = 'APPROVED'")
-    List<VaccinationConsent> findApprovedConsentsByCampaignId(@Param("campaignId") Long campaignId);
-
-    @Query("SELECT COUNT(vc) FROM VaccinationConsent vc WHERE vc.campaign.campaignId = :campaignId AND vc.status = :status")
-    Integer countByCampaignIdAndStatus(@Param("campaignId") Long campaignId, @Param("status") ConsentStatus status);
-
     @Query("SELECT vc FROM VaccinationConsent vc " +
            "WHERE vc.campaign.campaignId = :campaignId " +
            "AND vc.status = 'PENDING' " +
            "AND vc.reminderSentAt IS NULL")
     List<VaccinationConsent> findPendingConsentsWithNoReminder(@Param("campaignId") Long campaignId);
-
+    
     List<VaccinationConsent> findByStatus(ConsentStatus consentStatus);
 
     Long countByStatus(ConsentStatus status);

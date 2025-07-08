@@ -22,39 +22,12 @@ public class ScheduledMedicationTaskSpecification {
         };
     }
 
-    public Specification<ScheduledMedicationTask> scheduledOnOrAfter(LocalDate startDate) {
-        return (root, query, criteriaBuilder) -> {
-            if (startDate == null) {
-                return criteriaBuilder.conjunction();
-            }
-            return criteriaBuilder.greaterThanOrEqualTo(root.get("scheduledDate"), startDate);
-        };
-    }
-
-    public Specification<ScheduledMedicationTask> scheduledOnOrBefore(LocalDate endDate) {
-        return (root, query, criteriaBuilder) -> {
-            if (endDate == null) {
-                return criteriaBuilder.conjunction();
-            }
-            return criteriaBuilder.lessThanOrEqualTo(root.get("scheduledDate"), endDate);
-        };
-    }
-
     public Specification<ScheduledMedicationTask> hasStatus(ScheduledMedicationTaskStatus status) {
         return (root, query, criteriaBuilder) -> {
             if (status == null) {
                 return criteriaBuilder.conjunction();
             }
             return criteriaBuilder.equal(root.get("status"), status);
-        };
-    }
-
-    public Specification<ScheduledMedicationTask> hasStatusIn(Collection<ScheduledMedicationTaskStatus> statuses) {
-        return (root, query, criteriaBuilder) -> {
-            if (statuses == null || statuses.isEmpty()) {
-                return criteriaBuilder.conjunction();
-            }
-            return root.get("status").in(statuses);
         };
     }
 
@@ -91,36 +64,6 @@ public class ScheduledMedicationTaskSpecification {
                 return criteriaBuilder.conjunction();
             }
             return criteriaBuilder.equal(root.get("studentMedication").get("student").get("id"), studentId);
-        };
-    }
-
-    public Specification<ScheduledMedicationTask> forMedication(Long medicationId) {
-        return (root, query, criteriaBuilder) -> {
-            if (medicationId == null) {
-                return criteriaBuilder.conjunction();
-            }
-            return criteriaBuilder.equal(root.get("studentMedication").get("studentMedicationId"), medicationId);
-        };
-    }
-
-    public Specification<ScheduledMedicationTask> inSession(SchoolSession session) {
-        return (root, query, criteriaBuilder) -> {
-            if (session == null) {
-                return criteriaBuilder.conjunction();
-            }
-            return criteriaBuilder.equal(root.get("schoolSession"), session);
-        };
-    }
-
-    public Specification<ScheduledMedicationTask> hasStaffNotesContaining(String searchText) {
-        return (root, query, criteriaBuilder) -> {
-            if (searchText == null || searchText.isEmpty()) {
-                return criteriaBuilder.conjunction();
-            }
-            return criteriaBuilder.like(
-                criteriaBuilder.lower(root.get("staffNotes")),
-                "%" + searchText.toLowerCase() + "%"
-            );
         };
     }
 

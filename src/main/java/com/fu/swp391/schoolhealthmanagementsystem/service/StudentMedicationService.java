@@ -155,7 +155,7 @@ public class StudentMedicationService {
                 currentUser.getEmail(), currentUser.getRole(), studentMedicationId);
 
         // Sử dụng query fetch join để lấy time slots nếu cần
-        StudentMedication studentMedication = studentMedicationRepository.findWithMedicationTimeSlotsByStudentMedicationId(studentMedicationId)
+        StudentMedication studentMedication = studentMedicationRepository.findByStudentMedicationId(studentMedicationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thông tin thuốc của học sinh với ID: " + studentMedicationId));
 
         UserRole currentUserRole = currentUser.getRole();
@@ -183,7 +183,7 @@ public class StudentMedicationService {
         log.info("Staff {} is attempting to update schedule for StudentMedication ID: {}",
                 currentStaff.getEmail(), studentMedicationId);
 
-        StudentMedication medication = studentMedicationRepository.findWithMedicationTimeSlotsByStudentMedicationId(studentMedicationId)
+        StudentMedication medication = studentMedicationRepository.findByStudentMedicationId(studentMedicationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thông tin thuốc với ID: " + studentMedicationId));
 
         //chỉ cho phép cập nhật lịch trình nếu thuốc đang có trạng thái AVAILABLE

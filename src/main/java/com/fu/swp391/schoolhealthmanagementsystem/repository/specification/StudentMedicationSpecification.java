@@ -47,13 +47,4 @@ public class StudentMedicationSpecification {
             return criteriaBuilder.equal(root.get("student"), student);
         };
     }
-
-    public Specification<StudentMedication> hasStudentMedicationName (String medicationName) {
-        return (root, query, criteriaBuilder) -> {
-            if (medicationName == null || medicationName.isEmpty()) {
-                return criteriaBuilder.conjunction();
-            }
-            return criteriaBuilder.like(criteriaBuilder.lower(root.get("medicationName")), "%" + medicationName.toLowerCase() + "%");
-        };
-    }
 }

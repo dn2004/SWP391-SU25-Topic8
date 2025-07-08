@@ -19,41 +19,14 @@ import java.util.Optional;
 public interface StudentMedicationRepository extends JpaRepository<StudentMedication, Long>, JpaSpecificationExecutor<StudentMedication> {
     List<StudentMedication> findAllByStatus(MedicationStatus status);
 
-    @Query("SELECT sm FROM StudentMedication sm WHERE sm.status = :status AND sm.remainingDoses > 0 AND sm.scheduleStartDate IS NOT NULL AND sm.medicationTimeSlots IS NOT EMPTY AND (sm.nextScheduledTaskGenerationDate IS NULL OR sm.nextScheduledTaskGenerationDate <= :currentDate)")
-    List<StudentMedication> findMedicationsRequiringTaskGeneration(@Param("status") MedicationStatus status, @Param("currentDate") LocalDate currentDate);
-
     Page<StudentMedication> findByStudent(Student student, Pageable pageable);
 
     Page<StudentMedication> findByStatus(MedicationStatus medicationStatus, Pageable pageable);
 
-    @Query("SELECT sm FROM StudentMedication sm WHERE sm.student = :student AND " +
-            "(:startDate IS NULL OR sm.dateReceived >= :startDate) AND " +
-            "(:endDate IS NULL OR sm.dateReceived <= :endDate)")
-    Page<StudentMedication> findByStudentAndDateRange(
-            @Param("student") Student student,
-            @Param("startDate") LocalDate startDate,
-            @Param("endDate") LocalDate endDate,
-            Pageable pageable);
-
-    @Query("SELECT sm FROM StudentMedication sm WHERE " +
-            "(:startDate IS NULL OR sm.dateReceived >= :startDate) AND " +
-            "(:endDate IS NULL OR sm.dateReceived <= :endDate)")
-    Page<StudentMedication> findByDateRange(
-            @Param("startDate") LocalDate startDate,
-            @Param("endDate") LocalDate endDate,
-            Pageable pageable);
-
-    @Query("SELECT sm FROM StudentMedication sm WHERE sm.status = :status AND " +
-            "(:startDate IS NULL OR sm.dateReceived >= :startDate) AND " +
-            "(:endDate IS NULL OR sm.dateReceived <= :endDate)")
-    Page<StudentMedication> findByStatusAndDateRange(
-            @Param("status") MedicationStatus status,
-            @Param("startDate") LocalDate startDate,
-            @Param("endDate") LocalDate endDate,
-            Pageable pageable);
-
-    @Query("SELECT sm FROM StudentMedication sm JOIN FETCH sm.medicationTimeSlots WHERE sm.studentMedicationId = :id")
-    Optional<StudentMedication> findWithMedicationTimeSlotsByStudentMedicationId(@Param("id") Long id);
+    // Tên phương thức giờ đây chỉ cần mô tả việc tìm kiếm,
+// việc fetch được khai báo qua annotation.
+    @EntityGraph(attributePaths = {"medicationTimeSlots"})
+    Optional<StudentMedication> findByStudentMedicationId(Long id);
 
     int countByStudent(Student student);
 

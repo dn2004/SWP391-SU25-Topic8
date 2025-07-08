@@ -22,14 +22,5 @@ public class ParentStudentLinkSpecification {
         return (root, query, criteriaBuilder) ->
                 criteriaBuilder.equal(root.get("student").get("status"), status);
     }
-
-    public Specification<ParentStudentLink> fetchStudent() {
-        return (root, query, criteriaBuilder) -> {
-            if (Long.class != query.getResultType() && long.class != query.getResultType()) {
-                root.fetch("student", JoinType.LEFT);
-            }
-            return criteriaBuilder.conjunction();
-        };
-    }
 }
 

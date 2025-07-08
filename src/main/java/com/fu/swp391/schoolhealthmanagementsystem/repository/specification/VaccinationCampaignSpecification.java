@@ -45,15 +45,6 @@ public class VaccinationCampaignSpecification {
         };
     }
 
-    public Specification<VaccinationCampaign> hasMultipleStatuses(List<VaccinationCampaignStatus> statuses) {
-        return (root, query, criteriaBuilder) -> {
-            if (statuses == null || statuses.isEmpty()) {
-                return criteriaBuilder.conjunction();
-            }
-            return root.get("status").in(statuses);
-        };
-    }
-
     public Specification<VaccinationCampaign> vaccinationDateAfterOrEqual(LocalDate startDate) {
         return (root, query, criteriaBuilder) -> {
             if (startDate == null) {

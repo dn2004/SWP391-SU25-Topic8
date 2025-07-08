@@ -16,7 +16,6 @@ import java.util.Optional;
 
 @Repository
 public interface StudentRepository extends JpaRepository<Student, Long>, JpaSpecificationExecutor<Student> {
-
     List<Student> findByClassGroup(ClassGroup classGroup);
 
     List<Student> findByClassValue(Class classValue);
@@ -25,13 +24,9 @@ public interface StudentRepository extends JpaRepository<Student, Long>, JpaSpec
 
     List<Student> findByClassGroupIn(Collection<ClassGroup> classGroups);
 
-    List<Student> findByClassValueIn(Collection<Class> classValues);
-
     List<Student> findByClassGroupAndStatus(ClassGroup classGroup, StudentStatus status);
 
     List<Student> findByClassGroupInAndStatus(Collection<ClassGroup> classGroups, StudentStatus status);
-
-    List<Student> findByDateOfBirthBetween(LocalDate minDate, LocalDate maxDate);
 
     List<Student> findByStatus(StudentStatus status);
 

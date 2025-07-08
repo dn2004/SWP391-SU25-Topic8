@@ -19,15 +19,6 @@ public class SchoolVaccinationSpecification {
         };
     }
 
-    public Specification<SchoolVaccination> forStudent(Long studentId) {
-        return (root, query, criteriaBuilder) -> {
-            if (studentId == null) {
-                return criteriaBuilder.conjunction();
-            }
-            return criteriaBuilder.equal(root.get("student").get("id"), studentId);
-        };
-    }
-
     public Specification<SchoolVaccination> forStudentName(String studentName) {
         return (root, query, criteriaBuilder) -> {
             if (studentName == null || studentName.isEmpty()) {
@@ -58,33 +49,6 @@ public class SchoolVaccinationSpecification {
                 return criteriaBuilder.conjunction();
             }
             return criteriaBuilder.equal(root.get("status"), status);
-        };
-    }
-
-    public Specification<SchoolVaccination> vaccinationDateAfterOrEqual(LocalDate startDate) {
-        return (root, query, criteriaBuilder) -> {
-            if (startDate == null) {
-                return criteriaBuilder.conjunction();
-            }
-            return criteriaBuilder.greaterThanOrEqualTo(root.get("vaccinationDate"), startDate);
-        };
-    }
-
-    public Specification<SchoolVaccination> vaccinationDateBeforeOrEqual(LocalDate endDate) {
-        return (root, query, criteriaBuilder) -> {
-            if (endDate == null) {
-                return criteriaBuilder.conjunction();
-            }
-            return criteriaBuilder.lessThanOrEqualTo(root.get("vaccinationDate"), endDate);
-        };
-    }
-
-    public Specification<SchoolVaccination> administeredBy(Long userId) {
-        return (root, query, criteriaBuilder) -> {
-            if (userId == null) {
-                return criteriaBuilder.conjunction();
-            }
-            return criteriaBuilder.equal(root.get("administeredByUser").get("userId"), userId);
         };
     }
 }

@@ -18,10 +18,6 @@ import java.util.Optional;
 @Repository
 public interface HealthIncidentRepository extends JpaRepository<HealthIncident, Long>, JpaSpecificationExecutor<HealthIncident> {
 
-    @Query("SELECT hi FROM HealthIncident hi WHERE hi.incidentId = :incidentId")
-    Optional<HealthIncident> findIncidentEvenIfDeleted(@Param("incidentId") Long incidentId);
-
-
     Page<HealthIncident> findByStudent(Student student, Pageable pageable);
 
     // Trong HealthIncidentRepository.java

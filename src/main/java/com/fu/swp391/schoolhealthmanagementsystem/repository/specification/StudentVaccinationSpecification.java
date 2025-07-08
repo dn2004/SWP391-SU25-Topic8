@@ -63,13 +63,4 @@ public class StudentVaccinationSpecification {
             return criteriaBuilder.equal(root.get("status"), status);
         };
     }
-
-    public Specification<StudentVaccination> approvedBy(Long userId) {
-        return (root, query, criteriaBuilder) -> {
-            if (userId == null) {
-                return criteriaBuilder.conjunction();
-            }
-            return criteriaBuilder.equal(root.get("approvedByUser").get("userId"), userId);
-        };
-    }
 }

@@ -40,24 +40,6 @@ public class StudentSpecification {
         };
     }
 
-    public Specification<Student> hasClassGroupIn(Collection<ClassGroup> classGroups) {
-        return (root, query, criteriaBuilder) -> {
-            if (classGroups == null || classGroups.isEmpty()) {
-                return criteriaBuilder.conjunction();
-            }
-            return root.get("classGroup").in(classGroups);
-        };
-    }
-
-    public Specification<Student> hasClassValueIn(Collection<Class> classValues) {
-        return (root, query, criteriaBuilder) -> {
-            if (classValues == null || classValues.isEmpty()) {
-                return criteriaBuilder.conjunction();
-            }
-            return root.get("classValue").in(classValues);
-        };
-    }
-
     public Specification<Student> hasStatus(StudentStatus status) {
         return (root, query, criteriaBuilder) -> {
             if (status == null) {
@@ -83,11 +65,6 @@ public class StudentSpecification {
             }
             return criteriaBuilder.lessThanOrEqualTo(root.get("dateOfBirth"), endDate);
         };
-    }
-
-    public Specification<Student> dateOfBirthBetween(LocalDate startDate, LocalDate endDate) {
-        return Specification.where(dateOfBirthAfterOrEqual(startDate))
-                .and(dateOfBirthBeforeOrEqual(endDate));
     }
 
     public Specification<Student> hasDateOfBirth(LocalDate dateOfBirth) {

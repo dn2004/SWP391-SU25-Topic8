@@ -39,7 +39,6 @@ public class HealthIncidentService {
     private final HealthIncidentRepository healthIncidentRepository;
     private final StudentRepository studentRepository;
     private final MedicalSupplyRepository medicalSupplyRepository;
-    private final MedicalSupplyService medicalSupplyService;
     private final HealthIncidentMapper healthIncidentMapper;
     private final AuthorizationService authorizationService;
     private final SupplyTransactionRepository supplyTransactionRepository;

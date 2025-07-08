@@ -37,26 +37,6 @@ public class MedicalSupplySpecification {
         };
     }
 
-    public Specification<MedicalSupply> isExpired(boolean expired) {
-        return (root, query, criteriaBuilder) -> {
-            if (expired) {
-                return criteriaBuilder.lessThan(root.get("expiredDate"), LocalDate.now());
-            } else {
-                return criteriaBuilder.greaterThanOrEqualTo(root.get("expiredDate"), LocalDate.now());
-            }
-        };
-    }
-
-    public Specification<MedicalSupply> stockLessThan(int quantity) {
-        return (root, query, criteriaBuilder) ->
-            criteriaBuilder.lessThan(root.get("currentStock"), quantity);
-    }
-
-    public Specification<MedicalSupply> stockGreaterThan(int quantity) {
-        return (root, query, criteriaBuilder) ->
-            criteriaBuilder.greaterThan(root.get("currentStock"), quantity);
-    }
-
     public Specification<MedicalSupply> hasExpiredDateFrom(LocalDate from) {
         return (root, query, criteriaBuilder) -> {
             if (from == null) {

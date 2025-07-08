@@ -18,9 +18,6 @@ public interface ParentStudentLinkRepository extends JpaRepository<ParentStudent
     boolean existsByParentAndStudent(User parent, Student student);
     Optional<ParentStudentLink> findByParentAndStudent(User parent, Student student);
 
-    @Query("SELECT psl.student FROM ParentStudentLink psl WHERE psl.parent = :parent")
-    Page<Student> findStudentsByParent(User parent, Pageable pageable);
-
     boolean existsByParentAndStudentAndStatus(User currentUser, Student student, LinkStatus linkStatus);
 
     boolean existsByStudent(Student student);
