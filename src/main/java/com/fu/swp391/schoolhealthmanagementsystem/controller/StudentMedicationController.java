@@ -1,6 +1,6 @@
 package com.fu.swp391.schoolhealthmanagementsystem.controller;
 
-import com.fu.swp391.schoolhealthmanagementsystem.dto.studentmedication.*;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.student.medication.*;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.MedicationStatus;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentMedicationTransactionType;
 import com.fu.swp391.schoolhealthmanagementsystem.service.StudentMedicationService;

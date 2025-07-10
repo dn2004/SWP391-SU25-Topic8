@@ -11,8 +11,7 @@ public enum SchoolVaccinationStatus {
     SCHEDULED("Đã lên lịch"),       // Vaccination is scheduled
     COMPLETED("Đã hoàn thành"),     // Vaccination was successfully administered
     ABSENT("Vắng mặt"),             // Student was absent on vaccination day
-    DECLINED("Từ chối"),            // Parent declined or student had contraindications at the time
-    POST_MONITORING("Đang theo dõi"); // In post-vaccination monitoring period
+    DECLINED("Từ chối");     // Parent declined or student had contraindications at the time
 
     private final String displayName;
 

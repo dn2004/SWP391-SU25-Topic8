@@ -1,6 +1,6 @@
 package com.fu.swp391.schoolhealthmanagementsystem.mapper;
 
-import com.fu.swp391.schoolhealthmanagementsystem.dto.studentmedication.MedicationTimeSlotDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.student.medication.MedicationTimeSlotDto;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.MedicationTimeSlot;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

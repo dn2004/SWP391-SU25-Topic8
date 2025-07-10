@@ -1,9 +1,9 @@
 package com.fu.swp391.schoolhealthmanagementsystem.controller;
 
 import com.fu.swp391.schoolhealthmanagementsystem.dto.ErrorResponseDto; // Giả sử bạn có DTO này
-import com.fu.swp391.schoolhealthmanagementsystem.dto.student.StudentVaccinationRequestDto;
-import com.fu.swp391.schoolhealthmanagementsystem.dto.student.StudentVaccinationResponseDto;
-import com.fu.swp391.schoolhealthmanagementsystem.dto.student.VaccinationStatusUpdateRequestDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.student.vaccination.StudentVaccinationRequestDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.student.vaccination.StudentVaccinationResponseDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.student.vaccination.VaccinationStatusUpdateRequestDto;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentVaccinationStatus;
 import com.fu.swp391.schoolhealthmanagementsystem.service.StudentVaccinationService;
 import io.swagger.v3.oas.annotations.Operation;

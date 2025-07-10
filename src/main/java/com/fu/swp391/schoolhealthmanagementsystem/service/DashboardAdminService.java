@@ -1,8 +1,7 @@
 package com.fu.swp391.schoolhealthmanagementsystem.service;
 
-import com.fu.swp391.schoolhealthmanagementsystem.dto.DashboardAdminDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.dashboard.DashboardAdminDto;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.*;
-import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.Class;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -46,14 +45,14 @@ public class DashboardAdminService {
         long activeUsers = userRepository.countByActive(true);
         long inactiveUsers = userRepository.countByActive(false);
 
+        Map<UserRole, Long> usersByRole = new EnumMap<>(UserRole.class);
+        for (UserRole role : UserRole.values()) {
+            usersByRole.put(role, userRepository.countByRole(role));
+        }
+
         Map<ClassGroup, Long> studentsByClassGroup = new EnumMap<>(ClassGroup.class);
         for (ClassGroup classGroup : ClassGroup.values()) {
             studentsByClassGroup.put(classGroup, studentRepository.countByClassGroup(classGroup));
-        }
-
-        Map<Class, Long> studentsByClass = new EnumMap<>(Class.class);
-        for (Class classValue : Class.values()) {
-            studentsByClass.put(classValue, studentRepository.countByClassValue(classValue));
         }
 
         Map<Gender, Long> studentsByGender = new EnumMap<>(Gender.class);
@@ -202,8 +201,8 @@ public class DashboardAdminService {
             totalSchoolAdmins,
             activeUsers,
             inactiveUsers,
+            usersByRole,
             studentsByClassGroup,
-            studentsByClass,
             studentsByGender,
             studentsByStatus,
             totalHealthIncidents,
@@ -230,8 +229,8 @@ public class DashboardAdminService {
             totalMedicationTransactions,
             medicationTransactionsByType,
             totalBlogs,
-            blogsByStatus,
             recentBlogs,
+            blogsByStatus,
             blogsByCategory,
             totalSupplyTransactions,
             supplyTransactionsByType,

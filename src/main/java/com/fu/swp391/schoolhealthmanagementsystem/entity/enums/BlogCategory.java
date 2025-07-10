@@ -33,10 +33,6 @@ public enum BlogCategory {
         return displayName;
     }
 
-    public String getBackgroundColor() {
-        return backgroundColor;
-    }
-
     @JsonCreator
     public static BlogCategory fromDisplayName(String displayName) {
         if (displayName == null || displayName.isEmpty()) {

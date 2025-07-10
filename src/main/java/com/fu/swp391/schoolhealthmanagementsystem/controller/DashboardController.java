@@ -1,8 +1,8 @@
 package com.fu.swp391.schoolhealthmanagementsystem.controller;
 
-import com.fu.swp391.schoolhealthmanagementsystem.dto.DashboardAdminDto;
-import com.fu.swp391.schoolhealthmanagementsystem.dto.DashboardMedicalStaffDto;
-import com.fu.swp391.schoolhealthmanagementsystem.dto.DashboardStaffManagerDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.dashboard.DashboardAdminDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.dashboard.DashboardMedicalStaffDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.dashboard.DashboardStaffManagerDto;
 import com.fu.swp391.schoolhealthmanagementsystem.service.DashboardAdminService;
 import com.fu.swp391.schoolhealthmanagementsystem.service.DashboardMedicalStaffService;
 import com.fu.swp391.schoolhealthmanagementsystem.service.DashboardStaffManagerService;

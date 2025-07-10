@@ -79,19 +79,6 @@ public class SchoolVaccinationService {
 
         // Thông báo cho phụ huynh về trạng thái tiêm chủng
         notifyParentAboutVaccinationStatus(savedVaccination, currentUser);
-
-        // Nếu trạng thái là COMPLETED, chuyển sang POST_MONITORING
-        if (requestDto.status() == SchoolVaccinationStatus.COMPLETED) {
-            savedVaccination.setStatus(SchoolVaccinationStatus.POST_MONITORING);
-            savedVaccination = schoolVaccinationRepository.save(savedVaccination);
-
-            // Thông báo cho phụ huynh về việc hoàn thành tiêm chủng và bắt đầu theo dõi
-            notifyParentAboutPostMonitoring(savedVaccination);
-
-            // Thông báo cho nhân viên y tế về yêu cầu theo dõi
-            notifyMedicalStaffAboutMonitoring(savedVaccination, currentUser);
-        }
-
         return schoolVaccinationMapper.toDto(savedVaccination);
     }
 
@@ -139,64 +126,6 @@ public class SchoolVaccinationService {
                 vaccination.getNotes() != null && !vaccination.getNotes().isEmpty() ? "Ghi chú: " + vaccination.getNotes() : "");
     }
 
-    // Notify parents about post-vaccination monitoring
-    private void notifyParentAboutPostMonitoring(SchoolVaccination vaccination) {
-        Student student = vaccination.getStudent();
-        if (student == null || student.getParentLinks().isEmpty()) {
-            log.warn("Không thể gửi thông báo theo dõi sau tiêm. Không có phụ huynh được liên kết với học sinh ID: {}",
-                    student != null ? student.getId() : "null");
-            return;
-        }
-
-        String content = String.format(
-                "Học sinh %s đã được tiêm vaccine %s và đang được theo dõi sau tiêm. Nhân viên y tế sẽ thông báo nếu có bất kỳ phản ứng bất thường.",
-                student.getFullName(), vaccination.getCampaign().getVaccineName());
-
-        String link = "/vaccination/record/" + vaccination.getSchoolVaccinationId();
-
-        student.getParentLinks().forEach(parentLink -> {
-            User parent = parentLink.getParent();
-            if (parent != null) {
-                try {
-                    notificationService.createAndSendNotification(
-                            parent.getEmail(), content, link, vaccination.getAdministeredByUser().getEmail());
-
-                    log.info("Đã gửi thông báo theo dõi sau tiêm cho học sinh ID: {} đến phụ huynh: {}",
-                            student.getId(), parent.getEmail());
-                } catch (Exception e) {
-                    log.error("Không thể gửi thông báo theo dõi sau tiêm đến phụ huynh ID: {}, Email: {}. Lỗi: {}",
-                            parent.getUserId(), parent.getEmail(), e.getMessage());
-                }
-            }
-        });
-    }
-
-    // Notify medical staff about monitoring requirements
-    private void notifyMedicalStaffAboutMonitoring(SchoolVaccination vaccination, User currentUser) {
-        String content = String.format(
-                "Học sinh %s vừa được tiêm vaccine %s. Cần theo dõi sau tiêm trong 30 phút.",
-                vaccination.getStudent().getFullName(), vaccination.getCampaign().getVaccineName());
-
-        String link = "/vaccination/record/" + vaccination.getSchoolVaccinationId() + "/monitoring";
-
-        try {
-            // Notify current user as a reminder to monitor
-            if (currentUser.getRole() == UserRole.MedicalStaff) {
-                notificationService.createAndSendNotification(
-                        currentUser.getEmail(), content, link, "system");
-            }
-
-            // Notify other medical staff on duty
-            notificationService.createAndSendNotificationToRole(
-                    UserRole.MedicalStaff, content, link, currentUser.getEmail());
-
-            log.info("Đã gửi nhắc nhở theo dõi cho tiêm chủng ID: {}", vaccination.getSchoolVaccinationId());
-        } catch (Exception e) {
-            log.error("Không thể gửi nhắc nhở theo dõi cho tiêm chủng ID: {}. Lỗi: {}",
-                    vaccination.getSchoolVaccinationId(), e.getMessage());
-        }
-    }
-
     // Record post-vaccination monitoring
     @Transactional
     public PostVaccinationMonitoringResponseDto recordPostVaccinationMonitoring(
@@ -208,9 +137,9 @@ public class SchoolVaccinationService {
                         "School vaccination not found with ID: " + requestDto.schoolVaccinationId()));
 
         // Verify the vaccination is in POST_MONITORING status
-        if (vaccination.getStatus() != SchoolVaccinationStatus.POST_MONITORING) {
+        if (vaccination.getStatus() != SchoolVaccinationStatus.COMPLETED) {
             throw new InvalidOperationException(
-                    "Cannot record monitoring for vaccination not in POST_MONITORING status");
+                    "Cannot record monitoring for vaccination not in COMPLETED status");
         }
 
         // Check if monitoring record already exists (since it's 1-1 relationship)
@@ -324,11 +253,6 @@ public class SchoolVaccinationService {
         SchoolVaccinationStatus oldStatus = vaccination.getStatus();
         SchoolVaccinationStatus newStatus = requestDto.status();
 
-        // Kiểm tra không cho phép thay đổi từ POST_MONITORING về các trạng thái khác
-        if (oldStatus == SchoolVaccinationStatus.POST_MONITORING && newStatus != SchoolVaccinationStatus.COMPLETED) {
-            throw new InvalidOperationException("Không thể thay đổi từ trạng thái THEO DÕI sang trạng thái khác (trừ COMPLETED)");
-        }
-
         // Kiểm tra consent status khi cập nhật sang COMPLETED
         VaccinationConsent consent = vaccination.getConsent();
         if (newStatus == SchoolVaccinationStatus.COMPLETED && consent.getStatus() != ConsentStatus.APPROVED) {
@@ -347,17 +271,6 @@ public class SchoolVaccinationService {
 
         // Gửi thông báo về thay đổi trạng thái
         notifyParentAboutStatusUpdate(updatedVaccination, oldStatus, newStatus, requestDto.reasonForChange(), currentUser);
-
-        // Xử lý logic đặc biệt khi chuyển sang COMPLETED
-        if (newStatus == SchoolVaccinationStatus.COMPLETED && oldStatus != SchoolVaccinationStatus.POST_MONITORING) {
-            updatedVaccination.setStatus(SchoolVaccinationStatus.POST_MONITORING);
-            updatedVaccination = schoolVaccinationRepository.save(updatedVaccination);
-
-            // Thông báo về việc bắt đầu theo dõi
-            notifyParentAboutPostMonitoring(updatedVaccination);
-            notifyMedicalStaffAboutMonitoring(updatedVaccination, currentUser);
-        }
-
         return schoolVaccinationMapper.toDto(updatedVaccination);
     }
 
@@ -474,9 +387,9 @@ public class SchoolVaccinationService {
             throw new InvalidOperationException("Không thể cập nhật bản ghi theo dõi khi chiến dịch đã hoàn thành");
         }
 
-        // Kiểm tra vaccination phải đang POST_MONITORING
-        if (vaccination.getStatus() != SchoolVaccinationStatus.POST_MONITORING) {
-            throw new InvalidOperationException("Chỉ có thể cập nhật bản ghi theo dõi khi vaccination đang ở trạng thái POST_MONITORING");
+        // Kiểm tra vaccination phải đang COMPLETED
+        if (vaccination.getStatus() != SchoolVaccinationStatus.COMPLETED) {
+            throw new InvalidOperationException("Chỉ có thể cập nhật bản ghi theo dõi khi vaccination đang ở trạng thái COMPLETED");
         }
 
         // Lưu thông tin cũ để so sánh
@@ -505,30 +418,10 @@ public class SchoolVaccinationService {
         log.info("User {} updated monitoring record ID: {}. Reason: {}",
                 currentUser.getEmail(), monitoringId, requestDto.reasonForUpdate());
 
-        // Nếu có thay đổi quan trọng về phản ứng phụ, gửi thông báo
-        if (hasSignificantChange(oldHasSideEffects, oldTemperature, updatedMonitoring)) {
+        // gửi thông báo
             notifyAboutMonitoringUpdate(updatedMonitoring, vaccination, requestDto.reasonForUpdate(), currentUser);
-        }
 
         return monitoringMapper.toDto(updatedMonitoring);
-    }
-
-    // Kiểm tra có thay đổi quan trọng trong theo dõi không
-    private boolean hasSignificantChange(Boolean oldHasSideEffects, Float oldTemperature, PostVaccinationMonitoring newMonitoring) {
-        // Thay đổi từ không có phản ứng phụ sang có phản ứng phụ
-        if (!Boolean.TRUE.equals(oldHasSideEffects) && Boolean.TRUE.equals(newMonitoring.getHasSideEffects())) {
-            return true;
-        }
-
-        // Thay đổi nhiệt độ đáng kể (> 1°C)
-        if (oldTemperature != null && newMonitoring.getTemperature() != null) {
-            float tempDiff = Math.abs(newMonitoring.getTemperature() - oldTemperature);
-            if (tempDiff > 1.0f) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     // Thông báo về cập nhật theo dõi

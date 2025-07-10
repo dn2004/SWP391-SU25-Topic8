@@ -31,7 +31,7 @@ public class MedicalSupply {
     private String category;
 
     @Column(name = "Unit", length = 20, columnDefinition = "NVARCHAR(20)")
-    private String unit;
+    private String unit; //Đơn vị tính của vật tư sau mỗi lần sử dụng. Ví dụ viên, ml,...
 
     @Column(name = "CurrentStock", nullable = false)
     @Builder.Default

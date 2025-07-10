@@ -1,9 +1,9 @@
 package com.fu.swp391.schoolhealthmanagementsystem.mapper;
 
 import com.fu.swp391.schoolhealthmanagementsystem.dto.cloudinary.CloudinaryUploadResponse;
-import com.fu.swp391.schoolhealthmanagementsystem.dto.student.StudentVaccinationRequestDto;
-import com.fu.swp391.schoolhealthmanagementsystem.dto.student.StudentVaccinationResponseDto;
-import com.fu.swp391.schoolhealthmanagementsystem.dto.student.VaccinationStatusUpdateRequestDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.student.vaccination.StudentVaccinationRequestDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.student.vaccination.StudentVaccinationResponseDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.student.vaccination.VaccinationStatusUpdateRequestDto;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.StudentVaccination;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.User;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentVaccinationStatus;

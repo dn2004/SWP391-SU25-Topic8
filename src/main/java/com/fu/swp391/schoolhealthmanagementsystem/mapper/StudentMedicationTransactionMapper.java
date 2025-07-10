@@ -1,6 +1,6 @@
 package com.fu.swp391.schoolhealthmanagementsystem.mapper;
 
-import com.fu.swp391.schoolhealthmanagementsystem.dto.studentmedication.StudentMedicationTransactionResponseDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.student.medication.StudentMedicationTransactionResponseDto;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.StudentMedicationTransaction;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.User;
 import org.mapstruct.Mapper;

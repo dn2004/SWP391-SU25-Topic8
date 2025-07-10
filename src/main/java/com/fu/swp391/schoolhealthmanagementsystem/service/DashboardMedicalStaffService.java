@@ -1,8 +1,7 @@
 package com.fu.swp391.schoolhealthmanagementsystem.service;
 
-import com.fu.swp391.schoolhealthmanagementsystem.dto.DashboardMedicalStaffDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.dashboard.DashboardMedicalStaffDto;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.*;
-import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.Class;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,7 +22,6 @@ public class DashboardMedicalStaffService {
     private final StudentChronicDiseaseRepository studentChronicDiseaseRepository;
     private final VaccinationCampaignRepository vaccinationCampaignRepository;
     private final VaccinationConsentRepository vaccinationConsentRepository;
-    private final SchoolVaccinationRepository schoolVaccinationRepository;
     private final PostVaccinationMonitoringRepository postVaccinationMonitoringRepository;
     private final NotificationRepository notificationRepository;
     private final MedicationTimeSlotRepository medicationTimeSlotRepository;
@@ -39,11 +37,6 @@ public class DashboardMedicalStaffService {
         Map<ClassGroup, Long> studentsByClassGroup = new EnumMap<>(ClassGroup.class);
         for (ClassGroup classGroup : ClassGroup.values()) {
             studentsByClassGroup.put(classGroup, studentRepository.countByClassGroup(classGroup));
-        }
-
-        Map<Class, Long> studentsByClass = new EnumMap<>(Class.class);
-        for (Class classValue : Class.values()) {
-            studentsByClass.put(classValue, studentRepository.countByClassValue(classValue));
         }
 
         // Today's Tasks & Schedules (Note: would need additional repository methods for date filtering)
@@ -138,7 +131,6 @@ public class DashboardMedicalStaffService {
         return new DashboardMedicalStaffDto(
             totalStudentsUnderCare,
             studentsByClassGroup,
-            studentsByClass,
             todayScheduledMedicationTasks,
             pendingMedicationTasks,
             completedMedicationTasksToday,

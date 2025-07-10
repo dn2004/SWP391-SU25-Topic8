@@ -1,8 +1,7 @@
 package com.fu.swp391.schoolhealthmanagementsystem.service;
 
-import com.fu.swp391.schoolhealthmanagementsystem.dto.DashboardStaffManagerDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.dashboard.DashboardStaffManagerDto;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.*;
-import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.Class;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -56,11 +55,6 @@ public class DashboardStaffManagerService {
         Map<ClassGroup, Long> studentsByClassGroup = new EnumMap<>(ClassGroup.class);
         for (ClassGroup classGroup : ClassGroup.values()) {
             studentsByClassGroup.put(classGroup, studentRepository.countByClassGroup(classGroup));
-        }
-
-        Map<Class, Long> studentsByClass = new EnumMap<>(Class.class);
-        for (Class classValue : Class.values()) {
-            studentsByClass.put(classValue, studentRepository.countByClassValue(classValue));
         }
 
         Map<StudentStatus, Long> studentsByStatus = new EnumMap<>(StudentStatus.class);
@@ -210,7 +204,6 @@ public class DashboardStaffManagerService {
             usersByRole,
             totalStudents,
             studentsByClassGroup,
-            studentsByClass,
             studentsByStatus,
             totalHealthIncidents,
             recentHealthIncidents,

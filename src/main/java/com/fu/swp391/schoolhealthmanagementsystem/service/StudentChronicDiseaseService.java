@@ -1,9 +1,9 @@
 package com.fu.swp391.schoolhealthmanagementsystem.service;
 
 import com.fu.swp391.schoolhealthmanagementsystem.dto.cloudinary.CloudinaryUploadResponse;
-import com.fu.swp391.schoolhealthmanagementsystem.dto.student.ChronicDiseaseStatusUpdateRequestDto;
-import com.fu.swp391.schoolhealthmanagementsystem.dto.student.StudentChronicDiseaseRequestDto;
-import com.fu.swp391.schoolhealthmanagementsystem.dto.student.StudentChronicDiseaseResponseDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.student.disease.ChronicDiseaseStatusUpdateRequestDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.student.disease.StudentChronicDiseaseRequestDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.student.disease.StudentChronicDiseaseResponseDto;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.Student;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.StudentChronicDisease;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.User;

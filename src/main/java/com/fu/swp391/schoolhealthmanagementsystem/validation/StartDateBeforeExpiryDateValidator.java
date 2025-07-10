@@ -1,6 +1,6 @@
 package com.fu.swp391.schoolhealthmanagementsystem.validation;
 
-import com.fu.swp391.schoolhealthmanagementsystem.dto.studentmedication.CreateStudentMedicationByStaffRequestDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.student.medication.CreateStudentMedicationByStaffRequestDto;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 

@@ -9,8 +9,7 @@ public record UserActivationRequestDto(
         @Schema(
                 description = "Đặt thành true để kích hoạt, false để vô hiệu hóa",
                 example = "true",
-                allowableValues = {"true", "false"},
-                requiredMode = Schema.RequiredMode.REQUIRED
+                allowableValues = {"true", "false"}
         )
         Boolean isActive
 ) {

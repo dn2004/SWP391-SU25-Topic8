@@ -10,15 +10,28 @@ import jakarta.validation.constraints.Size;
 public record ChangePasswordRequestDto(
 
         @NotBlank(message = "Mật khẩu cũ không được để trống")
-        @Schema(description = "Mật khẩu hiện tại của người dùng", example = "currentPassword123")
+        @Schema(
+                description = "Mật khẩu hiện tại của người dùng",
+                example = "currentPassword123"
+        )
         String oldPassword,
 
         @NotBlank(message = "Mật khẩu mới không được để trống")
-        @Size(min = 6, max = 255, message = "Mật khẩu mới phải từ 6 đến 255 ký tự")
-        @Schema(description = "Mật khẩu mới", example = "newStrongPassword456")
+        @Size(
+                min = 6,
+                max = 255,
+                message = "Mật khẩu mới phải từ 6 đến 255 ký tự"
+        )
+        @Schema(
+                description = "Mật khẩu mới",
+                example = "newStrongPassword456"
+        )
         String newPassword,
 
         @NotBlank(message = "Xác nhận mật khẩu mới không được để trống")
-        @Schema(description = "Xác nhận lại mật khẩu mới", example = "newStrongPassword456")
+        @Schema(
+                description = "Xác nhận lại mật khẩu mới",
+                example = "newStrongPassword456"
+        )
         String confirmNewPassword
 ) {}

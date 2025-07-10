@@ -5,24 +5,46 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "Thông tin chi tiết người dùng")
 public record UserDto(
-        @Schema(description = "ID người dùng", example = "1")
+        @Schema(
+                description = "ID người dùng",
+                example = "1"
+        )
         Long userId,
 
-        @Schema(description = "Họ tên đầy đủ", example = "Nguyễn Văn A")
+        @Schema(
+                description = "Họ tên đầy đủ",
+                example = "Nguyễn Văn A"
+        )
         String fullName,
 
-        @Schema(description = "Địa chỉ email", example = "user@example.com")
+        @Schema(
+                description = "Địa chỉ email",
+                example = "user@example.com"
+        )
         String email,
 
-        @Schema(description = "Số điện thoại", example = "0901234567")
+        @Schema(
+                description = "Số điện thoại",
+                example = "0901234567"
+        )
         String phoneNumber,
 
-        @Schema(description = "Vai trò người dùng")
+        @Schema(
+                description = "Vai trò người dùng",
+                example = "Quản lý Nhân sự/Nhân viên"
+        )
         UserRole role,
 
-        @Schema(description = "Trạng thái hoạt động", example = "true")
+        @Schema(
+                description = "Trạng thái hoạt động",
+                example = "true"
+        )
         boolean isActive,
 
-        @Schema(description = "Phụ huynh đã liên kết với học sinh chưa?", example = "false")
+        @Schema(
+                description = "Phụ huynh đã liên kết với học sinh chưa?",
+                example = "false"
+        )
         boolean linkedToStudent
-) {}
+) {
+}

@@ -1,22 +1,19 @@
 package com.fu.swp391.schoolhealthmanagementsystem.mapper;
 
-import com.fu.swp391.schoolhealthmanagementsystem.dto.studentmedication.CreateStudentMedicationByStaffRequestDto;
-import com.fu.swp391.schoolhealthmanagementsystem.dto.studentmedication.StudentMedicationResponseDto;
-import com.fu.swp391.schoolhealthmanagementsystem.dto.studentmedication.UpdateMedicationScheduleRequestDto;
-import com.fu.swp391.schoolhealthmanagementsystem.dto.studentmedication.UpdateStudentMedicationInfoRequestDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.student.medication.CreateStudentMedicationByStaffRequestDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.student.medication.StudentMedicationResponseDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.student.medication.UpdateMedicationScheduleRequestDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.student.medication.UpdateStudentMedicationInfoRequestDto;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.MedicationTimeSlot;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.Student;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.StudentMedication;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.User;
 import org.mapstruct.AfterMapping;
 import org.mapstruct.BeanMapping;
-import org.mapstruct.Context; // Không cần thiết nếu không dùng @Context
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
-
-import java.util.List; // Import List
 
 @Mapper(componentModel = "spring", uses = {MedicationTimeSlotMapper.class})
 public interface StudentMedicationMapper {

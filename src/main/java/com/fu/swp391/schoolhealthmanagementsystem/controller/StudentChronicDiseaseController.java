@@ -1,8 +1,8 @@
 package com.fu.swp391.schoolhealthmanagementsystem.controller;
 
-import com.fu.swp391.schoolhealthmanagementsystem.dto.student.ChronicDiseaseStatusUpdateRequestDto;
-import com.fu.swp391.schoolhealthmanagementsystem.dto.student.StudentChronicDiseaseRequestDto;
-import com.fu.swp391.schoolhealthmanagementsystem.dto.student.StudentChronicDiseaseResponseDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.student.disease.ChronicDiseaseStatusUpdateRequestDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.student.disease.StudentChronicDiseaseRequestDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.student.disease.StudentChronicDiseaseResponseDto;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentChronicDiseaseStatus;
  import com.fu.swp391.schoolhealthmanagementsystem.service.StudentChronicDiseaseService;
 import io.swagger.v3.oas.annotations.Operation;

@@ -41,21 +41,9 @@ public interface StudentMapper {
     @Mapping(target = "invitationCode", ignore = true)
     @Mapping(target = "vaccinations", ignore = true)
     @Mapping(target = "healthIncidents", ignore = true)
-    @Mapping(target = "classGroup", ignore = true) // Được xác định trong afterMapping
-    @Mapping(target = "classValue", ignore = true) // Được xác định trong afterMapping
+    @Mapping(source = "classGroup", target = "classGroup")
+    @Mapping(source = "classValue", target = "classValue")
     void updateStudentFromDto(UpdateStudentRequestDto dto, @MappingTarget Student student);
-
-    @AfterMapping
-    default void afterUpdateStudentFromDto(UpdateStudentRequestDto dto, @MappingTarget Student student) {
-        // Cập nhật classGroup và classValue nếu className thay đổi
-        if (dto.className() != null && !dto.className().isEmpty()) {
-            ClassGroup classGroup = ClassNameValidator.determineClassGroup(dto.className());
-            Class classValue = ClassNameValidator.determineClass(dto.className());
-
-            student.setClassGroup(classGroup);
-            student.setClassValue(classValue);
-        }
-    }
 
     // This custom mapping method handles the Gender enum to its Vietnamese display name String conversion.
     @Named("genderToDisplayNameString")

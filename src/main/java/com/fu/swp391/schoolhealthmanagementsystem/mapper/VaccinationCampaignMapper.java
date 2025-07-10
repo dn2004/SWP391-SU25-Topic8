@@ -30,8 +30,6 @@ public interface VaccinationCampaignMapper {
     @Mapping(target = "declinedConsents", ignore = true)
     VaccinationCampaignResponseDto toDto(VaccinationCampaign entity);
 
-    List<VaccinationCampaignResponseDto> toDtoList(List<VaccinationCampaign> entities);
-
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "campaignId", ignore = true)
     @Mapping(target = "organizedByUser", ignore = true)

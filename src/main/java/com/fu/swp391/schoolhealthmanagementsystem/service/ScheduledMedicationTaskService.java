@@ -1,9 +1,9 @@
 package com.fu.swp391.schoolhealthmanagementsystem.service;
 
 import com.fu.swp391.schoolhealthmanagementsystem.dto.cloudinary.CloudinaryUploadResponse;
-import com.fu.swp391.schoolhealthmanagementsystem.dto.studentmedication.AdministerMedicationRequestDto;
-import com.fu.swp391.schoolhealthmanagementsystem.dto.studentmedication.ScheduledMedicationTaskResponseDto;
-import com.fu.swp391.schoolhealthmanagementsystem.dto.studentmedication.SkipMedicationTaskRequestDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.student.medication.AdministerMedicationRequestDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.student.medication.ScheduledMedicationTaskResponseDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.student.medication.SkipMedicationTaskRequestDto;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.*;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.*;
 import com.fu.swp391.schoolhealthmanagementsystem.exception.FileStorageException;

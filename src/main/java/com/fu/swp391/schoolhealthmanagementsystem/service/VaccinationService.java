@@ -51,13 +51,12 @@ public class VaccinationService {
             throw new InvalidOperationException("Vaccination date cannot be in the past");
         }
 
-        if (requestDto.consentDeadline().isAfter(requestDto.vaccinationDate())) {
-            throw new InvalidOperationException("Consent deadline must be before vaccination date");
-        }
+        LocalDate consentDeadline = requestDto.vaccinationDate().minusDays(2);
 
         VaccinationCampaign campaign = campaignMapper.toEntity(requestDto);
         campaign.setStatus(VaccinationCampaignStatus.DRAFT);
         campaign.setOrganizedByUser(currentUser);
+        campaign.setConsentDeadline(consentDeadline);
 
         VaccinationCampaign savedCampaign = vaccinationCampaignRepository.save(campaign);
         log.info("User {} created a new vaccination campaign: {}", currentUser.getEmail(), savedCampaign.getCampaignId());
@@ -643,40 +642,6 @@ public class VaccinationService {
         } catch (Exception e) {
             log.error("Failed to send consent response notification for student ID: {}. Error: {}",
                     student.getId(), e.getMessage());
-        }
-    }
-
-    // Validate status change
-    private void validateStatusChange(VaccinationCampaignStatus currentStatus, VaccinationCampaignStatus newStatus) {
-        // Define valid status transitions based on the new business logic
-        boolean isValidTransition = switch (currentStatus) {
-            case DRAFT -> newStatus == VaccinationCampaignStatus.SCHEDULED;
-            case SCHEDULED, PREPARING, IN_PROGRESS -> newStatus == VaccinationCampaignStatus.CANCELED;
-            default -> false; // By default, no other transitions are allowed manually
-        };
-
-        // Manual transitions allowed
-        if (isValidTransition) return;
-
-        // Allow DRAFT -> CANCELED
-        if (currentStatus == VaccinationCampaignStatus.DRAFT && newStatus == VaccinationCampaignStatus.CANCELED) return;
-
-        // Allow transitions for the scheduler/system
-        // SCHEDULED -> PREPARING (by scheduler)
-        // IN_PROGRESS -> COMPLETED (by scheduler)
-        // These are not initiated by a user changing status directly, so we don't check them here.
-
-        // Allow manual state changes that are valid
-        boolean isManualTransitionAllowed = switch (currentStatus) {
-            case DRAFT -> newStatus == VaccinationCampaignStatus.SCHEDULED;
-            case SCHEDULED -> newStatus == VaccinationCampaignStatus.PREPARING || newStatus == VaccinationCampaignStatus.CANCELED;
-            case PREPARING -> newStatus == VaccinationCampaignStatus.IN_PROGRESS || newStatus == VaccinationCampaignStatus.CANCELED;
-            case IN_PROGRESS -> newStatus == VaccinationCampaignStatus.COMPLETED || newStatus == VaccinationCampaignStatus.CANCELED;
-            default -> false;
-        };
-
-        if (!isManualTransitionAllowed) {
-            throw new InvalidOperationException("Invalid status change from " + currentStatus + " to " + newStatus);
         }
     }
 

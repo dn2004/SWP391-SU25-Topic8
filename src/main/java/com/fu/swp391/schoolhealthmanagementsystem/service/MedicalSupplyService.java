@@ -196,7 +196,7 @@ public class MedicalSupplyService {
                 medicalSupply.setStatus(MedicalSupplyStatus.OUT_OF_STOCK);
                 log.info("Vật tư ID: {} đã hết hàng, cập nhật trạng thái thành OUT_OF_STOCK", supplyId);
             }
-        } else if (transactionType == SupplyTransactionType.RECEIVED) {
+        } else if (transactionType == SupplyTransactionType.ADJUSTMENT_IN) {
             medicalSupply.setCurrentStock(oldStock + quantityChange);
 
             // Nếu vật tư trước đó hết hàng và giờ có stock, cập nhật trạng thái thành AVAILABLE

@@ -1,7 +1,7 @@
 package com.fu.swp391.schoolhealthmanagementsystem.mapper;
 
 
-import com.fu.swp391.schoolhealthmanagementsystem.dto.studentmedication.ScheduledMedicationTaskResponseDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.student.medication.ScheduledMedicationTaskResponseDto;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.ScheduledMedicationTask;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

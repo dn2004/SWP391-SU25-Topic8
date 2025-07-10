@@ -2,6 +2,7 @@ package com.fu.swp391.schoolhealthmanagementsystem.dto.auth;
 
 import com.fu.swp391.schoolhealthmanagementsystem.validation.PasswordMatches;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -9,20 +10,29 @@ import jakarta.validation.constraints.Size;
 @PasswordMatches(passwordField = "newPassword", confirmPasswordField = "confirmNewPassword")
 public record ResetPasswordRequestDto(
 
+        @Schema(
+                description = "Email đã dùng để yêu cầu OTP",
+                example = "user@example.com"
+        )
         @NotBlank(message = "Email không được để trống")
-        @Schema(description = "Email đã dùng để yêu cầu OTP", example = "user@example.com")
+        @Email(message = "Email không hợp lệ")
         String email,
 
-        @NotBlank(message = "OTP không được để trống")
-        @Schema(description = "Mã OTP nhận được qua email", example = "123456")
-        String otp,
-
+        @Schema(
+                description = "Mật khẩu mới",
+                example = "newPassword123"
+        )
         @NotBlank(message = "Mật khẩu mới không được để trống")
-        @Size(min = 6, max = 255, message = "Mật khẩu phải từ 6 đến 255 ký tự")
-        @Schema(description = "Mật khẩu mới", example = "newSecurePassword123")
+        @Size(
+                min = 6,
+                message = "Mật khẩu phải có ít nhất 6 ký tự"
+        )
         String newPassword,
 
-        @NotBlank(message = "Xác nhận mật khẩu mới không được để trống")
-        @Schema(description = "Xác nhận lại mật khẩu mới", example = "newStrongPassword456")
-        String confirmNewPassword
+        @Schema(
+                description = "Mã OTP",
+                example = "123456"
+        )
+        @NotBlank(message = "OTP không được để trống")
+        String otp
 ) {}

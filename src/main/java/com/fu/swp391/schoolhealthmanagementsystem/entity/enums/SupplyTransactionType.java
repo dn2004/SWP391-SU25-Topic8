@@ -12,7 +12,8 @@ public enum SupplyTransactionType {
     USED_FOR_INCIDENT("Sử dụng cho sự cố"),
     ADJUSTMENT_OUT("Điều chỉnh giảm"), // Ví dụ: hỏng, hết hạn
     ADJUSTMENT_IN("Điều chỉnh tăng"), // Ví dụ: kiểm kê thừa
-    RETURN_FROM_INCIDENT("Trả lại từ sự cố"), EXPIRED("Loại bỏ hết vì hết hạn");
+    RETURN_FROM_INCIDENT("Trả lại từ sự cố"),
+    EXPIRED("Loại bỏ hết vì hết hạn");
 
     private final String displayName;
 

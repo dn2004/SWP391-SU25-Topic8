@@ -1,8 +1,8 @@
 package com.fu.swp391.schoolhealthmanagementsystem.controller;
 
-import com.fu.swp391.schoolhealthmanagementsystem.dto.studentmedication.AdministerMedicationRequestDto;
-import com.fu.swp391.schoolhealthmanagementsystem.dto.studentmedication.ScheduledMedicationTaskResponseDto;
-import com.fu.swp391.schoolhealthmanagementsystem.dto.studentmedication.SkipMedicationTaskRequestDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.student.medication.AdministerMedicationRequestDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.student.medication.ScheduledMedicationTaskResponseDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.student.medication.SkipMedicationTaskRequestDto;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.ScheduledMedicationTaskStatus;
 import com.fu.swp391.schoolhealthmanagementsystem.service.ScheduledMedicationTaskService;
 import io.swagger.v3.oas.annotations.Operation;
