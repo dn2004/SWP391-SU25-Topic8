@@ -1,6 +1,5 @@
-package com.fu.swp391.schoolhealthmanagementsystem.entity.converter;
+package com.fu.swp391.schoolhealthmanagementsystem.entity.enums;
 
-import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.MedicalSupplyStatus;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 

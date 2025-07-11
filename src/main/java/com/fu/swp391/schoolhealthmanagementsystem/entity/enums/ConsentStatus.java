@@ -8,9 +8,9 @@ import lombok.Getter;
 @Getter
 @Schema(description = "Trạng thái phiếu đồng ý tiêm chủng")
 public enum ConsentStatus {
-    PENDING("Đang chờ"),    // No response from parent yet
-    APPROVED("Đồng ý"),     // Parent has approved vaccination
-    DECLINED("Từ chối");    // Parent has declined vaccination
+    PENDING("Đang chờ"),
+    APPROVED("Đồng ý"),
+    DECLINED("Từ chối");
     private final String displayName;
 
     ConsentStatus(String displayName) {

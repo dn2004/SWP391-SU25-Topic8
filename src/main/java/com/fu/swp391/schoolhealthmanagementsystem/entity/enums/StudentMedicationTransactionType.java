@@ -29,7 +29,7 @@ public enum StudentMedicationTransactionType {
     @JsonCreator
     public static StudentMedicationTransactionType fromDisplayName(String displayName) {
         if (displayName == null || displayName.isEmpty()) {
-            throw new IllegalArgumentException("Display name không được để trống");
+            throw new IllegalArgumentException("display name không được để trống");
         }
         for (StudentMedicationTransactionType type : StudentMedicationTransactionType.values()) {
             if (type.displayName.equalsIgnoreCase(displayName) || type.name().equalsIgnoreCase(displayName)) {

@@ -1,6 +1,5 @@
-package com.fu.swp391.schoolhealthmanagementsystem.config.converter;
+package com.fu.swp391.schoolhealthmanagementsystem.entity.enums;
 
-import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.ClassGroup;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 

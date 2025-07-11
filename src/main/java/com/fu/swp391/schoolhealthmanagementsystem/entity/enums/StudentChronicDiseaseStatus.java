@@ -2,11 +2,12 @@ package com.fu.swp391.schoolhealthmanagementsystem.entity.enums;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Getter
-@Slf4j
+@Schema(description = "Trạng thái bệnh mãn tính của học sinh")
 public enum StudentChronicDiseaseStatus {
     PENDING("Chờ xử lý"),
     APPROVE("Chấp nhận"),
@@ -26,7 +27,6 @@ public enum StudentChronicDiseaseStatus {
     @JsonCreator
     public static StudentChronicDiseaseStatus fromDisplayName(String text) {
         if (text == null || text.trim().isEmpty()) {
-            log.warn("Input display name for StudentChronicDiseaseStatus is null or empty. Throwing IllegalArgumentException.");
             throw new IllegalArgumentException("Trạng thái bệnh mãn tính không được để trống.");
         }
 
@@ -35,7 +35,6 @@ public enum StudentChronicDiseaseStatus {
                 return status;
             }
         }
-        log.warn("No matching StudentChronicDiseaseStatus found for: '{}'", text);
         throw new IllegalArgumentException("Không tìm thấy trạng thái nào khớp với: " + text);
     }
 }

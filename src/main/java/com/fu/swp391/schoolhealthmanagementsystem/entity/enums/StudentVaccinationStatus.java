@@ -7,7 +7,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Getter
-@Slf4j
+@Schema(description = "Trạng thái tiêm chủng của học sinh ngoài trường")
 public enum StudentVaccinationStatus {
     PENDING("Chờ xử lý"),
     APPROVE("Chấp nhận"),
@@ -28,9 +28,7 @@ public enum StudentVaccinationStatus {
     public static StudentVaccinationStatus fromDisplayName(String text) {
         if (text == null || text.trim().isEmpty()) {
 
-            log.warn("Giá trị displayName đầu vào cho StudentVaccinationStatus là null hoặc rỗng. Ném IllegalArgumentException.");
             throw new IllegalArgumentException("Trạng thái tiêm chủng không được để trống.");
-
         }
 
         for (StudentVaccinationStatus status : values()) {
@@ -39,7 +37,6 @@ public enum StudentVaccinationStatus {
                 return status;
             }
         }
-        log.warn("Không tìm thấy StudentVaccinationStatus nào khớp với: '{}'", text);
         throw new IllegalArgumentException("No matching status for: " + text);
     }
 

@@ -1,13 +1,12 @@
 package com.fu.swp391.schoolhealthmanagementsystem.entity.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
 @Getter
 @Schema(description = "Loại mối quan hệ giữa phụ huynh và học sinh")
-@Slf4j
 public enum RelationshipType {
     FATHER("Bố"),
     MOTHER("Mẹ"),
@@ -16,34 +15,28 @@ public enum RelationshipType {
     GRANDMOTHER("Bà"),
     OTHER("Khác");
 
-    private final String vietnameseName;
+    private final String displayName;
 
-//    @JsonValue
-//    public String getVietnameseName() {
-//        return vietnameseName;
-//    }
-
-    RelationshipType(String vietnameseName) {
-        this.vietnameseName = vietnameseName;
+    @JsonValue
+    public String getDisplayName() {
+        return displayName;
     }
 
-    // Phương thức này sẽ được converter sử dụng để chuyển từ String (đọc từ DB) về Enum
-    public static RelationshipType fromString(String text) {
-        if (text == null || text.trim().isEmpty()) {
-            return OTHER;
+    @JsonCreator
+    public static RelationshipType fromDisplayName(String displayName) {
+        if (displayName == null || displayName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Display name không được để trống");
         }
-        for (RelationshipType b : RelationshipType.values()) {
-            if (b.vietnameseName.equalsIgnoreCase(text)) {
-                return b;
-            }
-            if (b.name().equalsIgnoreCase(text)) {
-                return b;
+        String trimmedDisplayName = displayName.trim();
+        for (RelationshipType type : RelationshipType.values()) {
+            if (type.displayName.equalsIgnoreCase(trimmedDisplayName) || type.name().equalsIgnoreCase(trimmedDisplayName)) {
+                return type;
             }
         }
-        // Nếu không tìm thấy, trả về OTHER như logic hiện tại của bạn
-        log.warn("Không tìm thấy RelationshipType cho giá trị: {}. Trả về OTHER.", text);
-        return OTHER;
+        throw new IllegalArgumentException("Không tìm thấy RelationshipType với displayName: " + displayName);
     }
 
-    // Lombok @Getter đã tạo getVietnameseName()
+    RelationshipType(String displayName) {
+        this.displayName = displayName;
+    }
 }

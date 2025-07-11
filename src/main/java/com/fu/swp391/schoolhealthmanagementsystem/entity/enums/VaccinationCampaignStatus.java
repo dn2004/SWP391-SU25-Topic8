@@ -36,18 +36,4 @@ public enum VaccinationCampaignStatus {
         }
         throw new IllegalArgumentException("Không tìm thấy VaccinationCampaignStatus với displayName: " + displayName);
     }
-
-    public static VaccinationCampaignStatus fromDisplayNameFallback(String displayName) {
-        for (VaccinationCampaignStatus status : VaccinationCampaignStatus.values()) {
-            if (status.getDisplayName().equalsIgnoreCase(displayName)) {
-                return status;
-            }
-        }
-        // Fallback to valueOf for direct enum name matching (e.g., "SCHEDULED")
-        try {
-            return VaccinationCampaignStatus.valueOf(displayName.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Không tìm thấy trạng thái chiến dịch tiêm chủng phù hợp cho giá trị: " + displayName);
-        }
-    }
 }
