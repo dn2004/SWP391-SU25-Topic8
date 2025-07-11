@@ -2,6 +2,7 @@ package com.fu.swp391.schoolhealthmanagementsystem.init;
 
 import com.fu.swp391.schoolhealthmanagementsystem.entity.*;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.HealthIncidentType;
+import com.fu.swp391.schoolhealthmanagementsystem.exception.InvalidOperationException;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.*;
 import com.fu.swp391.schoolhealthmanagementsystem.service.MedicalSupplyService; // Import service
 import lombok.RequiredArgsConstructor;
@@ -71,7 +72,7 @@ public class DemoHealthIncidentInitializer implements ApplicationRunner {
                 try {
                     medicalSupplyService.recordSupplyUsageForIncident(paracetamol, 1, savedIncident1, nurse);
                     log.info("Đã ghi nhận sử dụng Paracetamol cho sự cố ID {}.", savedIncident1.getIncidentId());
-                } catch (IllegalStateException e) {
+                } catch (InvalidOperationException e) {
                     log.warn("Không thể ghi nhận sử dụng Paracetamol cho sự cố ID {}: {}", savedIncident1.getIncidentId(), e.getMessage());
                 }
             } else {
@@ -101,7 +102,7 @@ public class DemoHealthIncidentInitializer implements ApplicationRunner {
                 try {
                     medicalSupplyService.recordSupplyUsageForIncident(bandage, 1, savedIncident2, nurse);
                     log.info("Đã ghi nhận sử dụng Băng gạc y tế cho sự cố ID {}.", savedIncident2.getIncidentId());
-                } catch (IllegalStateException e) {
+                } catch (InvalidOperationException e) {
                     log.warn("Không thể ghi nhận sử dụng Băng gạc y tế cho sự cố ID {}: {}", savedIncident2.getIncidentId(), e.getMessage());
                 }
             } else {

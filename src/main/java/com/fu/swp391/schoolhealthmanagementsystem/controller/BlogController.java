@@ -41,19 +41,19 @@ public class BlogController {
     private final BlogService blogService;
 
     @Operation(
-        summary = "Tạo một bài blog mới",
-        description = """
-### Mô tả
-Tạo một bài đăng blog mới. Người dùng hiện tại sẽ được gán làm tác giả.
-- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`, `MedicalStaff`, hoặc `StaffManager`.
-"""
+            summary = "Tạo một bài blog mới",
+            description = """
+                    ### Mô tả
+                    Tạo một bài đăng blog mới. Người dùng hiện tại sẽ được gán làm tác giả.
+                    - **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`, `MedicalStaff`, hoặc `StaffManager`.
+                    """
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "201", description = "Tạo thành công",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = BlogResponseDto.class))),
-        @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ", content = @Content),
-        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
+            @ApiResponse(responseCode = "201", description = "Tạo thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = BlogResponseDto.class))),
+            @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
     })
     @PreAuthorize("hasAnyRole('SchoolAdmin', 'MedicalStaff', 'StaffManager')")
     @PostMapping
@@ -64,20 +64,20 @@ Tạo một bài đăng blog mới. Người dùng hiện tại sẽ được g�
     }
 
     @Operation(
-        summary = "Lấy danh sách tất cả bài blog (công khai, có phân trang)",
-        description = """
-### Mô tả
-Lấy danh sách các bài đăng trên blog. Hỗ trợ tìm kiếm và lọc theo nhiều tiêu chí.
-- **Phân quyền:** 
-    - **Người dùng công khai:** Chỉ xem được các bài đăng có trạng thái `PUBLIC`.
-    - **`SchoolAdmin`, `StaffManager`:** Có thể xem tất cả các trạng thái và lọc theo ID tác giả.
-"""
+            summary = "Lấy danh sách tất cả bài blog (công khai, có phân trang)",
+            description = """
+                    ### Mô tả
+                    Lấy danh sách các bài đăng trên blog. Hỗ trợ tìm kiếm và lọc theo nhiều tiêu chí.
+                    - **Phân quyền:** 
+                        - **Người dùng công khai:** Chỉ xem được các bài đăng có trạng thái `PUBLIC`.
+                        - **`SchoolAdmin`, `StaffManager`:** Có thể xem tất cả các trạng thái và lọc theo ID tác giả.
+                    """
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Thành công",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class)))
+            @ApiResponse(responseCode = "200", description = "Thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class)))
     })
-    @GetMapping
+    @GetMapping()
     public ResponseEntity<Page<BlogResponseDto>> getAllBlogs(
             @Parameter(description = "Tìm kiếm tổng hợp trong tiêu đề, mô tả và nội dung") @RequestParam(required = false) String search,
             @Parameter(description = "Lọc theo tiêu đề bài đăng") @RequestParam(required = false) String title,
@@ -94,18 +94,18 @@ Lấy danh sách các bài đăng trên blog. Hỗ trợ tìm kiếm và lọc t
     }
 
     @Operation(
-        summary = "Lấy danh sách các bài blog của tôi (phân trang)",
-        description = """
-### Mô tả
-Lấy danh sách các bài đăng được tạo bởi chính người dùng đang đăng nhập.
-- **Phân quyền:** Yêu cầu người dùng đã xác thực.
-"""
+            summary = "Lấy danh sách các bài blog của tôi (phân trang)",
+            description = """
+                    ### Mô tả
+                    Lấy danh sách các bài đăng được tạo bởi chính người dùng đang đăng nhập.
+                    - **Phân quyền:** Yêu cầu người dùng đã xác thực.
+                    """
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Thành công",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
-        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
     })
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/my-blogs")
@@ -117,18 +117,18 @@ Lấy danh sách các bài đăng được tạo bởi chính người dùng đa
     }
 
     @Operation(
-        summary = "(Admin/Manager) Lấy danh sách các bài blog của một tác giả",
-        description = """
-### Mô tả
-Lấy danh sách các bài đăng được tạo bởi một tác giả cụ thể.
-- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin` hoặc `StaffManager`.
-"""
+            summary = "(Admin/Manager) Lấy danh sách các bài blog của một tác giả",
+            description = """
+                    ### Mô tả
+                    Lấy danh sách các bài đăng được tạo bởi một tác giả cụ thể.
+                    - **Phân quyền:** Yêu cầu vai trò `SchoolAdmin` hoặc `StaffManager`.
+                    """
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Thành công",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
-        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
     })
     @PreAuthorize("hasAnyRole('SchoolAdmin', 'StaffManager')")
     @GetMapping("/author/{authorId}")
@@ -142,20 +142,20 @@ Lấy danh sách các bài đăng được tạo bởi một tác giả cụ th�
     }
 
     @Operation(
-        summary = "Lấy thông tin chi tiết một bài blog bằng ID (công khai)",
-        description = """
-### Mô tả
-Lấy thông tin chi tiết của một bài đăng bằng ID.
-- **Phân quyền:** 
-    - **Người dùng công khai:** Chỉ xem được bài đăng có trạng thái `PUBLIC`.
-    - **Tác giả, `SchoolAdmin`, `StaffManager`:** Có thể xem các trạng thái khác.
-"""
+            summary = "Lấy thông tin chi tiết một bài blog bằng ID (công khai)",
+            description = """
+                    ### Mô tả
+                    Lấy thông tin chi tiết của một bài đăng bằng ID.
+                    - **Phân quyền:** 
+                        - **Người dùng công khai:** Chỉ xem được bài đăng có trạng thái `PUBLIC`.
+                        - **Tác giả, `SchoolAdmin`, `StaffManager`:** Có thể xem các trạng thái khác.
+                    """
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Thành công",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = BlogResponseDto.class))),
-        @ApiResponse(responseCode = "403", description = "Không có quyền xem bài đăng này", content = @Content),
-        @ApiResponse(responseCode = "404", description = "Không tìm thấy bài đăng", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = BlogResponseDto.class))),
+            @ApiResponse(responseCode = "403", description = "Không có quyền xem bài đăng này", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy bài đăng", content = @Content)
     })
     @GetMapping("/{blogId}")
     public ResponseEntity<BlogResponseDto> getBlogById(
@@ -166,20 +166,20 @@ Lấy thông tin chi tiết của một bài đăng bằng ID.
     }
 
     @Operation(
-        summary = "Lấy thông tin chi tiết một bài blog bằng slug (công khai)",
-        description = """
-### Mô tả
-Lấy thông tin chi tiết của một bài đăng bằng slug (đường dẫn thân thiện).
-- **Phân quyền:** 
-    - **Người dùng công khai:** Chỉ xem được bài đăng có trạng thái `PUBLIC`.
-    - **Tác giả, `SchoolAdmin`, `StaffManager`:** Có thể xem các trạng thái khác.
-"""
+            summary = "Lấy thông tin chi tiết một bài blog bằng slug (công khai)",
+            description = """
+                    ### Mô tả
+                    Lấy thông tin chi tiết của một bài đăng bằng slug (đường dẫn thân thiện).
+                    - **Phân quyền:** 
+                        - **Người dùng công khai:** Chỉ xem được bài đăng có trạng thái `PUBLIC`.
+                        - **Tác giả, `SchoolAdmin`, `StaffManager`:** Có thể xem các trạng thái khác.
+                    """
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Thành công",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = BlogResponseDto.class))),
-        @ApiResponse(responseCode = "403", description = "Không có quyền xem bài đăng này", content = @Content),
-        @ApiResponse(responseCode = "404", description = "Không tìm thấy bài đăng", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = BlogResponseDto.class))),
+            @ApiResponse(responseCode = "403", description = "Không có quyền xem bài đăng này", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy bài đăng", content = @Content)
     })
     @GetMapping("/slug/{slug}")
     public ResponseEntity<BlogResponseDto> getBlogBySlug(
@@ -190,20 +190,20 @@ Lấy thông tin chi tiết của một bài đăng bằng slug (đường dẫn
     }
 
     @Operation(
-        summary = "Cập nhật một bài blog",
-        description = """
-### Mô tả
-Cập nhật nội dung của một bài đăng.
-- **Phân quyền:** Chỉ tác giả của bài đăng mới có thể cập nhật.
-"""
+            summary = "Cập nhật một bài blog",
+            description = """
+                    ### Mô tả
+                    Cập nhật nội dung của một bài đăng.
+                    - **Phân quyền:** Chỉ tác giả của bài đăng mới có thể cập nhật.
+                    """
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Cập nhật thành công",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = BlogResponseDto.class))),
-        @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ", content = @Content),
-        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
-        @ApiResponse(responseCode = "404", description = "Không tìm thấy bài đăng", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Cập nhật thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = BlogResponseDto.class))),
+            @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy bài đăng", content = @Content)
     })
     @PreAuthorize("hasAnyRole('SchoolAdmin', 'MedicalStaff')") // Vẫn cần quyền cơ bản để viết blog
     @PutMapping("/{blogId}")
@@ -216,20 +216,20 @@ Cập nhật nội dung của một bài đăng.
     }
 
     @Operation(
-        summary = "(Admin/Manager) Cập nhật trạng thái một bài blog",
-        description = """
-### Mô tả
-Cập nhật trạng thái của một bài đăng (ví dụ: duyệt bài từ `DRAFT` sang `PUBLIC`).
-- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin` hoặc `StaffManager`.
-"""
+            summary = "(Admin/Manager) Cập nhật trạng thái một bài blog",
+            description = """
+                    ### Mô tả
+                    Cập nhật trạng thái của một bài đăng (ví dụ: duyệt bài từ `DRAFT` sang `PUBLIC`).
+                    - **Phân quyền:** Yêu cầu vai trò `SchoolAdmin` hoặc `StaffManager`.
+                    """
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Cập nhật trạng thái thành công",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = BlogResponseDto.class))),
-        @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ", content = @Content),
-        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
-        @ApiResponse(responseCode = "404", description = "Không tìm thấy bài đăng", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Cập nhật trạng thái thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = BlogResponseDto.class))),
+            @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy bài đăng", content = @Content)
     })
     @PreAuthorize("hasAnyRole('SchoolAdmin', 'StaffManager', 'MedicalStaff')")
     @PatchMapping("/{blogId}/status")
@@ -242,18 +242,18 @@ Cập nhật trạng thái của một bài đăng (ví dụ: duyệt bài từ 
     }
 
     @Operation(
-        summary = "Xóa một bài blog",
-        description = """
-### Mô tả
-Xóa một bài đăng.
-- **Phân quyền:** Chỉ tác giả của bài đăng hoặc người dùng có vai trò `SchoolAdmin` mới có thể xóa.
-"""
+            summary = "Xóa một bài blog",
+            description = """
+                    ### Mô tả
+                    Xóa một bài đăng.
+                    - **Phân quyền:** Chỉ tác giả của bài đăng hoặc người dùng có vai trò `SchoolAdmin` mới có thể xóa.
+                    """
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "204", description = "Xóa thành công", content = @Content),
-        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
-        @ApiResponse(responseCode = "404", description = "Không tìm thấy bài đăng", content = @Content)
+            @ApiResponse(responseCode = "204", description = "Xóa thành công", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy bài đăng", content = @Content)
     })
     @PreAuthorize("hasAnyRole('SchoolAdmin', 'MedicalStaff', 'StaffManager')")
     @DeleteMapping("/{blogId}")

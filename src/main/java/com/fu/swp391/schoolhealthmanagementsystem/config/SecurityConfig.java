@@ -25,7 +25,8 @@ import java.util.Arrays;
 public class SecurityConfig {
     private static final String[] PUBLIC_ENDPOINTS = {
             "/api/auth/**",
-            "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html"
+            "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html",
+            "/api/blogs",
     };
 
     @Autowired

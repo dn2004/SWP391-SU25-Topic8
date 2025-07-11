@@ -17,9 +17,8 @@ public interface VaccinationConsentMapper {
     @Mapping(source = "student.className", target = "studentClass")
     @Mapping(source = "parent.userId", target = "parentId")
     @Mapping(source = "parent.fullName", target = "parentName")
+    @Mapping(source = "medicalNotes", target = "medicalNotes")
     VaccinationConsentResponseDto toDto(VaccinationConsent entity);
-
-    List<VaccinationConsentResponseDto> toDtoList(List<VaccinationConsent> entities);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "consentId", ignore = true)

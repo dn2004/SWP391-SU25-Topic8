@@ -26,14 +26,16 @@ public enum Gender {
 
     @JsonCreator
     public static Gender fromDisplayName(String displayName) {
-        if (displayName == null || displayName.isEmpty()) {
+        if (displayName == null || displayName.trim().isEmpty()) {
             throw new IllegalArgumentException("Display name không được để trống");
         }
+        String trimmedDisplayName = displayName.trim();
         for (Gender gender : Gender.values()) {
-            if (gender.displayName.equalsIgnoreCase(displayName) || gender.name().equalsIgnoreCase(displayName)) {
+            if (gender.getDisplayName().equalsIgnoreCase(trimmedDisplayName) || gender.name().equalsIgnoreCase(trimmedDisplayName)) {
                 return gender;
             }
         }
-        throw new IllegalArgumentException("Không tìm thấy giới tính với tên hiển thị: " + displayName);
+        // If no match is found, throw a clear exception.
+        throw new IllegalArgumentException("Không tìm thấy giới tính phù hợp với giá trị: '" + displayName + "'. Các giá trị hợp lệ là 'Nam', 'Nữ', 'MALE', 'FEMALE'.");
     }
 }

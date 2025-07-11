@@ -9,6 +9,7 @@ import com.fu.swp391.schoolhealthmanagementsystem.dto.incident.CreateHealthIncid
 import com.fu.swp391.schoolhealthmanagementsystem.dto.incident.HealthIncidentResponseDto;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.incident.HealthIncidentSupplyUsageDto;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.*;
+import com.fu.swp391.schoolhealthmanagementsystem.exception.InvalidOperationException;
 import com.fu.swp391.schoolhealthmanagementsystem.exception.ResourceNotFoundException;
 import com.fu.swp391.schoolhealthmanagementsystem.mapper.HealthIncidentMapper;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.HealthIncidentRepository;
@@ -67,12 +68,12 @@ public class HealthIncidentService {
                         .orElseThrow(() -> new ResourceNotFoundException("Medical supply not found with ID: " + usageDto.supplyId()));
 
                 if (supply.getStatus() == MedicalSupplyStatus.DISPOSE || supply.getStatus() == MedicalSupplyStatus.EXPIRED) {
-                    throw new IllegalStateException("Medical supply '" + supply.getName() + "' (ID: " + supply.getSupplyId() +
+                    throw new InvalidOperationException("Medical supply '" + supply.getName() + "' (ID: " + supply.getSupplyId() +
                             ") has status " + supply.getStatus() + " and cannot be used.");
                 }
 
                 if (supply.getCurrentStock() < usageDto.quantityUsed()) {
-                    throw new IllegalStateException("Insufficient stock for medical supply '" + supply.getName() + "'. Requested: " +
+                    throw new InvalidOperationException("Insufficient stock for medical supply '" + supply.getName() + "'. Requested: " +
                             usageDto.quantityUsed() + ", Available: " + supply.getCurrentStock());
                 }
             }
@@ -87,12 +88,12 @@ public class HealthIncidentService {
                         .orElseThrow(() -> new ResourceNotFoundException("Medical supply not found with ID: " + usageDto.supplyId()));
 
                 if (supply.getStatus() == MedicalSupplyStatus.DISPOSE || supply.getStatus() == MedicalSupplyStatus.EXPIRED) {
-                    throw new IllegalStateException("Medical supply '" + supply.getName() + "' (ID: " + supply.getSupplyId() +
+                    throw new InvalidOperationException("Medical supply '" + supply.getName() + "' (ID: " + supply.getSupplyId() +
                             ") has status " + supply.getStatus() + " and cannot be used.");
                 }
 
                 if (supply.getCurrentStock() < usageDto.quantityUsed()) {
-                    throw new IllegalStateException("Insufficient stock for medical supply '" + supply.getName() + "'. Requested: " +
+                    throw new InvalidOperationException("Insufficient stock for medical supply '" + supply.getName() + "'. Requested: " +
                             usageDto.quantityUsed() + ", Available: " + supply.getCurrentStock());
                 }
 
@@ -121,7 +122,7 @@ public class HealthIncidentService {
 
         // Fetch again to get the fully populated incident with transactions for the response
         HealthIncident finalIncidentWithTransactions = healthIncidentRepository.findById(savedIncident.getIncidentId())
-                .orElseThrow(() -> new IllegalStateException("Could not retrieve the newly created incident: " + savedIncident.getIncidentId()));
+                .orElseThrow(() -> new InvalidOperationException("Could not retrieve the newly created incident: " + savedIncident.getIncidentId()));
 
         log.info("Health incident ID: {} created for student {}, recorded by {}",
                 finalIncidentWithTransactions.getIncidentId(), student.getFullName(), currentUser.getFullName());
@@ -157,7 +158,7 @@ public class HealthIncidentService {
         if (studentOfIncident == null) {
             // Trường hợp này không nên xảy ra nếu DB constraint đúng
             log.error("Health incident ID {} is not associated with any student.", incidentId);
-            throw new IllegalStateException("Health incident data is corrupted: no associated student.");
+            throw new InvalidOperationException("Health incident data is corrupted: no associated student.");
         }
 
         // Authorization check
@@ -293,7 +294,7 @@ public class HealthIncidentService {
         if (incident.getCreatedAt().isBefore(LocalDateTime.now().minusDays(1))) {
             log.warn("User {} attempted to update health incident ID {} which was created more than 1 day ago.",
                     currentUser.getEmail(), incidentId);
-            throw new IllegalStateException("Cannot update a health incident that was created more than 1 day ago.");
+            throw new InvalidOperationException("Cannot update a health incident that was created more than 1 day ago.");
         }
 
         // Authorization: Only the recorder or specific admin roles can update
@@ -368,14 +369,14 @@ public class HealthIncidentService {
         // Bước 2: Kiểm tra xem nó đã bị xóa mềm trước đó chưa.
         if (incidentToSoftDelete.isDeleted()) {
             log.warn("User {} attempted to delete an already soft-deleted health incident ID: {}", currentUser.getEmail(), incidentId);
-            throw new IllegalStateException("Health incident with ID " + incidentId + " is already deleted.");
+            throw new InvalidOperationException("Health incident with ID " + incidentId + " is already deleted.");
         }
 
         // Bước 3: Kiểm tra quyền và điều kiện xóa (trong ngày, đúng vai trò)
         if (!incidentToSoftDelete.getCreatedAt().toLocalDate().isEqual(LocalDate.now())) {
             log.warn("User {} attempted to delete health incident ID {} which was not created today.",
                     currentUser.getEmail(), incidentId);
-            throw new IllegalStateException("Cannot delete a health incident that was not created today. Deletion is only allowed on the day of creation.");
+            throw new InvalidOperationException("Cannot delete a health incident that was not created today. Deletion is only allowed on the day of creation.");
         }
 
         User recordedUser = incidentToSoftDelete.getRecordedByUser();

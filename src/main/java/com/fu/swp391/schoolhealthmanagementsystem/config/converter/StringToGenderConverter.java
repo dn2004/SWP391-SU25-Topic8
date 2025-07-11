@@ -20,13 +20,13 @@ public class StringToGenderConverter implements Converter<String, Gender> {
         }
 
         try {
-            Gender result = Gender.fromDisplayName(source);
+            Gender result = Gender.fromDisplayName(source.trim());
             log.debug("Đã chuyển đổi thành công '{}' thành enum '{}'", source, result);
             return result;
         } catch (IllegalArgumentException e) {
-            log.error("Chuyển đổi không thành công cho chuỗi '{}' thành Gender. Lỗi: {}",
-                    source, e.getMessage());
-            throw e;
+            log.error("Chuyển đổi không thành công cho chuỗi '{}' thành Gender. Lỗi: {}", source, e.getMessage());
+            // Throw a more descriptive exception for Spring to handle
+            throw new IllegalArgumentException(String.format("Giá trị '%s' không hợp lệ cho Gender. Các giá trị được chấp nhận: 'Nam', 'Nữ', 'MALE', 'FEMALE'", source), e);
         }
     }
 }

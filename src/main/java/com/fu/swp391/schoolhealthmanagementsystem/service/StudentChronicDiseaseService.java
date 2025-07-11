@@ -10,6 +10,7 @@ import com.fu.swp391.schoolhealthmanagementsystem.entity.User;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentChronicDiseaseStatus;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.UserRole;
 import com.fu.swp391.schoolhealthmanagementsystem.exception.FileStorageException;
+import com.fu.swp391.schoolhealthmanagementsystem.exception.InvalidOperationException;
 import com.fu.swp391.schoolhealthmanagementsystem.exception.ResourceNotFoundException;
 import com.fu.swp391.schoolhealthmanagementsystem.mapper.StudentChronicDiseaseMapper;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.StudentChronicDiseaseRepository;
@@ -90,7 +91,7 @@ public class StudentChronicDiseaseService {
 
         Student student = existingEntity.getStudent();
         if (student == null) {
-            throw new IllegalStateException("Hồ sơ bệnh mãn tính không liên kết với học sinh nào.");
+            throw new InvalidOperationException("Hồ sơ bệnh mãn tính không liên kết với học sinh nào.");
         }
 
         if (currentUser.getRole() == UserRole.Parent) {
@@ -177,7 +178,7 @@ public class StudentChronicDiseaseService {
 
         Student student = entity.getStudent();
         if (student == null) {
-            throw new IllegalStateException("Hồ sơ không liên kết với học sinh.");
+            throw new InvalidOperationException("Hồ sơ không liên kết với học sinh.");
         }
 
         if (currentUser.getRole() == UserRole.Parent) {
@@ -208,7 +209,7 @@ public class StudentChronicDiseaseService {
 
         Student student = entity.getStudent();
         if (student == null) {
-            throw new IllegalStateException("Hồ sơ không liên kết với học sinh.");
+            throw new InvalidOperationException("Hồ sơ không liên kết với học sinh.");
         }
 
         if (currentUser.getRole() == UserRole.Parent) {
@@ -259,7 +260,7 @@ public class StudentChronicDiseaseService {
 
         Student student = entity.getStudent();
         if (student == null) {
-            throw new IllegalStateException("Hồ sơ không liên kết với học sinh.");
+            throw new InvalidOperationException("Hồ sơ không liên kết với học sinh.");
         }
 
         if (currentUser.getRole() == UserRole.Parent) {

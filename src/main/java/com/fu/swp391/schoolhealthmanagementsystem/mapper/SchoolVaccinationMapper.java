@@ -20,8 +20,6 @@ public interface SchoolVaccinationMapper {
     @Mapping(source = "administeredByUser.fullName", target = "administeredByUserName")
     SchoolVaccinationResponseDto toDto(SchoolVaccination entity);
 
-    List<SchoolVaccinationResponseDto> toDtoList(List<SchoolVaccination> entities);
-
     @Mapping(target = "schoolVaccinationId", ignore = true)
     @Mapping(target = "campaign", ignore = true)
     @Mapping(target = "student", ignore = true)

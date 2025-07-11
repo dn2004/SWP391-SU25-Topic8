@@ -46,29 +46,23 @@ public interface StudentChronicDiseaseMapper {
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "student", ignore = true)
+    @Mapping(target = "diseaseName", ignore = true)
+    @Mapping(target = "diagnosedDate", ignore = true)
+    @Mapping(target = "diagnosingDoctor", ignore = true)
+    @Mapping(target = "notes", ignore = true)
+    @Mapping(target = "attachmentFileOriginalName", ignore = true)
+    @Mapping(target = "attachmentFileType", ignore = true)
+    @Mapping(target = "status", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "createdByUser", ignore = true)
     @Mapping(target = "updatedByUser", ignore = true)
     @Mapping(target = "approvedByUser", ignore = true)
     @Mapping(target = "approvedAt", ignore = true)
     @Mapping(target = "approverNotes", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "attachmentFileOriginalName", ignore = true)
-    @Mapping(target = "attachmentFileType", ignore = true)
-    @Mapping(target = "attachmentPublicId", ignore = true)
-    @Mapping(target = "attachmentResourceType", ignore = true)
-    @Mapping(target = "status", ignore = true)
     void updateEntityFromDto(StudentChronicDiseaseRequestDto dto, @MappingTarget StudentChronicDisease entity);
 
     @Mapping(target = "attachmentPublicId", source = "publicId")
     @Mapping(target = "attachmentResourceType", source = "resourceType")
     void updateAttachmentFileDetailsFromUploadResult(CloudinaryUploadResponse uploadResult, @MappingTarget StudentChronicDisease entity);
-
-    default void clearAttachmentFileDetails(@MappingTarget StudentChronicDisease entity) {
-        entity.setAttachmentFileOriginalName(null);
-        entity.setAttachmentFileType(null);
-        entity.setAttachmentPublicId(null);
-        entity.setAttachmentResourceType(null);
-    }
-
 }

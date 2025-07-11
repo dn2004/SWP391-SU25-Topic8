@@ -16,8 +16,5 @@ public interface ScheduledMedicationTaskMapper {
     @Mapping(source = "administeredByStaff.userId", target = "administeredByStaffId")
     @Mapping(source = "administeredByStaff.fullName", target = "administeredByStaffName")
     ScheduledMedicationTaskResponseDto toDto(ScheduledMedicationTask entity);
-
-    List<ScheduledMedicationTaskResponseDto> toDtos(List<ScheduledMedicationTask> entities);
-
     // Các mapping khác cho việc tạo/cập nhật task nếu có
 }

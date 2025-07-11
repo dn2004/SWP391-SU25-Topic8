@@ -1,6 +1,6 @@
 package com.fu.swp391.schoolhealthmanagementsystem.controller;
 
-import com.fu.swp391.schoolhealthmanagementsystem.dto.ErrorResponseDto; // Giả sử bạn có DTO này
+import com.fu.swp391.schoolhealthmanagementsystem.dto.ErrorResponseDto;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.student.vaccination.StudentVaccinationRequestDto;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.student.vaccination.StudentVaccinationResponseDto;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.student.vaccination.VaccinationStatusUpdateRequestDto;
@@ -43,25 +43,25 @@ public class StudentVaccinationController {
 
     @Operation(summary = "Thêm mới thông tin tiêm chủng cho học sinh",
             description = """
-### Mô tả
-Thêm thông tin một mũi tiêm chủng cho học sinh, có thể đính kèm file bằng chứng.
-- **Phân quyền:**
-    - `Parent`: Thêm cho con mình, trạng thái mặc định là `PENDING`.
-    - `MedicalStaff`, `StaffManager`, `SchoolAdmin`: Thêm cho bất kỳ học sinh nào, trạng thái mặc định là `APPROVED`.
-- **Thông báo:** Nếu phụ huynh thêm, hệ thống sẽ gửi thông báo đến nhân viên y tế để duyệt.
-"""
+                    ### Mô tả
+                    Thêm thông tin một mũi tiêm chủng cho học sinh, có thể đính kèm file bằng chứng.
+                    - **Phân quyền:**
+                        - `Parent`: Thêm cho con mình, trạng thái mặc định là `PENDING`.
+                        - `MedicalStaff`, `StaffManager`, `SchoolAdmin`: Thêm cho bất kỳ học sinh nào, trạng thái mặc định là `APPROVED`.
+                    - **Thông báo:** Nếu phụ huynh thêm, hệ thống sẽ gửi thông báo đến nhân viên y tế để duyệt.
+                    """
     )
     @ApiResponses(value = {
-    @ApiResponse(responseCode = "201", description = "Tạo thành công",
-            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = StudentVaccinationResponseDto.class))),
-    @ApiResponse(responseCode = "400", description = "Dữ liệu không hợp lệ",
-            content = @Content),
-    @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-    @ApiResponse(responseCode = "403", description = "Phụ huynh không có liên kết với học sinh này",
-            content = @Content),
-    @ApiResponse(responseCode = "404", description = "Học sinh không tìm thấy",
-            content = @Content)
+            @ApiResponse(responseCode = "201", description = "Tạo thành công",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = StudentVaccinationResponseDto.class))),
+            @ApiResponse(responseCode = "400", description = "Dữ liệu không hợp lệ",
+                    content = @Content),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Phụ huynh không có liên kết với học sinh này",
+                    content = @Content),
+            @ApiResponse(responseCode = "404", description = "Học sinh không tìm thấy",
+                    content = @Content)
     })
     @PreAuthorize("isAuthenticated()")
     @PostMapping(path = "/students/{studentId}/vaccinations", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
@@ -75,21 +75,21 @@ Thêm thông tin một mũi tiêm chủng cho học sinh, có thể đính kèm 
 
     @Operation(summary = "Lấy thông tin tiêm chủng theo ID bản ghi tiêm chủng",
             description = """
-### Mô tả
-Lấy thông tin chi tiết của một bản ghi tiêm chủng.
-- **Phân quyền:**
-    - `Parent`: Chỉ xem được của con mình.
-    - `MedicalStaff`, `StaffManager`, `SchoolAdmin`: Có thể xem của bất kỳ ai.
-"""
+                    ### Mô tả
+                    Lấy thông tin chi tiết của một bản ghi tiêm chủng.
+                    - **Phân quyền:**
+                        - `Parent`: Chỉ xem được của con mình.
+                        - `MedicalStaff`, `StaffManager`, `SchoolAdmin`: Có thể xem của bất kỳ ai.
+                    """
     )
     @ApiResponses(value = {
-    @ApiResponse(responseCode = "200", description = "Thành công",
-            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = StudentVaccinationResponseDto.class))),
-    @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-    @ApiResponse(responseCode = "403", description = "Phụ huynh không có quyền xem bản ghi này (không có liên kết với học sinh)",
-            content = @Content),
-    @ApiResponse(responseCode = "404", description = "Bản ghi tiêm chủng không tìm thấy",
-            content = @Content)
+            @ApiResponse(responseCode = "200", description = "Thành công",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = StudentVaccinationResponseDto.class))),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Phụ huynh không có quyền xem bản ghi này (không có liên kết với học sinh)",
+                    content = @Content),
+            @ApiResponse(responseCode = "404", description = "Bản ghi tiêm chủng không tìm thấy",
+                    content = @Content)
     })
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/vaccinations/{vaccinationId}")
@@ -103,24 +103,24 @@ Lấy thông tin chi tiết của một bản ghi tiêm chủng.
 
     @Operation(summary = "Cập nhật thông tin tiêm chủng cho học sinh",
             description = """
-### Mô tả
-Cập nhật thông tin của một bản ghi tiêm chủng.
-- **Phân quyền:**
-    - `Parent`: Chỉ sửa được hồ sơ `PENDING` của con mình. Sau khi sửa, trạng thái vẫn là `PENDING` và cần duyệt lại.
-    - `MedicalStaff`, `StaffManager`, `SchoolAdmin`: Không sửa được hồ sơ `PENDING` (phải duyệt), chỉ sửa được các hồ sơ đã được duyệt.
-- **Thông báo:** Nếu phụ huynh cập nhật, hệ thống sẽ gửi thông báo đến nhân viên y tế để duyệt lại.
-"""
+                    ### Mô tả
+                    Cập nhật thông tin của một bản ghi tiêm chủng.
+                    - **Phân quyền:**
+                        - `Parent`: Chỉ sửa được hồ sơ `PENDING` của con mình. Sau khi sửa, trạng thái vẫn là `PENDING` và cần duyệt lại.
+                        - `MedicalStaff`, `StaffManager`, `SchoolAdmin`: Không sửa được hồ sơ `PENDING` (phải duyệt), chỉ sửa được các hồ sơ đã được duyệt.
+                    - **Thông báo:** Nếu phụ huynh cập nhật, hệ thống sẽ gửi thông báo đến nhân viên y tế để duyệt lại.
+                    """
     )
     @ApiResponses(value = {
-    @ApiResponse(responseCode = "200", description = "Cập nhật thành công",
-            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = StudentVaccinationResponseDto.class))),
-    @ApiResponse(responseCode = "400", description = "Dữ liệu không hợp lệ",
-            content = @Content),
-    @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-    @ApiResponse(responseCode = "403", description = "Không có quyền cập nhật bản ghi này (phụ huynh không có liên kết với học sinh hoặc bản ghi không ở trạng thái cho phép)",
-            content = @Content),
-    @ApiResponse(responseCode = "404", description = "Bản ghi tiêm chủng không tìm thấy",
-            content = @Content)
+            @ApiResponse(responseCode = "200", description = "Cập nhật thành công",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = StudentVaccinationResponseDto.class))),
+            @ApiResponse(responseCode = "400", description = "Dữ liệu không hợp lệ",
+                    content = @Content),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền cập nhật bản ghi này (phụ huynh không có liên kết với học sinh hoặc bản ghi không ở trạng thái cho phép)",
+                    content = @Content),
+            @ApiResponse(responseCode = "404", description = "Bản ghi tiêm chủng không tìm thấy",
+                    content = @Content)
     })
     @PreAuthorize("hasAnyRole('Parent', 'SchoolAdmin', 'MedicalStaff', 'StaffManager')")
     @PutMapping(value = "/vaccinations/{vaccinationId}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
@@ -135,22 +135,22 @@ Cập nhật thông tin của một bản ghi tiêm chủng.
 
     @Operation(summary = "Duyệt/Thay đổi trạng thái bản ghi tiêm chủng",
             description = """
-### Mô tả
-Duyệt một bản ghi tiêm chủng đang ở trạng thái `PENDING`.
-- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`, `MedicalStaff` hoặc `StaffManager`.
-- **Thông báo:** Gửi thông báo đến phụ huynh về kết quả duyệt (chấp nhận hoặc từ chối).
-"""
+                    ### Mô tả
+                    Duyệt một bản ghi tiêm chủng đang ở trạng thái `PENDING`.
+                    - **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`, `MedicalStaff` hoặc `StaffManager`.
+                    - **Thông báo:** Gửi thông báo đến phụ huynh về kết quả duyệt (chấp nhận hoặc từ chối).
+                    """
     )
     @ApiResponses(value = {
-    @ApiResponse(responseCode = "200", description = "Cập nhật trạng thái thành công",
-            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = StudentVaccinationResponseDto.class))),
-    @ApiResponse(responseCode = "400", description = "Bản ghi không ở trạng thái PENDING hoặc trạng thái mới không hợp lệ",
-            content = @Content),
-    @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-    @ApiResponse(responseCode = "403", description = "Không có quyền duyệt bản ghi",
-            content = @Content),
-    @ApiResponse(responseCode = "404", description = "Bản ghi tiêm chủng không tìm thấy",
-            content = @Content)
+            @ApiResponse(responseCode = "200", description = "Cập nhật trạng thái thành công",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = StudentVaccinationResponseDto.class))),
+            @ApiResponse(responseCode = "400", description = "Bản ghi không ở trạng thái PENDING hoặc trạng thái mới không hợp lệ",
+                    content = @Content),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền duyệt bản ghi",
+                    content = @Content),
+            @ApiResponse(responseCode = "404", description = "Bản ghi tiêm chủng không tìm thấy",
+                    content = @Content)
     })
     @PreAuthorize("hasAnyRole('SchoolAdmin', 'MedicalStaff', 'StaffManager')")
     @PatchMapping("/vaccinations/{vaccinationId}/status")
@@ -165,20 +165,20 @@ Duyệt một bản ghi tiêm chủng đang ở trạng thái `PENDING`.
 
     @Operation(summary = "Xóa thông tin tiêm chủng",
             description = """
-### Mô tả
-Xóa một bản ghi tiêm chủng.
-- **Phân quyền:**
-    - `Parent`: Chỉ xóa được hồ sơ `PENDING` của con mình.
-    - `SchoolAdmin`: Có thể xóa bất kỳ hồ sơ nào.
-"""
+                    ### Mô tả
+                    Xóa một bản ghi tiêm chủng.
+                    - **Phân quyền:**
+                        - `Parent`: Chỉ xóa được hồ sơ `PENDING` của con mình.
+                        - `SchoolAdmin`: Có thể xóa bất kỳ hồ sơ nào.
+                    """
     )
     @ApiResponses(value = {
-    @ApiResponse(responseCode = "204", description = "Xóa thành công"),
-    @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-    @ApiResponse(responseCode = "403", description = "Không có quyền xóa bản ghi này (phụ huynh không có liên kết với học sinh hoặc bản ghi không ở trạng thái PENDING)",
-            content = @Content),
-    @ApiResponse(responseCode = "404", description = "Bản ghi tiêm chủng không tìm thấy",
-            content = @Content)
+            @ApiResponse(responseCode = "204", description = "Xóa thành công"),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền xóa bản ghi này (phụ huynh không có liên kết với học sinh hoặc bản ghi không ở trạng thái PENDING)",
+                    content = @Content),
+            @ApiResponse(responseCode = "404", description = "Bản ghi tiêm chủng không tìm thấy",
+                    content = @Content)
     })
     @PreAuthorize("hasAnyRole('Parent', 'SchoolAdmin')") // Chỉ Parent hoặc SchoolAdmin được gọi API này
     @DeleteMapping("/vaccinations/{vaccinationId}")
@@ -191,22 +191,22 @@ Xóa một bản ghi tiêm chủng.
 
     @Operation(summary = "Lấy danh sách tất cả thông tin tiêm chủng của một học sinh (phân trang)",
             description = """
-### Mô tả
-Lấy danh sách các mũi tiêm đã ghi nhận cho một học sinh.
-- **Phân quyền:**
-    - `Parent`: Chỉ xem được của con mình.
-    - `MedicalStaff`, `StaffManager`, `SchoolAdmin`: Có thể xem của bất kỳ ai.
-"""
+                    ### Mô tả
+                    Lấy danh sách các mũi tiêm đã ghi nhận cho một học sinh.
+                    - **Phân quyền:**
+                        - `Parent`: Chỉ xem được của con mình.
+                        - `MedicalStaff`, `StaffManager`, `SchoolAdmin`: Có thể xem của bất kỳ ai.
+                    """
     )
     @ApiResponses(value = {
-    @ApiResponse(responseCode = "200", description = "Thành công",
-            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = Page.class))), // Response là một Page của StudentVaccinationResponseDto
-    @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-    @ApiResponse(responseCode = "403", description = "Phụ huynh không có quyền xem danh sách này (không có liên kết với học sinh)",
-            content = @Content),
-    @ApiResponse(responseCode = "404", description = "Học sinh không tìm thấy",
-            content = @Content)
+            @ApiResponse(responseCode = "200", description = "Thành công",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = Page.class))), // Response là một Page của StudentVaccinationResponseDto
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Phụ huynh không có quyền xem danh sách này (không có liên kết với học sinh)",
+                    content = @Content),
+            @ApiResponse(responseCode = "404", description = "Học sinh không tìm thấy",
+                    content = @Content)
     })
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/students/{studentId}/vaccinations")
@@ -231,18 +231,18 @@ Lấy danh sách các mũi tiêm đã ghi nhận cho một học sinh.
 
     @Operation(summary = "Lấy danh sách tất cả thông tin tiêm chủng (phân trang, có bộ lọc)",
             description = """
-### Mô tả
-Lấy danh sách tất cả các bản ghi tiêm chủng trong hệ thống.
-- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`, `MedicalStaff` hoặc `StaffManager`.
-"""
+                    ### Mô tả
+                    Lấy danh sách tất cả các bản ghi tiêm chủng trong hệ thống.
+                    - **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`, `MedicalStaff` hoặc `StaffManager`.
+                    """
     )
     @ApiResponses(value = {
-    @ApiResponse(responseCode = "200", description = "Thành công",
-            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = Page.class))),
-    @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-    @ApiResponse(responseCode = "403", description = "Không có quyền xem danh sách này",
-            content = @Content)
+            @ApiResponse(responseCode = "200", description = "Thành công",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = Page.class))),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền xem danh sách này",
+                    content = @Content)
     })
     @PreAuthorize("hasAnyRole('SchoolAdmin', 'MedicalStaff', 'StaffManager')")
     @GetMapping("/vaccinations")
@@ -268,18 +268,18 @@ Lấy danh sách tất cả các bản ghi tiêm chủng trong hệ thống.
 
     @Operation(summary = "Lấy danh sách các bản ghi tiêm chủng đang chờ duyệt",
             description = """
-### Mô tả
-Lấy danh sách các bản ghi tiêm chủng có trạng thái `PENDING` để nhân viên y tế duyệt.
-- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`, `MedicalStaff` hoặc `StaffManager`.
-"""
+                    ### Mô tả
+                    Lấy danh sách các bản ghi tiêm chủng có trạng thái `PENDING` để nhân viên y tế duyệt.
+                    - **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`, `MedicalStaff` hoặc `StaffManager`.
+                    """
     )
     @ApiResponses(value = {
-    @ApiResponse(responseCode = "200", description = "Thành công",
-            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = Page.class))),
-    @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-    @ApiResponse(responseCode = "403", description = "Không có quyền xem danh sách này",
-            content = @Content)
+            @ApiResponse(responseCode = "200", description = "Thành công",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = Page.class))),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền xem danh sách này",
+                    content = @Content)
     })
     @PreAuthorize("hasAnyRole('SchoolAdmin', 'MedicalStaff', 'StaffManager')")
     @GetMapping("/vaccinations/pending")
@@ -295,22 +295,22 @@ Lấy danh sách các bản ghi tiêm chủng có trạng thái `PENDING` để 
 
     @Operation(summary = "Lấy URL truy cập (đã ký) cho file bằng chứng của một bản ghi tiêm chủng",
             description = """
-### Mô tả
-Nhận một URL tạm thời (đã ký) để truy cập file bằng chứng của một bản ghi tiêm chủng.
-- **Phân quyền:** Người dùng đã xác thực và có quyền xem bản ghi tương ứng.
-"""
+                    ### Mô tả
+                    Nhận một URL tạm thời (đã ký) để truy cập file bằng chứng của một bản ghi tiêm chủng.
+                    - **Phân quyền:** Người dùng đã xác thực và có quyền xem bản ghi tương ứng.
+                    """
     )
     @ApiResponses(value = {
-    @ApiResponse(responseCode = "200", description = "Thành công, trả về URL đã ký trong một đối tượng JSON {'url': 'SIGNED_URL'}",
-            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(type = "object", example = "{\"url\": \"https://res.cloudinary.com/...SIGNED_URL...\"}"))),
-    @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-    @ApiResponse(responseCode = "403", description = "Không có quyền truy cập file này (phụ huynh không có liên kết với học sinh)",
-            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDto.class))),
-    @ApiResponse(responseCode = "404", description = "Bản ghi tiêm chủng hoặc file bằng chứng không tìm thấy",
-            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDto.class))),
-    @ApiResponse(responseCode = "500", description = "Lỗi khi tạo URL truy cập file",
-            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDto.class)))
+            @ApiResponse(responseCode = "200", description = "Thành công, trả về URL đã ký trong một đối tượng JSON {'url': 'SIGNED_URL'}",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(type = "object", example = "{\"url\": \"https://res.cloudinary.com/...SIGNED_URL...\"}"))),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập file này (phụ huynh không có liên kết với học sinh)",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDto.class))),
+            @ApiResponse(responseCode = "404", description = "Bản ghi tiêm chủng hoặc file bằng chứng không tìm thấy",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDto.class))),
+            @ApiResponse(responseCode = "500", description = "Lỗi khi tạo URL truy cập file",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDto.class)))
     })
     @PreAuthorize("isAuthenticated()") // Service sẽ kiểm tra quyền chi tiết hơn
     @GetMapping("/vaccinations/{vaccinationId}/file-access-url")

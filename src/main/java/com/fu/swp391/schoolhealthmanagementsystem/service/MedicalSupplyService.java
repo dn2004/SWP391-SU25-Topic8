@@ -11,6 +11,7 @@ import com.fu.swp391.schoolhealthmanagementsystem.entity.SupplyTransaction;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.User;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.MedicalSupplyStatus;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.SupplyTransactionType;
+import com.fu.swp391.schoolhealthmanagementsystem.exception.InvalidOperationException;
 import com.fu.swp391.schoolhealthmanagementsystem.exception.ResourceNotFoundException;
 import com.fu.swp391.schoolhealthmanagementsystem.mapper.MedicalSupplyMapper;
 import com.fu.swp391.schoolhealthmanagementsystem.mapper.SupplyTransactionMapper;
@@ -141,7 +142,7 @@ public class MedicalSupplyService {
 
         if (existingSupply.getStatus() == MedicalSupplyStatus.DISPOSE) {
             log.warn("Không thể cập nhật vật tư y tế ID: {} vì nó đã được lưu trữ.", supplyId);
-            throw new IllegalStateException("Không thể cập nhật vật tư y tế đã được lưu trữ.");
+            throw new InvalidOperationException("Không thể cập nhật vật tư y tế đã được lưu trữ.");
         }
 
         // Kiểm tra ngày hết hạn phải lớn hơn ngày tạo vật tư ít nhất 30 ngày
@@ -176,7 +177,7 @@ public class MedicalSupplyService {
 
         if (medicalSupply.getStatus() == MedicalSupplyStatus.DISPOSE) {
             log.warn("Không thể điều chỉnh tồn kho cho vật tư ID: {} vì nó đã được lưu trữ.", supplyId);
-            throw new IllegalStateException("Không thể điều chỉnh tồn kho cho vật tư y tế đã được lưu trữ.");
+            throw new InvalidOperationException("Không thể điều chỉnh tồn kho cho vật tư y tế đã được lưu trữ.");
         }
 
         int quantityChange = adjustmentDto.quantity();
@@ -187,7 +188,7 @@ public class MedicalSupplyService {
             if (oldStock < quantityChange) {
                 log.error("Không đủ tồn kho ({} < {}) cho vật tư ID {} để thực hiện giảm/xuất.",
                         oldStock, quantityChange, supplyId);
-                throw new IllegalStateException("Không đủ tồn kho để thực hiện. Tồn kho hiện tại: " + oldStock);
+                throw new InvalidOperationException("Không đủ tồn kho để thực hiện. Tồn kho hiện tại: " + oldStock);
             }
             medicalSupply.setCurrentStock(oldStock - quantityChange);
 
@@ -233,12 +234,12 @@ public class MedicalSupplyService {
 
         if (medicalSupply.getStatus() == MedicalSupplyStatus.DISPOSE ||
             medicalSupply.getStatus() == MedicalSupplyStatus.EXPIRED) {
-            throw new IllegalStateException("Vật tư y tế '" + medicalSupply.getName() +
+            throw new InvalidOperationException("Vật tư y tế '" + medicalSupply.getName() +
                 "' không khả dụng (trạng thái: " + medicalSupply.getStatus() + ").");
         }
 
         if (medicalSupply.getCurrentStock() < quantityUsed) {
-            throw new IllegalStateException("Không đủ tồn kho cho vật tư '" + medicalSupply.getName() +
+            throw new InvalidOperationException("Không đủ tồn kho cho vật tư '" + medicalSupply.getName() +
                 "'. Yêu cầu: " + quantityUsed + ", Hiện có: " + medicalSupply.getCurrentStock());
         }
 
@@ -276,7 +277,7 @@ public class MedicalSupplyService {
 
         if (medicalSupply.getStatus() == MedicalSupplyStatus.DISPOSE) {
             log.warn("Vật tư y tế ID: {} đã ở trạng thái lưu trữ.", supplyId);
-            throw new IllegalStateException("Vật tư y tế này đã ở trạng thái lưu trữ.");
+            throw new InvalidOperationException("Vật tư y tế này đã ở trạng thái lưu trữ.");
         }
 
         medicalSupply.setStatus(MedicalSupplyStatus.DISPOSE);
@@ -299,7 +300,7 @@ public class MedicalSupplyService {
         boolean hasIncidentRelation = supplyTransactionRepository.existsByMedicalSupplyAndHealthIncidentNotNull(medicalSupply);
         if (hasIncidentRelation) {
             log.warn("Không thể xóa cứng vật tư y tế ID: {} vì nó có giao dịch liên quan đến sự cố y tế.", supplyId);
-            throw new IllegalStateException("Không thể xóa cứng vật tư y tế này vì có giao dịch liên quan.");
+            throw new InvalidOperationException("Không thể xóa cứng vật tư y tế này vì có giao dịch liên quan.");
         }
 
         String deletedName = medicalSupply.getName();

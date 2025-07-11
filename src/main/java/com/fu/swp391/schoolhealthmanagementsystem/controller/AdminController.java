@@ -42,21 +42,21 @@ public class AdminController {
 
     @PostMapping("/staff")
     @Operation(
-        summary = "Tạo tài khoản nhân viên mới (MedicalStaff, StaffManager)",
-        description = """
-### Mô tả
-Tạo tài khoản nhân viên mới với vai trò `MedicalStaff` hoặc `StaffManager`.
-- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`.
-- **Thông báo:** Mật khẩu ngẫu nhiên sẽ được tạo và gửi đến email của nhân viên mới.
-"""
+            summary = "Tạo tài khoản nhân viên mới (MedicalStaff, StaffManager)",
+            description = """
+                    ### Mô tả
+                    Tạo tài khoản nhân viên mới với vai trò `MedicalStaff` hoặc `StaffManager`.
+                    - **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`.
+                    - **Thông báo:** Mật khẩu ngẫu nhiên sẽ được tạo và gửi đến email của nhân viên mới.
+                    """
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "201", description = "Tạo tài khoản thành công",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserDto.class))),
-        @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ", content = @Content),
-        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
-        @ApiResponse(responseCode = "409", description = "Email đã tồn tại", content = @Content)
+            @ApiResponse(responseCode = "201", description = "Tạo tài khoản thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserDto.class))),
+            @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+            @ApiResponse(responseCode = "409", description = "Email đã tồn tại", content = @Content)
     })
     public ResponseEntity<UserDto> createStaffAccount(@Valid @RequestBody CreateStaffRequestDto requestDto) {
         log.info("API Admin: Yêu cầu tạo tài khoản nhân viên - email: {}, role: {}", requestDto.email(), requestDto.role());
@@ -66,21 +66,21 @@ Tạo tài khoản nhân viên mới với vai trò `MedicalStaff` hoặc `Staff
 
     @PutMapping("/{userId}/activation")
     @Operation(
-        summary = "Kích hoạt hoặc vô hiệu hóa tài khoản người dùng",
-        description = """
-### Mô tả
-Cập nhật trạng thái kích hoạt (active/inactive) cho một tài khoản người dùng.
-- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`.
-- **Thông báo:** Gửi thông báo đến người dùng bị ảnh hưởng về việc tài khoản của họ đã được kích hoạt hoặc vô hiệu hóa.
-"""
+            summary = "Kích hoạt hoặc vô hiệu hóa tài khoản người dùng",
+            description = """
+                    ### Mô tả
+                    Cập nhật trạng thái kích hoạt (active/inactive) cho một tài khoản người dùng.
+                    - **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`.
+                    - **Thông báo:** Gửi thông báo đến người dùng bị ảnh hưởng về việc tài khoản của họ đã được kích hoạt hoặc vô hiệu hóa.
+                    """
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Cập nhật trạng thái thành công",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserDto.class))),
-        @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ", content = @Content),
-        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
-        @ApiResponse(responseCode = "404", description = "Không tìm thấy người dùng", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Cập nhật trạng thái thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserDto.class))),
+            @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy người dùng", content = @Content)
     })
     public ResponseEntity<UserDto> updateUserActivationStatus(
             @Parameter(description = "ID của người dùng cần cập nhật") @PathVariable Long userId,
@@ -91,19 +91,19 @@ Cập nhật trạng thái kích hoạt (active/inactive) cho một tài khoản
     }
 
     @Operation(
-        summary = "Tìm kiếm và lấy danh sách phụ huynh (phân trang)",
-        description = """
-### Mô tả
-Lấy danh sách phụ huynh có phân trang và hỗ trợ lọc theo nhiều tiêu chí.
-- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`.
-"""
+            summary = "Tìm kiếm và lấy danh sách phụ huynh (phân trang)",
+            description = """
+                    ### Mô tả
+                    Lấy danh sách phụ huynh có phân trang và hỗ trợ lọc theo nhiều tiêu chí.
+                    - **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`.
+                    """
     )
     @GetMapping("/parents")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
-        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
     })
     public ResponseEntity<Page<UserDto>> getParents(
             @Parameter(description = "Tên phụ huynh")
@@ -128,19 +128,19 @@ Lấy danh sách phụ huynh có phân trang và hỗ trợ lọc theo nhiều t
     }
 
     @Operation(
-        summary = "Tìm kiếm và lấy danh sách nhân viên y tế (phân trang)",
-        description = """
-### Mô tả
-Lấy danh sách nhân viên y tế có phân trang và hỗ trợ lọc theo nhiều tiêu chí.
-- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`.
-"""
+            summary = "Tìm kiếm và lấy danh sách nhân viên y tế (phân trang)",
+            description = """
+                    ### Mô tả
+                    Lấy danh sách nhân viên y tế có phân trang và hỗ trợ lọc theo nhiều tiêu chí.
+                    - **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`.
+                    """
     )
     @GetMapping("/medical-staff")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
-        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
     })
     public ResponseEntity<Page<UserDto>> getMedicalStaff(
             @Parameter(description = "Tên nhân viên y tế")
@@ -165,19 +165,19 @@ Lấy danh sách nhân viên y tế có phân trang và hỗ trợ lọc theo nh
     }
 
     @Operation(
-        summary = "Tìm kiếm và lấy danh sách quản lý y tế (phân trang)",
-        description = """
-### Mô tả
-Lấy danh sách quản lý y tế có phân trang và hỗ trợ lọc theo nhiều tiêu chí.
-- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`.
-"""
+            summary = "Tìm kiếm và lấy danh sách quản lý y tế (phân trang)",
+            description = """
+                    ### Mô tả
+                    Lấy danh sách quản lý y tế có phân trang và hỗ trợ lọc theo nhiều tiêu chí.
+                    - **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`.
+                    """
     )
     @GetMapping("/staff-managers")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
-        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
     })
     public ResponseEntity<Page<UserDto>> getStaffManagers(
             @Parameter(description = "Tên quản lý y tế")
@@ -202,21 +202,21 @@ Lấy danh sách quản lý y tế có phân trang và hỗ trợ lọc theo nhi
     }
 
     @Operation(
-        summary = "Admin tạo hồ sơ học sinh mới",
-        description = """
-### Mô tả
-Tạo một hồ sơ học sinh mới trong hệ thống.
-- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`.
-"""
+            summary = "Admin tạo hồ sơ học sinh mới",
+            description = """
+                    ### Mô tả
+                    Tạo một hồ sơ học sinh mới trong hệ thống.
+                    - **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`.
+                    """
     )
     @PostMapping("/students")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "201", description = "Tạo hồ sơ học sinh thành công",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = StudentDto.class))),
-        @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ", content = @Content),
-        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
-        @ApiResponse(responseCode = "409", description = "Học sinh đã tồn tại", content = @Content)
+            @ApiResponse(responseCode = "201", description = "Tạo hồ sơ học sinh thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = StudentDto.class))),
+            @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+            @ApiResponse(responseCode = "409", description = "Học sinh đã tồn tại", content = @Content)
     })
     public ResponseEntity<StudentDto> createStudentProfile(@Valid @RequestBody CreateStudentRequestDto requestDto) {
         StudentDto createdStudent = studentService.createStudent(requestDto);
@@ -224,20 +224,20 @@ Tạo một hồ sơ học sinh mới trong hệ thống.
     }
 
     @Operation(
-        summary = "Admin lấy thông tin chi tiết một người dùng bằng ID",
-        description = """
-### Mô tả
-Lấy thông tin chi tiết của bất kỳ người dùng nào trong hệ thống bằng ID của họ.
-- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`.
-"""
+            summary = "Admin lấy thông tin chi tiết một người dùng bằng ID",
+            description = """
+                    ### Mô tả
+                    Lấy thông tin chi tiết của bất kỳ người dùng nào trong hệ thống bằng ID của họ.
+                    - **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`.
+                    """
     )
     @GetMapping("/{userId}")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Lấy thông tin thành công",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserDto.class))),
-        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
-        @ApiResponse(responseCode = "404", description = "Không tìm thấy người dùng", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Lấy thông tin thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserDto.class))),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy người dùng", content = @Content)
     })
     public ResponseEntity<UserDto> getUserById(
             @Parameter(description = "ID của người dùng cần truy vấn") @PathVariable Long userId) {

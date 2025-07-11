@@ -32,18 +32,18 @@ public class DashboardController {
 
 
     @Operation(
-        summary = "Lấy thống kê dashboard cho Staff Manager",
+            summary = "Lấy thống kê dashboard cho Staff Manager",
             description = """
-### Mô tả
-Trả về các số liệu tổng hợp cho dashboard của quản lý nhân viên y tế.
-- **Phân quyền:** Yêu cầu vai trò `StaffManager` hoặc `SchoolAdmin`.
-"""
+                    ### Mô tả
+                    Trả về các số liệu tổng hợp cho dashboard của quản lý nhân viên y tế.
+                    - **Phân quyền:** Yêu cầu vai trò `StaffManager` hoặc `SchoolAdmin`.
+                    """
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Lấy thống kê thành công",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = DashboardStaffManagerDto.class))),
-        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Lấy thống kê thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = DashboardStaffManagerDto.class))),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
     })
     @PreAuthorize("hasRole('StaffManager') or hasRole('SchoolAdmin')")
     @GetMapping("/staff-manager")
@@ -53,18 +53,18 @@ Trả về các số liệu tổng hợp cho dashboard của quản lý nhân vi
     }
 
     @Operation(
-        summary = "Lấy thống kê dashboard cho admin",
-        description = """
-### Mô tả
-Trả về các số liệu tổng hợp cho dashboard của quản trị viên trường học.
-- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`.
-"""
+            summary = "Lấy thống kê dashboard cho admin",
+            description = """
+                    ### Mô tả
+                    Trả về các số liệu tổng hợp cho dashboard của quản trị viên trường học.
+                    - **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`.
+                    """
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Lấy thống kê thành công",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = DashboardAdminDto.class))),
-        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Lấy thống kê thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = DashboardAdminDto.class))),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
     })
     @PreAuthorize("hasRole('SchoolAdmin') or hasRole('StaffManager')")
     @GetMapping("/admin")
@@ -74,18 +74,18 @@ Trả về các số liệu tổng hợp cho dashboard của quản trị viên 
     }
 
     @Operation(
-        summary = "Lấy thống kê dashboard cho Medical Staff",
-        description = """
-### Mô tả
-Trả về các số liệu tổng hợp cho dashboard của nhân viên y tế.
-- **Phân quyền:** Yêu cầu vai trò `MedicalStaff`, `StaffManager`, hoặc `SchoolAdmin`.
-"""
+            summary = "Lấy thống kê dashboard cho Medical Staff",
+            description = """
+                    ### Mô tả
+                    Trả về các số liệu tổng hợp cho dashboard của nhân viên y tế.
+                    - **Phân quyền:** Yêu cầu vai trò `MedicalStaff`, `StaffManager`, hoặc `SchoolAdmin`.
+                    """
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Lấy thống kê thành công",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = DashboardMedicalStaffDto.class))),
-        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Lấy thống kê thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = DashboardMedicalStaffDto.class))),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
     })
     @PreAuthorize("hasRole('MedicalStaff') or hasRole('StaffManager') or hasRole('SchoolAdmin')")
     @GetMapping("/medical-staff")

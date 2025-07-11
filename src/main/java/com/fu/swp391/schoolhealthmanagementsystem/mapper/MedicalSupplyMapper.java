@@ -37,6 +37,7 @@ public interface MedicalSupplyMapper {
     @Mapping(target = "lastUpdatedAt", ignore = true)
     @Mapping(target = "updatedByUser", ignore = true)
     @Mapping(target = "supplyTransactions", ignore = true)
+    @Mapping(target = "status", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateEntityFromUpdateDto(MedicalSupplyUpdateDto dto, @MappingTarget MedicalSupply entity);
 

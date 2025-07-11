@@ -21,8 +21,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/vaccination/records")
 @RequiredArgsConstructor
@@ -34,11 +32,11 @@ public class SchoolVaccinationController {
 
     @Operation(summary = "Ghi nhận kết quả tiêm chủng",
             description = """
-### Mô tả
-Ghi nhận việc học sinh đã tiêm, vắng mặt hoặc từ chối tiêm trong một chiến dịch tiêm chủng tại trường.
-- **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
-- **Thông báo:** Gửi thông báo đến phụ huynh về kết quả tiêm chủng của học sinh.
-"""
+                    ### Mô tả
+                    Ghi nhận việc học sinh đã tiêm, vắng mặt hoặc từ chối tiêm trong một chiến dịch tiêm chủng tại trường.
+                    - **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
+                    - **Thông báo:** Gửi thông báo đến phụ huynh về kết quả tiêm chủng của học sinh.
+                    """
     )
     @ApiResponse(responseCode = "200", description = "Ghi nhận thành công",
             content = @Content(schema = @Schema(implementation = SchoolVaccinationResponseDto.class)))
@@ -51,20 +49,20 @@ Ghi nhận việc học sinh đã tiêm, vắng mặt hoặc từ chối tiêm t
 
     @Operation(summary = "Cập nhật trạng thái tiêm chủng",
             description = """
-### Mô tả
-Cập nhật trạng thái của một bản ghi tiêm chủng.
-- **Điều kiện:** Chỉ có thể cập nhật khi chiến dịch đang diễn ra (`IN_PROGRESS`).
-- **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
-- **Thông báo:** Gửi thông báo đến phụ huynh về kết quả cập nhật.
-"""
+                    ### Mô tả
+                    Cập nhật trạng thái của một bản ghi tiêm chủng.
+                    - **Điều kiện:** Chỉ có thể cập nhật khi chiến dịch đang diễn ra (`IN_PROGRESS`).
+                    - **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
+                    - **Thông báo:** Gửi thông báo đến phụ huynh về kết quả cập nhật.
+                    """
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Cập nhật thành công",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = SchoolVaccinationResponseDto.class))),
-        @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ", content = @Content),
-        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
-        @ApiResponse(responseCode = "404", description = "Không tìm thấy bản ghi tiêm chủng", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Cập nhật thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = SchoolVaccinationResponseDto.class))),
+            @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy bản ghi tiêm chủng", content = @Content)
     })
     @PutMapping("/{vaccinationId}")
     @PreAuthorize("hasAnyRole('MedicalStaff', 'StaffManager')")
@@ -76,19 +74,19 @@ Cập nhật trạng thái của một bản ghi tiêm chủng.
 
     @Operation(summary = "Ghi nhận kết quả theo dõi sau tiêm",
             description = """
-### Mô tả
-Ghi nhận dữ liệu theo dõi sau tiêm như nhiệt độ, phản ứng phụ.
-- **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
-- **Thông báo:** Gửi thông báo đến phụ huynh về kết quả theo dõi.
-"""
+                    ### Mô tả
+                    Ghi nhận dữ liệu theo dõi sau tiêm như nhiệt độ, phản ứng phụ.
+                    - **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
+                    - **Thông báo:** Gửi thông báo đến phụ huynh về kết quả theo dõi.
+                    """
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Ghi nhận thành công",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = PostVaccinationMonitoringResponseDto.class))),
-        @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ", content = @Content),
-        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
-        @ApiResponse(responseCode = "404", description = "Không tìm thấy bản ghi tiêm chủng", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Ghi nhận thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PostVaccinationMonitoringResponseDto.class))),
+            @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy bản ghi tiêm chủng", content = @Content)
     })
     @PostMapping("/monitoring")
     @PreAuthorize("hasAnyRole('MedicalStaff', 'StaffManager')")
@@ -99,20 +97,20 @@ Ghi nhận dữ liệu theo dõi sau tiêm như nhiệt độ, phản ứng ph�
 
     @Operation(summary = "Cập nhật bản ghi theo dõi sau tiêm",
             description = """
-### Mô tả
-Cập nhật thông tin theo dõi sau tiêm chủng.
-- **Điều kiện:** Chỉ có thể cập nhật khi trạng thái tiêm chủng là `POST_MONITORING`.
-- **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
-- **Thông báo:** Gửi thông báo đến phụ huynh về kết quả cập nhật.
-"""
+                    ### Mô tả
+                    Cập nhật thông tin theo dõi sau tiêm chủng.
+                    - **Điều kiện:** Chỉ có thể cập nhật khi trạng thái tiêm chủng là `POST_MONITORING`.
+                    - **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
+                    - **Thông báo:** Gửi thông báo đến phụ huynh về kết quả cập nhật.
+                    """
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Cập nhật thành công",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = PostVaccinationMonitoringResponseDto.class))),
-        @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ", content = @Content),
-        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
-        @ApiResponse(responseCode = "404", description = "Không tìm thấy bản ghi theo dõi", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Cập nhật thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PostVaccinationMonitoringResponseDto.class))),
+            @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy bản ghi theo dõi", content = @Content)
     })
     @PutMapping("/monitoring/{monitoringId}")
     @PreAuthorize("hasAnyRole('MedicalStaff', 'StaffManager')")
@@ -124,17 +122,17 @@ Cập nhật thông tin theo dõi sau tiêm chủng.
 
     @Operation(summary = "Lấy danh sách tiêm chủng của một chiến dịch",
             description = """
-### Mô tả
-Lấy danh sách các bản ghi tiêm chủng trong một chiến dịch với phân trang và bộ lọc.
-- **Phân quyền:** Yêu cầu vai trò `MedicalStaff`, `StaffManager`, hoặc `SchoolAdmin`.
-"""
+                    ### Mô tả
+                    Lấy danh sách các bản ghi tiêm chủng trong một chiến dịch với phân trang và bộ lọc.
+                    - **Phân quyền:** Yêu cầu vai trò `MedicalStaff`, `StaffManager`, hoặc `SchoolAdmin`.
+                    """
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
-        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
-        @ApiResponse(responseCode = "404", description = "Không tìm thấy chiến dịch", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy chiến dịch", content = @Content)
     })
     @GetMapping("/campaign/{campaignId}")
     @PreAuthorize("hasAnyRole('MedicalStaff', 'StaffManager', 'SchoolAdmin')")
@@ -150,17 +148,17 @@ Lấy danh sách các bản ghi tiêm chủng trong một chiến dịch với p
 
     @Operation(summary = "Lấy chi tiết bản ghi tiêm chủng",
             description = """
-### Mô tả
-Lấy thông tin chi tiết của một bản ghi tiêm chủng theo ID.
-- **Phân quyền:** Yêu cầu người dùng đã xác thực. Service sẽ kiểm tra quyền truy cập chi tiết (phụ huynh chỉ xem của con mình).
-"""
+                    ### Mô tả
+                    Lấy thông tin chi tiết của một bản ghi tiêm chủng theo ID.
+                    - **Phân quyền:** Yêu cầu người dùng đã xác thực. Service sẽ kiểm tra quyền truy cập chi tiết (phụ huynh chỉ xem của con mình).
+                    """
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Lấy thông tin thành công",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = SchoolVaccinationResponseDto.class))),
-        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
-        @ApiResponse(responseCode = "404", description = "Không tìm thấy bản ghi tiêm chủng", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Lấy thông tin thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = SchoolVaccinationResponseDto.class))),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy bản ghi tiêm chủng", content = @Content)
     })
     @GetMapping("/{vaccinationId}")
     @PreAuthorize("isAuthenticated()")
@@ -171,17 +169,17 @@ Lấy thông tin chi tiết của một bản ghi tiêm chủng theo ID.
 
     @Operation(summary = "Lấy danh sách theo dõi sau tiêm",
             description = """
-### Mô tả
-Lấy bản ghi theo dõi sau tiêm cho một bản ghi tiêm chủng cụ thể.
-- **Phân quyền:** Yêu cầu người dùng đã xác thực. Service sẽ kiểm tra quyền truy cập chi tiết.
-"""
+                    ### Mô tả
+                    Lấy bản ghi theo dõi sau tiêm cho một bản ghi tiêm chủng cụ thể.
+                    - **Phân quyền:** Yêu cầu người dùng đã xác thực. Service sẽ kiểm tra quyền truy cập chi tiết.
+                    """
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Lấy thông tin thành công",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = PostVaccinationMonitoringResponseDto.class))),
-        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
-        @ApiResponse(responseCode = "404", description = "Không tìm thấy bản ghi tiêm chủng", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Lấy thông tin thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PostVaccinationMonitoringResponseDto.class))),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy bản ghi tiêm chủng", content = @Content)
     })
     @GetMapping("/{vaccinationId}/monitoring")
     @PreAuthorize("isAuthenticated()")

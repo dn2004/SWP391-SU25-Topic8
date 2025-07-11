@@ -75,6 +75,39 @@ public class DemoUserInitializer implements ApplicationRunner {
             log.info("Học sinh {} đã tồn tại.", studentFullName);
         }
 
+        // 2.1. Khởi tạo Học sinh thứ 2
+                String student2FullName = "Bob Student";
+                LocalDate student2Dob = LocalDate.of(2016, 2, 2);
+                Student student2;
+                if (studentRepository.findByFullNameAndDateOfBirth(student2FullName, student2Dob).isEmpty()) {
+                    student2 = new Student();
+                    student2.setFullName(student2FullName);
+                    student2.setDateOfBirth(student2Dob);
+                    student2.setGender(Gender.MALE);
+                    student2.setClassGroup(ClassGroup.MAM); // Sử dụng enum ClassGroup
+                    student2.setClassValue(Class.B); // Sử dụng enum Class
+                    student2.setInvitationCode(generateInvitationCode());
+                    student2.setStatus(StudentStatus.ACTIVE);
+                    student2 = studentRepository.save(student2);
+                    log.info("Đã tạo Học sinh: {}", student2.getFullName());
+                } else {
+                    student2 = studentRepository.findByFullNameAndDateOfBirth(student2FullName, student2Dob).get();
+                    log.info("Học sinh {} đã tồn tại.", student2FullName);
+                }
+
+                // 3.1. Liên kết Phụ huynh và Học sinh thứ 2
+                if (!parentStudentLinkRepository.existsByParentAndStudent(parent1, student2)) {
+                    ParentStudentLink link2 = new ParentStudentLink();
+                    link2.setParent(parent1);
+                    link2.setStudent(student2);
+                    link2.setRelationshipType(RelationshipType.FATHER);
+                    link2.setStatus(LinkStatus.ACTIVE);
+                    parentStudentLinkRepository.save(link2);
+                    log.info("Đã liên kết Phụ huynh {} với Học sinh {}.", parent1.getEmail(), student2.getFullName());
+                } else {
+                    log.info("Liên kết giữa Phụ huynh {} và Học sinh {} đã tồn tại.", parent1.getEmail(), student2.getFullName());
+                }
+
         // 3. Liên kết Phụ huynh và Học sinh
         if (!parentStudentLinkRepository.existsByParentAndStudent(parent1, student1)) {
             ParentStudentLink link = new ParentStudentLink();

@@ -7,6 +7,7 @@ import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.MedicationStatus;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.ScheduledMedicationTaskStatus;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentMedicationTransactionType;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.UserRole;
+import com.fu.swp391.schoolhealthmanagementsystem.exception.InvalidOperationException;
 import com.fu.swp391.schoolhealthmanagementsystem.exception.ResourceNotFoundException;
 import com.fu.swp391.schoolhealthmanagementsystem.mapper.MedicationTimeSlotMapper;
 import com.fu.swp391.schoolhealthmanagementsystem.mapper.StudentMedicationMapper;
@@ -162,7 +163,7 @@ public class StudentMedicationService {
         if (currentUserRole == UserRole.Parent) {
             Student studentOfMedication = studentMedication.getStudent();
             if (studentOfMedication == null) {
-                throw new IllegalStateException("Dữ liệu thuốc không hợp lệ, không tìm thấy thông tin học sinh liên quan.");
+                throw new InvalidOperationException("Dữ liệu thuốc không hợp lệ, không tìm thấy thông tin học sinh liên quan.");
             }
             authorizationService.authorizeParentAction(currentUser, studentOfMedication, "xem thông tin thuốc của con");
         } else if (!(currentUserRole == UserRole.MedicalStaff ||
@@ -189,7 +190,7 @@ public class StudentMedicationService {
         //chỉ cho phép cập nhật lịch trình nếu thuốc đang có trạng thái AVAILABLE
         if (medication.getStatus() != MedicationStatus.AVAILABLE) {
             log.warn("Cannot update schedule for StudentMedication ID {} with status {}.", studentMedicationId, medication.getStatus());
-            throw new IllegalStateException("Chỉ có thể cập nhật lịch trình cho thuốc đang có trạng thái 'Sẵn có'. Trạng thái hiện tại: " + medication.getStatus().getDisplayName());
+            throw new InvalidOperationException("Chỉ có thể cập nhật lịch trình cho thuốc đang có trạng thái 'Sẵn có'. Trạng thái hiện tại: " + medication.getStatus().getDisplayName());
         }
 
         // 1. Hủy các ScheduledMedicationTask trong tương lai (status SCHEDULED) dựa trên lịch cũ
@@ -308,7 +309,7 @@ public class StudentMedicationService {
                 medication.getStatus() == MedicationStatus.LOST) {
             log.warn("Update info failed: StudentMedication ID {} has status {} which does not allow general info updates.",
                     studentMedicationId, medication.getStatus());
-            throw new IllegalStateException("Không thể cập nhật thông tin cho thuốc có trạng thái: " +
+            throw new InvalidOperationException("Không thể cập nhật thông tin cho thuốc có trạng thái: " +
                     (medication.getStatus() != null ? medication.getStatus().getDisplayName() : "Không xác định"));
         }
 
@@ -340,7 +341,7 @@ public class StudentMedicationService {
         if (medication.getStatus() == MedicationStatus.LOST ||
                 medication.getStatus() == MedicationStatus.RETURNED_TO_PARENT ||
                 medication.getStatus() == MedicationStatus.OUT_OF_DOSES) {
-            throw new IllegalStateException("Không thể báo thất lạc cho thuốc đang có trạng thái: " + medication.getStatus().getDisplayName());
+            throw new InvalidOperationException("Không thể báo thất lạc cho thuốc đang có trạng thái: " + medication.getStatus().getDisplayName());
         }
 
         int dosesLost = medication.getRemainingDoses() != null ? medication.getRemainingDoses() : 0;
@@ -397,7 +398,7 @@ public class StudentMedicationService {
                 medication.getStatus() == MedicationStatus.LOST ||
                 medication.getStatus() == MedicationStatus.OUT_OF_DOSES
         ) {
-            throw new IllegalStateException("Không thể trả lại thuốc đang có trạng thái: " + medication.getStatus().getDisplayName());
+            throw new InvalidOperationException("Không thể trả lại thuốc đang có trạng thái: " + medication.getStatus().getDisplayName());
         }
 
         int dosesReturned = medication.getRemainingDoses() != null ? medication.getRemainingDoses() : 0;
@@ -477,12 +478,12 @@ public class StudentMedicationService {
         if (hasScheduledTasks) {
             log.warn("Cancel medication failed: Medication ID {} already has scheduled tasks",
                     studentMedicationId);
-            throw new IllegalStateException("Không thể hủy thuốc vì nhân viên y tế đã cho học sinh uống thuốc");
+            throw new InvalidOperationException("Không thể hủy thuốc vì nhân viên y tế đã cho học sinh uống thuốc");
         }
 
         // Kiểm tra trạng thái thuốc
         if (medication.getStatus() != MedicationStatus.AVAILABLE) {
-            throw new IllegalStateException("Chỉ có thể hủy thuốc đang ở trạng thái 'Sẵn có'. Trạng thái hiện tại: " +
+            throw new InvalidOperationException("Chỉ có thể hủy thuốc đang ở trạng thái 'Sẵn có'. Trạng thái hiện tại: " +
                     medication.getStatus().getDisplayName());
         }
 

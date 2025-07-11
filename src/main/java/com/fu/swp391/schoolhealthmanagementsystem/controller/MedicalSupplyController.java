@@ -36,10 +36,10 @@ public class MedicalSupplyController {
 
     @Operation(summary = "Tạo mới một vật tư y tế",
             description = """
-### Mô tả
-Tạo mới một vật tư y tế trong kho.
-- **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
-"""
+                    ### Mô tả
+                    Tạo mới một vật tư y tế trong kho.
+                    - **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
+                    """
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Vật tư y tế được tạo thành công",
@@ -59,10 +59,10 @@ Tạo mới một vật tư y tế trong kho.
 
     @Operation(summary = "Lấy thông tin vật tư y tế theo ID",
             description = """
-### Mô tả
-Lấy thông tin chi tiết của một vật tư y tế dựa trên ID.
-- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`, `StaffManager`, hoặc `MedicalStaff`.
-"""
+                    ### Mô tả
+                    Lấy thông tin chi tiết của một vật tư y tế dựa trên ID.
+                    - **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`, `StaffManager`, hoặc `MedicalStaff`.
+                    """
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Tìm thấy vật tư y tế",
@@ -82,10 +82,10 @@ Lấy thông tin chi tiết của một vật tư y tế dựa trên ID.
 
     @Operation(summary = "Lấy lịch sử giao dịch của một vật tư y tế (phân trang)",
             description = """
-### Mô tả
-Trả về danh sách các giao dịch (nhập, xuất, điều chỉnh) của một vật tư y tế cụ thể.
-- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`, `StaffManager`, hoặc `MedicalStaff`.
-"""
+                    ### Mô tả
+                    Trả về danh sách các giao dịch (nhập, xuất, điều chỉnh) của một vật tư y tế cụ thể.
+                    - **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`, `StaffManager`, hoặc `MedicalStaff`.
+                    """
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lấy danh sách giao dịch thành công",
@@ -110,10 +110,10 @@ Trả về danh sách các giao dịch (nhập, xuất, điều chỉnh) của m
 
     @Operation(summary = "Lấy danh sách tất cả vật tư y tế (phân trang)",
             description = """
-### Mô tả
-Trả về một trang danh sách các vật tư y tế trong hệ thống, hỗ trợ lọc và tìm kiếm.
-- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`, `StaffManager`, hoặc `MedicalStaff`.
-"""
+                    ### Mô tả
+                    Trả về một trang danh sách các vật tư y tế trong hệ thống, hỗ trợ lọc và tìm kiếm.
+                    - **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`, `StaffManager`, hoặc `MedicalStaff`.
+                    """
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lấy danh sách vật tư y tế thành công",
@@ -132,16 +132,16 @@ Trả về một trang danh sách các vật tư y tế trong hệ thống, hỗ
             @Parameter(description = "Lọc theo ngày hết hạn đến (YYYY-MM-DD)") @RequestParam(required = false) LocalDate expiredDateTo,
             @PageableDefault(size = 10, sort = "name") Pageable pageable) {
         Page<MedicalSupplyResponseDto> suppliesPage = medicalSupplyService.getAllMedicalSupplies(
-            name, category, status, expiredDateFrom, expiredDateTo, pageable);
+                name, category, status, expiredDateFrom, expiredDateTo, pageable);
         return ResponseEntity.ok(suppliesPage);
     }
 
     @Operation(summary = "Cập nhật thông tin (metadata) của một vật tư y tế",
             description = """
-### Mô tả
-Cập nhật các thông tin mô tả như tên, loại, đơn vị của một vật tư. Không dùng để thay đổi số lượng tồn kho.
-- **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
-"""
+                    ### Mô tả
+                    Cập nhật các thông tin mô tả như tên, loại, đơn vị của một vật tư. Không dùng để thay đổi số lượng tồn kho.
+                    - **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
+                    """
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Vật tư y tế được cập nhật thành công",
@@ -163,10 +163,10 @@ Cập nhật các thông tin mô tả như tên, loại, đơn vị của một 
 
     @Operation(summary = "Điều chỉnh số lượng tồn kho của vật tư y tế",
             description = """
-### Mô tả
-Thực hiện điều chỉnh số lượng tồn kho (nhập kho, xuất kho, kiểm kê).
-- **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
-"""
+                    ### Mô tả
+                    Thực hiện điều chỉnh số lượng tồn kho (nhập kho, xuất kho, kiểm kê).
+                    - **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
+                    """
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Điều chỉnh tồn kho thành công",
@@ -189,10 +189,10 @@ Thực hiện điều chỉnh số lượng tồn kho (nhập kho, xuất kho, k
 
     @Operation(summary = "Xóa mềm một vật tư y tế (đặt trạng thái không hoạt động)",
             description = """
-### Mô tả
-Đánh dấu một vật tư y tế là không hoạt động (DISPOSED). Đây là hình thức xóa mềm.
-- **Phân quyền:** Yêu cầu vai trò `StaffManager`.
-"""
+                    ### Mô tả
+                    Đánh dấu một vật tư y tế là không hoạt động (DISPOSED). Đây là hình thức xóa mềm.
+                    - **Phân quyền:** Yêu cầu vai trò `StaffManager`.
+                    """
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Vật tư y tế được xóa mềm thành công", content = @Content),
@@ -211,11 +211,11 @@ Thực hiện điều chỉnh số lượng tồn kho (nhập kho, xuất kho, k
 
     @Operation(summary = "Xóa cứng một vật tư y tế",
             description = """
-### Mô tả
-Xóa hoàn toàn một vật tư y tế khỏi hệ thống.
-- **Điều kiện:** Chỉ có thể thực hiện nếu vật tư không có giao dịch liên quan đến sự cố y tế.
-- **Phân quyền:** Người tạo vật tư, `StaffManager`, hoặc `SchoolAdmin`.
-"""
+                    ### Mô tả
+                    Xóa hoàn toàn một vật tư y tế khỏi hệ thống.
+                    - **Điều kiện:** Chỉ có thể thực hiện nếu vật tư không có giao dịch liên quan đến sự cố y tế.
+                    - **Phân quyền:** Người tạo vật tư, `StaffManager`, hoặc `SchoolAdmin`.
+                    """
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Vật tư y tế đã được xóa cứng thành công", content = @Content),

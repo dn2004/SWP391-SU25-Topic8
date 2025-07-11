@@ -5,10 +5,7 @@ import jakarta.validation.Payload;
 
 import java.lang.annotation.*;
 
-/**
- * Kiểm tra xem tên lớp có đúng định dạng không
- * Định dạng được chấp nhận: 1A, 2B, 3C, 10A, 12D, v.v.
- */
+
 @Documented
 @Constraint(validatedBy = ClassNameValidator.class)
 @Target({ElementType.FIELD, ElementType.PARAMETER})

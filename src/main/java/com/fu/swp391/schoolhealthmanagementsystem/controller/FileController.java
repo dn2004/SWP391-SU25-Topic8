@@ -31,18 +31,18 @@ public class FileController {
 
     @GetMapping("/upload-signature")
     @Operation(
-        summary = "Lấy signature để upload file lên Cloudinary",
-        description = """
-### Mô tả
-Tạo một chữ ký (signature) an toàn phía server để client có thể upload file trực tiếp lên Cloudinary mà không cần thông qua server.
-- **Phân quyền:** Yêu cầu người dùng đã xác thực.
-"""
+            summary = "Lấy signature để upload file lên Cloudinary",
+            description = """
+                    ### Mô tả
+                    Tạo một chữ ký (signature) an toàn phía server để client có thể upload file trực tiếp lên Cloudinary mà không cần thông qua server.
+                    - **Phân quyền:** Yêu cầu người dùng đã xác thực.
+                    """
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Lấy signature thành công",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = UploadSignatureResponse.class))),
-        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Lấy signature thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = UploadSignatureResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
     })
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<UploadSignatureResponse> getUploadSignature(@RequestParam(required = false) String folder) {
@@ -52,19 +52,19 @@ Tạo một chữ ký (signature) an toàn phía server để client có thể u
 
     @PostMapping("/upload-editor-image")
     @Operation(
-        summary = "Upload ảnh cho trình soạn thảo văn bản",
-        description = """
-### Mô tả
-Upload một file ảnh để sử dụng trong các trình soạn thảo văn bản (ví dụ: TinyMCE).
-- **Phân quyền:** Yêu cầu người dùng đã xác thực.
-"""
+            summary = "Upload ảnh cho trình soạn thảo văn bản",
+            description = """
+                    ### Mô tả
+                    Upload một file ảnh để sử dụng trong các trình soạn thảo văn bản (ví dụ: TinyMCE).
+                    - **Phân quyền:** Yêu cầu người dùng đã xác thực.
+                    """
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Upload ảnh thành công",
-                content = @Content(mediaType = "application/json")),
-        @ApiResponse(responseCode = "400", description = "File không hợp lệ", content = @Content),
-        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Upload ảnh thành công",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "400", description = "File không hợp lệ", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
     })
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> uploadEditorImage(@RequestParam("file") MultipartFile file) {
@@ -77,18 +77,18 @@ Upload một file ảnh để sử dụng trong các trình soạn thảo văn b
 
     @PostMapping("/delete-editor-image")
     @Operation(
-        summary = "Xóa ảnh đã upload khỏi Cloudinary",
-        description = """
-### Mô tả
-Xóa một ảnh đã upload khỏi Cloudinary bằng `publicId` của nó.
-- **Phân quyền:** Yêu cầu người dùng đã xác thực.
-"""
+            summary = "Xóa ảnh đã upload khỏi Cloudinary",
+            description = """
+                    ### Mô tả
+                    Xóa một ảnh đã upload khỏi Cloudinary bằng `publicId` của nó.
+                    - **Phân quyền:** Yêu cầu người dùng đã xác thực.
+                    """
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Xóa ảnh thành công", content = @Content),
-        @ApiResponse(responseCode = "400", description = "PublicId không hợp lệ", content = @Content),
-        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Xóa ảnh thành công", content = @Content),
+            @ApiResponse(responseCode = "400", description = "PublicId không hợp lệ", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
     })
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> deleteEditorImage(@RequestBody Map<String, String> payload) {

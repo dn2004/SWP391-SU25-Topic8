@@ -6,10 +6,8 @@ import com.fu.swp391.schoolhealthmanagementsystem.dto.student.UpdateStudentReque
 import com.fu.swp391.schoolhealthmanagementsystem.entity.ParentStudentLink;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.Student;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.User;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.*;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.Class;
-import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.ClassGroup;
-import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentStatus;
-import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.UserRole;
 import com.fu.swp391.schoolhealthmanagementsystem.exception.AppException;
 import com.fu.swp391.schoolhealthmanagementsystem.mapper.StudentMapper;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.ParentStudentLinkRepository;
@@ -179,8 +177,9 @@ public class StudentService {
     }
 
     @Transactional(readOnly = true)
-    public Page<StudentDto> getAllStudents(String fullName, ClassGroup classGroup,
+    public Page<StudentDto> getAllStudents(String search, ClassGroup classGroup,
                                           Class classValue, StudentStatus status,
+                                          Gender gender,
                                           LocalDate dateOfBirth,
                                           Pageable pageable) {
         User currentUser = userService.getCurrentAuthenticatedUser();
@@ -191,11 +190,12 @@ public class StudentService {
             throw new AppException(HttpStatus.FORBIDDEN, "You do not have permission to perform this action.");
         }
 
-        Specification<Student> spec = studentSpecification.hasFullName(fullName)
+        Specification<Student> spec = studentSpecification.search(search)
                 .and(studentSpecification.hasClassGroup(classGroup))
                 .and(studentSpecification.hasClassValue(classValue))
                 .and(studentSpecification.hasStatus(status))
-                .and(studentSpecification.hasDateOfBirth(dateOfBirth));
+                .and(studentSpecification.hasDateOfBirth(dateOfBirth))
+                .and(studentSpecification.hasGender(gender));
 
         Page<Student> studentPage = studentRepository.findAll(spec, pageable);
         return studentPage.map(studentMapper::studentToStudentDto);
@@ -330,4 +330,3 @@ public class StudentService {
         }
     }
 }
-

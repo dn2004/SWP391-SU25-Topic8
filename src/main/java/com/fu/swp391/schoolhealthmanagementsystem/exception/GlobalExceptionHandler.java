@@ -1,6 +1,7 @@
 package com.fu.swp391.schoolhealthmanagementsystem.exception;
 
 import com.fu.swp391.schoolhealthmanagementsystem.dto.ErrorResponseDto;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.Gender;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
@@ -8,15 +9,17 @@ import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -130,7 +133,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
     }
 
-    @ExceptionHandler(AuthenticationException.class) // Bao gồm BadCredentialsException
+    @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ErrorResponseDto> handleAuthenticationException(AuthenticationException ex, HttpServletRequest request) {
         log.warn("Lỗi xác thực (AuthenticationException) cho đường dẫn '{}': {}", request.getRequestURI(), ex.getMessage());
         String message = "Thông tin đăng nhập không chính xác hoặc tài khoản không hợp lệ.";
@@ -203,17 +206,6 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(IllegalStateException.class)
-    public ResponseEntity<ErrorResponseDto> handleIllegalStateException(IllegalStateException ex, HttpServletRequest request) {
-        log.error("Trạng thái không hợp lệ (IllegalStateException): {} tại {}", ex.getMessage(), request.getRequestURI());
-        ErrorResponseDto errorResponse = ErrorResponseDto.of(
-                HttpStatus.BAD_REQUEST,
-                "Trạng thái không hợp lệ: " + ex.getMessage(),
-                request.getRequestURI()
-        );
-        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-
     @ExceptionHandler(InvalidOperationException.class)
     public ResponseEntity<ErrorResponseDto> handleInvalidOperationException(InvalidOperationException ex, HttpServletRequest request) {
         log.warn("Thao tác không hợp lệ (InvalidOperationException): {} tại {}", ex.getMessage(), request.getRequestURI());
@@ -222,6 +214,33 @@ public class GlobalExceptionHandler {
                 ex.getMessage(),
                 request.getRequestURI()
         );
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponseDto> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
+        String parameterName = ex.getName();
+        String invalidValue = ex.getValue() != null ? ex.getValue().toString() : "null";
+        Class<?> requiredType = ex.getRequiredType();
+
+        String message;
+        if (requiredType != null && requiredType.equals(Gender.class)) {
+            message = String.format("Giá trị '%s' không hợp lệ cho tham số '%s'. Các giá trị hợp lệ: 'Nam', 'Nữ', 'MALE', 'FEMALE'",
+                    invalidValue, parameterName);
+        } else if (requiredType != null && requiredType.isEnum()) {
+            message = String.format("Giá trị '%s' không hợp lệ cho tham số '%s'", invalidValue, parameterName);
+        } else {
+            message = String.format("Giá trị '%s' không hợp lệ cho tham số '%s'", invalidValue, parameterName);
+        }
+
+        log.warn("Lỗi chuyển đổi tham số: {}", message, ex);
+
+        ErrorResponseDto errorResponse = ErrorResponseDto.of(
+                HttpStatus.BAD_REQUEST,
+                "Yêu cầu không hợp lệ: " + message,
+                request.getRequestURI()
+        );
+
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 }

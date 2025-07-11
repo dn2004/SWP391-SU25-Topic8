@@ -23,6 +23,4 @@ public interface PostVaccinationMonitoringMapper {
     @Mapping(source = "recordedByUser.userId", target = "recordedByUserId")
     @Mapping(source = "recordedByUser.fullName", target = "recordedByUserName")
     PostVaccinationMonitoringResponseDto toDto(PostVaccinationMonitoring entity);
-
-    List<PostVaccinationMonitoringResponseDto> toDtoList(List<PostVaccinationMonitoring> entities);
 }

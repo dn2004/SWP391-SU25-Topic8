@@ -35,41 +35,49 @@ public class BlogService {
     private final BlogMapper blogMapper;
     private final AuthorizationService authorizationService;
     private final BlogSpecification blogSpecification;
-    private final NotificationService notificationService;
+//    private final NotificationService notificationService;
     private final CloudinaryStorageService cloudinaryStorageService;
 
     @Transactional
     public BlogResponseDto createBlog(CreateBlogRequestDto createDto) {
         User currentUser = authorizationService.getCurrentUserAndValidate();
+        log.debug("Người dùng '{}' đang tạo blog mới với tiêu đề: '{}'", currentUser.getEmail(), createDto.title());
         Blog blog = blogMapper.toEntity(createDto, currentUser);
         Blog savedBlog = blogRepository.save(blog);
+        log.info("Tạo blog thành công. ID: {}, Slug: {}", savedBlog.getId(), savedBlog.getSlug());
         return blogMapper.toResponseDto(savedBlog);
     }
 
     @Transactional(readOnly = true)
     public Page<BlogResponseDto> getAllBlogs(String search, String title, String description, Long authorId, BlogStatus status, BlogCategory category, LocalDate startDate, LocalDate endDate, Pageable pageable) {
-        Optional<User> currentUserOpt = authorizationService.tryGetCurrentUser();
+        log.debug("Lấy danh sách blog với các tham số: search='{}', title='{}', description='{}', authorId={}, status={}, category={}, startDate={}, endDate={}, pageable={}",
+                search, title, description, authorId, status, category, startDate, endDate, pageable);
 
-        // Bắt đầu với specification cơ bản - sử dụng phương thức mới thay vì deprecated
         Specification<Blog> spec = (root, query, criteriaBuilder) -> criteriaBuilder.conjunction();
 
-        // Nếu có từ khóa tìm kiếm, sử dụng tìm kiếm tổng hợp
         if (search != null && !search.isBlank()) {
+            log.info("Áp dụng tìm kiếm tổng hợp với từ khóa: '{}'", search);
             spec = spec.and(blogSpecification.searchInTitleDescriptionContent(search));
         } else {
-            // Nếu không có tìm kiếm tổng hợp, áp dụng các bộ lọc riêng lẻ
+            log.info("Áp dụng bộ lọc tiêu đề và mô tả: title='{}', description='{}'", title, description);
             spec = spec.and(blogSpecification.titleContains(title))
                     .and(blogSpecification.descriptionContains(description));
         }
 
-        // Áp dụng các bộ lọc khác
+        log.info("Áp dụng các bộ lọc khác: authorId={}, status={}, category={}, startDate={}, endDate={}",
+                authorId, status, category, startDate, endDate);
+
         spec = spec.and(blogSpecification.hasAuthorId(authorId))
                 .and(blogSpecification.hasStatus(status))
                 .and(blogSpecification.hasCategory(category))
                 .and(blogSpecification.updatedBetween(startDate, endDate));
 
+        // Kiểm tra quyền truy cập
+        Optional<User> currentUserOpt = authorizationService.tryGetCurrentUser();
+
         // Nếu người dùng không đăng nhập hoặc không phải admin/manager, chỉ hiển thị các bài PUBLIC
         if (currentUserOpt.isEmpty() || !hasAdminOrManagerRole(currentUserOpt.get())) {
+            log.info("Người dùng không đăng nhập hoặc không có quyền quản trị, chỉ hiển thị các bài đăng công khai.");
             spec = spec.and(blogSpecification.hasStatus(BlogStatus.PUBLIC));
         }
 
@@ -84,12 +92,14 @@ public class BlogService {
     @Transactional(readOnly = true)
     public Page<BlogResponseDto> getMyBlogs(Pageable pageable) {
         User currentUser = authorizationService.getCurrentUserAndValidate();
+        log.debug("Lấy danh sách blog của người dùng '{}', pageable={}", currentUser.getEmail(), pageable);
         Specification<Blog> spec = blogSpecification.hasAuthor(currentUser);
         return blogRepository.findAll(spec, pageable).map(blogMapper::toResponseDto);
     }
 
     @Transactional(readOnly = true)
     public BlogResponseDto getBlogById(Long blogId) {
+        log.debug("Lấy chi tiết blog theo ID: {}", blogId);
         Blog blog = blogRepository.findById(blogId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bài đăng với ID: " + blogId));
 
@@ -111,6 +121,7 @@ public class BlogService {
 
     @Transactional(readOnly = true)
     public BlogResponseDto getBlogBySlug(String slug) {
+        log.debug("Lấy chi tiết blog theo slug: {}", slug);
         Blog blog = blogRepository.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bài đăng với slug: " + slug));
 
@@ -133,35 +144,38 @@ public class BlogService {
     @Transactional
     public BlogResponseDto updateBlog(Long blogId, UpdateBlogRequestDto updateDto) {
         User currentUser = authorizationService.getCurrentUserAndValidate();
+        log.debug("Người dùng '{}' đang cập nhật blog ID: {}", currentUser.getEmail(), blogId);
         Blog blog = blogRepository.findById(blogId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bài đăng với ID: " + blogId));
 
         boolean isAuthor = blog.getAuthor().getUserId().equals(currentUser.getUserId());
 
         if (!isAuthor) {
+            log.warn("Người dùng '{}' cố gắng cập nhật blog ID: {} nhưng không phải tác giả", currentUser.getEmail(), blogId);
             throw new AccessDeniedException("Bạn chỉ có thể cập nhật bài đăng của chính mình.");
         }
 
         // Xử lý thay đổi thumbnail
         if (updateDto.thumbnail() != null && !updateDto.thumbnail().equals(blog.getThumbnail())) {
-            // Xóa thumbnail cũ nếu có
             if (blog.getThumbnail() != null && !blog.getThumbnail().isEmpty()) {
                 try {
                     deleteThumbnailByUrl(blog.getThumbnail());
                 } catch (Exception e) {
-                    log.warn("Không thể xóa thumbnail cũ: {}", blog.getThumbnail(), e);
+                    log.warn("Không thể xóa thumbnail cũ: {} cho blog ID: {}", blog.getThumbnail(), blogId, e);
                 }
             }
         }
 
         blogMapper.updateEntityFromDto(updateDto, blog);
         Blog updatedBlog = blogRepository.save(blog);
+        log.info("Cập nhật blog ID: {} thành công bởi người dùng '{}'", blogId, currentUser.getEmail());
         return blogMapper.toResponseDto(updatedBlog);
     }
 
     @Transactional
     public void deleteBlog(Long blogId) {
         User currentUser = authorizationService.getCurrentUserAndValidate();
+        log.debug("Người dùng '{}' đang xóa blog ID: {}", currentUser.getEmail(), blogId);
         Blog blog = blogRepository.findById(blogId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bài đăng với ID: " + blogId));
 
@@ -169,26 +183,27 @@ public class BlogService {
         boolean isAdmin = currentUser.getRole().equals(UserRole.SchoolAdmin);
 
         if (!isAdmin && !isAuthor) {
+            log.warn("Người dùng '{}' cố gắng xóa blog ID: {} nhưng không có quyền", currentUser.getEmail(), blogId);
             throw new AccessDeniedException("Bạn không có quyền xóa bài đăng này.");
         }
 
-        // Xóa thumbnail từ Cloudinary trước khi xóa blog
         if (blog.getThumbnail() != null && !blog.getThumbnail().isEmpty()) {
             try {
                 deleteThumbnailByUrl(blog.getThumbnail());
             } catch (Exception e) {
-                log.warn("Không thể xóa thumbnail khi xóa blog: {}", blog.getThumbnail(), e);
+                log.warn("Không thể xóa thumbnail khi xóa blog ID: {}: {}", blogId, blog.getThumbnail(), e);
             }
         }
 
         blogRepository.delete(blog);
+        log.info("Blog ID: {} đã bị xóa bởi người dùng '{}'", blogId, currentUser.getEmail());
     }
 
     @Transactional
     public BlogResponseDto updateBlogStatus(Long blogId, UpdateBlogStatusRequestDto updateDto) {
         User currentUser = authorizationService.getCurrentUserAndValidate();
-        // This action is restricted to Admins and Managers
         if (!hasAdminOrManagerRole(currentUser)) {
+            log.warn("Người dùng '{}' cố gắng cập nhật trạng thái blog ID: {} nhưng không có quyền", currentUser.getEmail(), blogId);
             throw new AccessDeniedException("Bạn không có quyền cập nhật trạng thái bài đăng.");
         }
 
@@ -198,14 +213,13 @@ public class BlogService {
         blog.setStatus(updateDto.status());
         Blog updatedBlog = blogRepository.save(blog);
 
-        log.info("Trạng thái của bài đăng ID {} đã được cập nhật thành {} bởi người dùng {}", blogId, updateDto.status(), currentUser.getEmail());
-
+        log.info("Trạng thái blog ID: {} đã được cập nhật thành {} bởi người dùng '{}'", blogId, updateDto.status(), currentUser.getEmail());
         return blogMapper.toResponseDto(updatedBlog);
     }
 
     public String uploadThumbnail(MultipartFile file) {
         authorizationService.getCurrentUserAndValidate();
-
+        log.debug("Đang upload thumbnail cho blog");
         // Validate file type
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("File thumbnail không được để trống");
@@ -224,7 +238,7 @@ public class BlogService {
 
         try {
             String thumbnailUrl = cloudinaryStorageService.uploadBlogThumbnail(file);
-            log.info("Thumbnail đã được upload thành công: {}", thumbnailUrl);
+            log.info("Upload thumbnail thành công: {}", thumbnailUrl);
             return thumbnailUrl;
         } catch (Exception e) {
             log.error("Lỗi khi upload thumbnail", e);
@@ -234,6 +248,7 @@ public class BlogService {
 
     public void deleteThumbnail(String thumbnailUrl) {
         authorizationService.getCurrentUserAndValidate();
+        log.debug("Đang xóa thumbnail: {}", thumbnailUrl);
         deleteThumbnailByUrl(thumbnailUrl);
     }
 
@@ -241,9 +256,7 @@ public class BlogService {
         if (thumbnailUrl == null || thumbnailUrl.isEmpty()) {
             return;
         }
-
         try {
-            // Extract public_id from Cloudinary URL
             String publicId = extractPublicIdFromUrl(thumbnailUrl);
             if (publicId != null) {
                 cloudinaryStorageService.deleteEditorImage(publicId);
@@ -259,35 +272,24 @@ public class BlogService {
         if (url == null || url.isEmpty()) {
             return null;
         }
-
         try {
-            // URL format: https://res.cloudinary.com/{cloud_name}/{resource_type}/upload/{public_id}.{format}
-            // Example: https://res.cloudinary.com/mycloud/image/upload/v1234567890/folder/filename.jpg
-
             if (!url.contains("cloudinary.com")) {
                 log.warn("URL không phải từ Cloudinary: {}", url);
                 return null;
             }
-
-            // Find the part after '/upload/'
             String uploadMarker = "/upload/";
             int uploadIndex = url.indexOf(uploadMarker);
             if (uploadIndex == -1) {
                 log.warn("Không tìm thấy '/upload/' trong URL: {}", url);
                 return null;
             }
-
             String afterUpload = url.substring(uploadIndex + uploadMarker.length());
-
-            // Remove version if present (starts with 'v' followed by numbers)
             if (afterUpload.matches("^v\\d+/.*")) {
                 int slashIndex = afterUpload.indexOf('/');
                 if (slashIndex != -1) {
                     afterUpload = afterUpload.substring(slashIndex + 1);
                 }
             }
-
-            // Remove file extension
             int lastDotIndex = afterUpload.lastIndexOf('.');
             if (lastDotIndex != -1) {
                 afterUpload = afterUpload.substring(0, lastDotIndex);

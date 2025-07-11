@@ -1,5 +1,7 @@
 package com.fu.swp391.schoolhealthmanagementsystem.util;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.SchoolSession; // Import enum của bạn
+import com.fu.swp391.schoolhealthmanagementsystem.exception.InvalidOperationException;
+
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -23,7 +25,7 @@ public class SchoolSessionUtil {
             // Nếu không parse được, có thể là text như "Sau ăn trưa"
             // Cần logic phức tạp hơn để suy luận hoặc mặc định
             // Hiện tại, nếu không parse được, coi như không xác định được buổi
-            throw new IllegalStateException("Không thể xác định buổi học từ chuỗi: " + timeSlotText, e);
+            throw new InvalidOperationException("Không thể xác định buổi học từ chuỗi: " + timeSlotText, e);
         }
     }
 }

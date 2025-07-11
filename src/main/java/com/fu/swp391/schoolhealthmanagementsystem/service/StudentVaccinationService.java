@@ -11,6 +11,7 @@ import com.fu.swp391.schoolhealthmanagementsystem.entity.User;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentVaccinationStatus;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.UserRole;
 import com.fu.swp391.schoolhealthmanagementsystem.exception.FileStorageException;
+import com.fu.swp391.schoolhealthmanagementsystem.exception.InvalidOperationException;
 import com.fu.swp391.schoolhealthmanagementsystem.exception.ResourceNotFoundException;
 import com.fu.swp391.schoolhealthmanagementsystem.mapper.StudentVaccinationMapper;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.StudentRepository;
@@ -189,7 +190,7 @@ public class StudentVaccinationService {
 
         Student studentOfRecord = entity.getStudent();
         if (studentOfRecord == null) {
-            throw new IllegalStateException("Bản ghi tiêm chủng không liên kết với học sinh.");
+            throw new InvalidOperationException("Bản ghi tiêm chủng không liên kết với học sinh.");
         }
 
         if (currentUser.getRole() == UserRole.Parent) {
@@ -207,7 +208,7 @@ public class StudentVaccinationService {
 
         Student studentOfRecord = existingVaccination.getStudent();
         if (studentOfRecord == null) {
-            throw new IllegalStateException("Bản ghi tiêm chủng không liên kết với học sinh.");
+            throw new InvalidOperationException("Bản ghi tiêm chủng không liên kết với học sinh.");
         }
         Long studentId = studentOfRecord.getId(); // Lấy studentId từ bản ghi
 
@@ -362,7 +363,7 @@ public class StudentVaccinationService {
 
         Student studentOfRecord = vaccination.getStudent();
         if (studentOfRecord == null) {
-            throw new IllegalStateException("Bản ghi tiêm chủng không liên kết với học sinh.");
+            throw new InvalidOperationException("Bản ghi tiêm chủng không liên kết với học sinh.");
         }
 
         String denialReason = "Bạn không có quyền xóa bản ghi này hoặc bản ghi không ở trạng thái cho phép xóa.";
@@ -396,7 +397,7 @@ public class StudentVaccinationService {
 
         Student studentOfRecord = entity.getStudent();
         if (studentOfRecord == null) {
-            throw new IllegalStateException("Bản ghi tiêm chủng ID " + vaccinationId + " không liên kết với học sinh.");
+            throw new InvalidOperationException("Bản ghi tiêm chủng ID " + vaccinationId + " không liên kết với học sinh.");
         }
 
         // Kiểm tra quyền của người dùng hiện tại đối với việc xem file của học sinh này

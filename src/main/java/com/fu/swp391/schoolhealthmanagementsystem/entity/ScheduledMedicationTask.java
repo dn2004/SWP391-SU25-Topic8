@@ -31,7 +31,7 @@ public class ScheduledMedicationTask {
     @Column(name = "ScheduledDate", nullable = false)
     private LocalDate scheduledDate;
 
-    @Column(name = "ScheduledTimeText", length = 50, columnDefinition = "NVARCHAR(50)") // "08:00", "Sau ăn trưa"
+    @Column(name = "ScheduledTimeText", length = 50, columnDefinition = "NVARCHAR(50)")
     private String scheduledTimeText; // Vẫn giữ để NVYT dễ đọc
 
     @Column(name = "SchoolSession", length = 20) // Có thể suy ra từ ScheduledTimeText hoặc từ MedicationTimesPerDay
@@ -39,8 +39,6 @@ public class ScheduledMedicationTask {
 
     @Column(name = "Status", nullable = false)
     private ScheduledMedicationTaskStatus status;
-
-    // SpecificInstructionsForThisDose đã được bỏ
 
     // Thông tin khi đã thực hiện
     @Column(name = "AdministeredAt")

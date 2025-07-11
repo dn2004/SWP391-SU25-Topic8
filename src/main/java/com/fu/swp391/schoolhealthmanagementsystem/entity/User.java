@@ -17,9 +17,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Entity
-@Table(name = "Users",
-        uniqueConstraints = @UniqueConstraint(columnNames = "Email")
-)
+@Table(name = "Users")
 @Getter
 @Setter
 @NoArgsConstructor // Quan trọng cho JPA và @Builder

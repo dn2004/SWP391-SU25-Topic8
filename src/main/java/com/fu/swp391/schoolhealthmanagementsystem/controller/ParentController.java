@@ -22,8 +22,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.UUID;
-
 @RestController
 @RequestMapping("/api/parent")
 @RequiredArgsConstructor
@@ -38,18 +36,18 @@ public class ParentController {
     @PostMapping("/link-student")
     @Operation(summary = "Phụ huynh liên kết với học sinh bằng mã mời",
             description = """
-### Mô tả
-Cho phép phụ huynh liên kết tài khoản của mình với hồ sơ của một học sinh bằng cách sử dụng mã mời và ngày sinh của học sinh.
-- **Phân quyền:** Yêu cầu vai trò `Parent`.
-"""
+                    ### Mô tả
+                    Cho phép phụ huynh liên kết tài khoản của mình với hồ sơ của một học sinh bằng cách sử dụng mã mời và ngày sinh của học sinh.
+                    - **Phân quyền:** Yêu cầu vai trò `Parent`.
+                    """
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Liên kết thành công", content = @Content),
-        @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ", content = @Content),
-        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
-        @ApiResponse(responseCode = "404", description = "Không tìm thấy mã mời hoặc học sinh", content = @Content),
-        @ApiResponse(responseCode = "409", description = "Đã liên kết với học sinh này", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Liên kết thành công", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy mã mời hoặc học sinh", content = @Content),
+            @ApiResponse(responseCode = "409", description = "Đã liên kết với học sinh này", content = @Content)
     })
     public ResponseEntity<String> linkStudent(@Valid @RequestBody LinkStudentRequestDto requestDto) {
         parentStudentLinkService.linkParentToStudentByInvitation(requestDto);
@@ -60,16 +58,16 @@ Cho phép phụ huynh liên kết tài khoản của mình với hồ sơ của 
     @Operation(
             summary = "Lấy danh sách các học sinh đã liên kết của phụ huynh hiện tại (phân trang)",
             description = """
-### Mô tả
-Trả về danh sách các học sinh đã được liên kết với tài khoản phụ huynh đang đăng nhập.
-- **Phân quyền:** Yêu cầu vai trò `Parent`.
-"""
+                    ### Mô tả
+                    Trả về danh sách các học sinh đã được liên kết với tài khoản phụ huynh đang đăng nhập.
+                    - **Phân quyền:** Yêu cầu vai trò `Parent`.
+                    """
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
-        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
     })
     public ResponseEntity<Page<StudentDto>> getMyLinkedStudents(
             @RequestParam(required = false) StudentStatus status,

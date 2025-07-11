@@ -1,78 +1,72 @@
 package com.fu.swp391.schoolhealthmanagementsystem.repository.specification;
 
+import com.fu.swp391.schoolhealthmanagementsystem.entity.Blog;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.Student;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.*;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.Class;
-import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.ClassGroup;
-import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentStatus;
+import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
-import java.util.Collection;
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 public class StudentSpecification {
 
-    public Specification<Student> hasFullName(String fullName) {
+    public Specification<Student> search(String search) {
         return (root, query, criteriaBuilder) -> {
-            if (fullName == null || fullName.isEmpty()) {
+            if (!StringUtils.hasText(search)) {
                 return criteriaBuilder.conjunction();
             }
-            return criteriaBuilder.like(criteriaBuilder.lower(root.get("fullName")), "%" + fullName.toLowerCase() + "%");
+
+            String likePattern = "%" + search.toLowerCase() + "%";
+            List<Predicate> predicates = new ArrayList<>();
+
+            // Thêm điều kiện tìm kiếm theo fullName
+            predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("fullName")), likePattern));
+
+            // Thử chuyển đổi search thành Long để tìm theo ID
+            try {
+                Long id = Long.parseLong(search);
+                predicates.add(criteriaBuilder.equal(root.get("id"), id));
+            } catch (NumberFormatException e) {
+                // Bỏ qua nếu không phải là số
+            }
+
+            return criteriaBuilder.or(predicates.toArray(new Predicate[0]));
         };
     }
 
     public Specification<Student> hasClassGroup(ClassGroup classGroup) {
-        return (root, query, criteriaBuilder) -> {
-            if (classGroup == null) {
-                return criteriaBuilder.conjunction();
-            }
-            return criteriaBuilder.equal(root.get("classGroup"), classGroup);
-        };
+        return (root, query, criteriaBuilder) ->
+                classGroup == null ? criteriaBuilder.conjunction() : criteriaBuilder.equal(root.get("classGroup"), classGroup);
     }
 
     public Specification<Student> hasClassValue(Class classValue) {
-        return (root, query, criteriaBuilder) -> {
-            if (classValue == null) {
-                return criteriaBuilder.conjunction();
-            }
-            return criteriaBuilder.equal(root.get("classValue"), classValue);
-        };
+        return (root, query, criteriaBuilder) ->
+                classValue == null ? criteriaBuilder.conjunction() : criteriaBuilder.equal(root.get("classValue"), classValue);
     }
 
     public Specification<Student> hasStatus(StudentStatus status) {
-        return (root, query, criteriaBuilder) -> {
-            if (status == null) {
-                return criteriaBuilder.conjunction();
-            }
-            return criteriaBuilder.equal(root.get("status"), status);
-        };
+        return (root, query, criteriaBuilder) ->
+                status == null ? criteriaBuilder.conjunction() : criteriaBuilder.equal(root.get("status"), status);
     }
 
-    public Specification<Student> dateOfBirthAfterOrEqual(LocalDate startDate) {
+    // StudentSpecification.java
+    public Specification<Student> hasGender(Gender gender) {
         return (root, query, criteriaBuilder) -> {
-            if (startDate == null) {
+            if (gender == null) {
                 return criteriaBuilder.conjunction();
             }
-            return criteriaBuilder.greaterThanOrEqualTo(root.get("dateOfBirth"), startDate);
-        };
-    }
-
-    public Specification<Student> dateOfBirthBeforeOrEqual(LocalDate endDate) {
-        return (root, query, criteriaBuilder) -> {
-            if (endDate == null) {
-                return criteriaBuilder.conjunction();
-            }
-            return criteriaBuilder.lessThanOrEqualTo(root.get("dateOfBirth"), endDate);
+            return criteriaBuilder.equal(root.get("gender"), gender);
         };
     }
 
     public Specification<Student> hasDateOfBirth(LocalDate dateOfBirth) {
-        return (root, query, criteriaBuilder) -> {
-            if (dateOfBirth == null) {
-                return criteriaBuilder.conjunction();
-            }
-            return criteriaBuilder.equal(root.get("dateOfBirth"), dateOfBirth);
-        };
+        return (root, query, criteriaBuilder) ->
+                dateOfBirth == null ? criteriaBuilder.conjunction() : criteriaBuilder.equal(root.get("dateOfBirth"), dateOfBirth);
     }
 }

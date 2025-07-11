@@ -4,6 +4,7 @@ import com.fu.swp391.schoolhealthmanagementsystem.dto.student.StudentDto;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.student.UpdateStudentRequestDto;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.Class;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.ClassGroup;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.Gender;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentStatus;
 import com.fu.swp391.schoolhealthmanagementsystem.service.StudentService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -45,19 +46,19 @@ public class StudentController {
     @GetMapping("/{studentId}")
     @Operation(summary = "Lấy thông tin chi tiết một học sinh bằng ID",
             description = """
-### Mô tả
-Lấy thông tin chi tiết của một học sinh.
-- **Phân quyền:**
-    - `Parent`: Chỉ xem được thông tin của con mình.
-    - `MedicalStaff`, `StaffManager`, `SchoolAdmin`: Có thể xem của bất kỳ học sinh nào.
-"""
+                    ### Mô tả
+                    Lấy thông tin chi tiết của một học sinh.
+                    - **Phân quyền:**
+                        - `Parent`: Chỉ xem được thông tin của con mình.
+                        - `MedicalStaff`, `StaffManager`, `SchoolAdmin`: Có thể xem của bất kỳ học sinh nào.
+                    """
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Lấy thông tin thành công",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = StudentDto.class))),
-        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
-        @ApiResponse(responseCode = "404", description = "Không tìm thấy học sinh", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Lấy thông tin thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = StudentDto.class))),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy học sinh", content = @Content)
     })
     // Cho phép Admin, Staff, và Parent (service sẽ kiểm tra parent có link không)
     @PreAuthorize("hasAnyRole('SchoolAdmin', 'StaffManager', 'MedicalStaff', 'Parent')")
@@ -71,21 +72,21 @@ Lấy thông tin chi tiết của một học sinh.
     @GetMapping
     @Operation(summary = "Lấy danh sách học sinh (phân trang và lọc)",
             description = """
-### Mô tả
-Lấy danh sách học sinh trong toàn trường với các bộ lọc và phân trang.
-- **Phân quyền:** Yêu cầu vai trò `MedicalStaff`, `StaffManager`, hoặc `SchoolAdmin`.
-"""
+                    ### Mô tả
+                    Lấy danh sách học sinh trong toàn trường với các bộ lọc và phân trang.
+                    - **Phân quyền:** Yêu cầu vai trò `MedicalStaff`, `StaffManager`, hoặc `SchoolAdmin`.
+                    """
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
-        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
     })
     @PreAuthorize("hasAnyRole('SchoolAdmin', 'StaffManager', 'MedicalStaff')")
     public ResponseEntity<Page<StudentDto>> getAllStudents(
-            @Parameter(description = "Tên học sinh")
-            @RequestParam(required = false) String fullName,
+            @Parameter(description = "Tìm kiếm tổng quát (tên hoặc ID)")
+            @RequestParam(required = false) String search,
 
             @Parameter(description = "Khối lớp (MAM, CHOI, LA)")
             @RequestParam(required = false) ClassGroup classGroup,
@@ -96,32 +97,35 @@ Lấy danh sách học sinh trong toàn trường với các bộ lọc và phâ
             @Parameter(description = "Trạng thái")
             @RequestParam(required = false) StudentStatus status,
 
+            @Parameter(description = "Giới tính")
+            @RequestParam(required = false) Gender gender,
+
             @Parameter(description = "Ngày sinh chính xác (định dạng: yyyy-MM-dd)")
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateOfBirth,
 
             @ParameterObject
             @PageableDefault(size = 10, sort = "fullName") Pageable pageable) {
 
-        log.info("API: Yêu cầu lấy danh sách học sinh - fullName: {}, classGroup: {}, classValue: {}, status: {}, dateOfBirth: {}, page: {}, size: {}",
-                fullName, classGroup, classValue, status, dateOfBirth, pageable.getPageNumber(), pageable.getPageSize());
+        log.info("API: Yêu cầu lấy danh sách học sinh - search: {}, classGroup: {}, classValue: {}, status: {}, gender: {},dateOfBirth: {}, page: {}, size: {}",
+                search, classGroup, classValue, status, gender,dateOfBirth, pageable.getPageNumber(), pageable.getPageSize());
 
-        Page<StudentDto> studentPage = studentService.getAllStudents(fullName, classGroup, classValue, status, dateOfBirth, pageable);
+        Page<StudentDto> studentPage = studentService.getAllStudents(search, classGroup, classValue, status, gender, dateOfBirth, pageable);
         return ResponseEntity.ok(studentPage);
     }
 
     @GetMapping("/by-class-group-and-class/{classGroup}/{classValue}")
     @Operation(summary = "Lấy danh sách học sinh theo khối lớp và lớp cụ thể",
             description = """
-### Mô tả
-Lấy danh sách tất cả học sinh thuộc một lớp và khối lớp cụ thể.
-- **Phân quyền:** Yêu cầu vai trò `MedicalStaff`, `StaffManager`, hoặc `SchoolAdmin`.
-"""
+                    ### Mô tả
+                    Lấy danh sách tất cả học sinh thuộc một lớp và khối lớp cụ thể.
+                    - **Phân quyền:** Yêu cầu vai trò `MedicalStaff`, `StaffManager`, hoặc `SchoolAdmin`.
+                    """
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = List.class))),
-        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = List.class))),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
     })
     @PreAuthorize("hasAnyRole('SchoolAdmin', 'StaffManager', 'MedicalStaff')")
     public ResponseEntity<List<StudentDto>> getStudentsByClassGroupAndClass(
@@ -136,18 +140,18 @@ Lấy danh sách tất cả học sinh thuộc một lớp và khối lớp cụ
     @PutMapping("/{studentId}")
     @Operation(summary = "Cập nhật thông tin học sinh",
             description = """
-### Mô tả
-Cập nhật thông tin hồ sơ của một học sinh.
-- **Phân quyền:** Yêu cầu vai trò `StaffManager` hoặc `SchoolAdmin`.
-"""
+                    ### Mô tả
+                    Cập nhật thông tin hồ sơ của một học sinh.
+                    - **Phân quyền:** Yêu cầu vai trò `StaffManager` hoặc `SchoolAdmin`.
+                    """
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Cập nhật thành công",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = StudentDto.class))),
-        @ApiResponse(responseCode = "400", description = "Dữ liệu không hợp lệ", content = @Content),
-        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
-        @ApiResponse(responseCode = "404", description = "Không tìm thấy học sinh", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Cập nhật thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = StudentDto.class))),
+            @ApiResponse(responseCode = "400", description = "Dữ liệu không hợp lệ", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy học sinh", content = @Content)
     })
     @PreAuthorize("hasAnyRole('SchoolAdmin', 'StaffManager')")
     public ResponseEntity<StudentDto> updateStudent(
@@ -161,17 +165,17 @@ Cập nhật thông tin hồ sơ của một học sinh.
     @PostMapping("/{studentId}/graduate")
     @Operation(summary = "Đánh dấu học sinh đã tốt nghiệp",
             description = """
-### Mô tả
-Cập nhật trạng thái của học sinh thành `GRADUATED`.
-- **Phân quyền:** Yêu cầu vai trò `StaffManager` hoặc `SchoolAdmin`.
-"""
+                    ### Mô tả
+                    Cập nhật trạng thái của học sinh thành `GRADUATED`.
+                    - **Phân quyền:** Yêu cầu vai trò `StaffManager` hoặc `SchoolAdmin`.
+                    """
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Cập nhật thành công",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = StudentDto.class))),
-        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
-        @ApiResponse(responseCode = "404", description = "Không tìm thấy học sinh", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Cập nhật thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = StudentDto.class))),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy học sinh", content = @Content)
     })
     @PreAuthorize("hasAnyRole('SchoolAdmin', 'StaffManager')")
     public ResponseEntity<StudentDto> graduateStudent(
@@ -184,17 +188,17 @@ Cập nhật trạng thái của học sinh thành `GRADUATED`.
     @PostMapping("/{studentId}/withdraw")
     @Operation(summary = "Đánh dấu học sinh đã thôi học",
             description = """
-### Mô tả
-Cập nhật trạng thái của học sinh thành `WITHDRAWN`.
-- **Phân quyền:** Yêu cầu vai trò `StaffManager` hoặc `SchoolAdmin`.
-"""
+                    ### Mô tả
+                    Cập nhật trạng thái của học sinh thành `WITHDRAWN`.
+                    - **Phân quyền:** Yêu cầu vai trò `StaffManager` hoặc `SchoolAdmin`.
+                    """
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Cập nhật thành công",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = StudentDto.class))),
-        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
-        @ApiResponse(responseCode = "404", description = "Không tìm thấy học sinh", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Cập nhật thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = StudentDto.class))),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy học sinh", content = @Content)
     })
     @PreAuthorize("hasAnyRole('SchoolAdmin', 'StaffManager')")
     public ResponseEntity<StudentDto> withdrawStudent(
@@ -207,17 +211,17 @@ Cập nhật trạng thái của học sinh thành `WITHDRAWN`.
     @PostMapping("/{studentId}/reactivate")
     @Operation(summary = "Kích hoạt lại học sinh đã thôi học",
             description = """
-### Mô tả
-Cập nhật trạng thái của học sinh từ `WITHDRAWN` trở lại `STUDYING`.
-- **Phân quyền:** Yêu cầu vai trò `StaffManager` hoặc `SchoolAdmin`.
-"""
+                    ### Mô tả
+                    Cập nhật trạng thái của học sinh từ `WITHDRAWN` trở lại `STUDYING`.
+                    - **Phân quyền:** Yêu cầu vai trò `StaffManager` hoặc `SchoolAdmin`.
+                    """
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Cập nhật thành công",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = StudentDto.class))),
-        @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-        @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
-        @ApiResponse(responseCode = "404", description = "Không tìm thấy học sinh", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Cập nhật thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = StudentDto.class))),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy học sinh", content = @Content)
     })
     @PreAuthorize("hasAnyRole('SchoolAdmin', 'StaffManager')")
     public ResponseEntity<StudentDto> reactivateStudent(
@@ -229,19 +233,19 @@ Cập nhật trạng thái của học sinh từ `WITHDRAWN` trở lại `STUDYI
 
     @DeleteMapping("/{studentId}")
     @Operation(
-        summary = "Xóa học sinh theo ID",
-        description = """
-### Mô tả
-Xóa hồ sơ của một học sinh khỏi hệ thống.
-- **Điều kiện:** Chỉ cho phép xóa khi học sinh chưa có phụ huynh liên kết, chưa có sự cố sức khỏe và chưa có thông tin tiêm chủng.
-- **Phân quyền:** Yêu cầu vai trò `StaffManager` hoặc `SchoolAdmin`.
-"""
+            summary = "Xóa học sinh theo ID",
+            description = """
+                    ### Mô tả
+                    Xóa hồ sơ của một học sinh khỏi hệ thống.
+                    - **Điều kiện:** Chỉ cho phép xóa khi học sinh chưa có phụ huynh liên kết, chưa có sự cố sức khỏe và chưa có thông tin tiêm chủng.
+                    - **Phân quyền:** Yêu cầu vai trò `StaffManager` hoặc `SchoolAdmin`.
+                    """
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Xóa học sinh thành công"),
-        @ApiResponse(responseCode = "403", description = "Không có quyền xóa học sinh"),
-        @ApiResponse(responseCode = "404", description = "Không tìm thấy học sinh"),
-        @ApiResponse(responseCode = "409", description = "Không thể xóa vì học sinh đã có dữ liệu liên quan")
+            @ApiResponse(responseCode = "200", description = "Xóa học sinh thành công"),
+            @ApiResponse(responseCode = "403", description = "Không có quyền xóa học sinh"),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy học sinh"),
+            @ApiResponse(responseCode = "409", description = "Không thể xóa vì học sinh đã có dữ liệu liên quan")
     })
     @PreAuthorize("hasAnyRole('SchoolAdmin', 'StaffManager')")
     public ResponseEntity<Map<String, Object>> deleteStudent(

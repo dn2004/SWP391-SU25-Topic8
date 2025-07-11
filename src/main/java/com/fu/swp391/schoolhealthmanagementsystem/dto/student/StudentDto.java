@@ -38,7 +38,7 @@ public record StudentDto(
                 description = "Lớp học của học sinh",
                 example = "A"
         )
-        Class className,
+        String className,
 
         @Schema(
                 description = "Khối lớp (Mầm, Chồi, Lá)",

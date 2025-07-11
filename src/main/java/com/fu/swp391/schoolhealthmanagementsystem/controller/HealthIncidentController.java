@@ -40,10 +40,10 @@ public class HealthIncidentController {
 
     @Operation(summary = "Tạo mới một sự cố sức khỏe",
             description = """
-Ghi nhận một sự cố sức khỏe mới cho học sinh.
-- **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
-- **Thông báo:** Gửi thông báo đến phụ huynh của học sinh khi tạo thành công.
-""")
+                    Ghi nhận một sự cố sức khỏe mới cho học sinh.
+                    - **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
+                    - **Thông báo:** Gửi thông báo đến phụ huynh của học sinh khi tạo thành công.
+                    """)
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Sự cố sức khỏe được tạo thành công",
                     content = @Content(mediaType = "application/json",
@@ -63,11 +63,11 @@ Ghi nhận một sự cố sức khỏe mới cho học sinh.
 
     @Operation(summary = "Lấy thông tin sự cố sức khỏe theo ID",
             description = """
-Lấy thông tin chi tiết của một sự cố sức khỏe (chưa bị xóa mềm).
-- **Phân quyền:**
-    - `Parent`: Chỉ có thể xem sự cố của con mình.
-    - `MedicalStaff`, `StaffManager`, `SchoolAdmin`: Có thể xem bất kỳ sự cố nào.
-""")
+                    Lấy thông tin chi tiết của một sự cố sức khỏe (chưa bị xóa mềm).
+                    - **Phân quyền:**
+                        - `Parent`: Chỉ có thể xem sự cố của con mình.
+                        - `MedicalStaff`, `StaffManager`, `SchoolAdmin`: Có thể xem bất kỳ sự cố nào.
+                    """)
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Tìm thấy sự cố sức khỏe",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = HealthIncidentResponseDto.class))),
@@ -84,11 +84,11 @@ Lấy thông tin chi tiết của một sự cố sức khỏe (chưa bị xóa 
 
     @Operation(summary = "Lấy danh sách sự cố sức khỏe của một học sinh",
             description = """
-Lấy danh sách (phân trang) các sự cố sức khỏe (chưa bị xóa mềm) của một học sinh cụ thể. Hỗ trợ lọc theo loại, địa điểm và khoảng thời gian.
-- **Phân quyền:**
-    - `Parent`: Chỉ có thể xem danh sách sự cố của con mình.
-    - `MedicalStaff`, `StaffManager`, `SchoolAdmin`: Có thể xem của bất kỳ học sinh nào.
-""")
+                    Lấy danh sách (phân trang) các sự cố sức khỏe (chưa bị xóa mềm) của một học sinh cụ thể. Hỗ trợ lọc theo loại, địa điểm và khoảng thời gian.
+                    - **Phân quyền:**
+                        - `Parent`: Chỉ có thể xem danh sách sự cố của con mình.
+                        - `MedicalStaff`, `StaffManager`, `SchoolAdmin`: Có thể xem của bất kỳ học sinh nào.
+                    """)
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
@@ -116,9 +116,9 @@ Lấy danh sách (phân trang) các sự cố sức khỏe (chưa bị xóa mề
 
     @Operation(summary = "Lấy tất cả sự cố sức khỏe (cho nhân viên)",
             description = """
-Lấy danh sách (phân trang) tất cả các sự cố sức khỏe (chưa bị xóa mềm). Hỗ trợ lọc theo nhiều tiêu chí.
-- **Phân quyền:** Yêu cầu vai trò `MedicalStaff`, `StaffManager`, hoặc `SchoolAdmin`.
-""")
+                    Lấy danh sách (phân trang) tất cả các sự cố sức khỏe (chưa bị xóa mềm). Hỗ trợ lọc theo nhiều tiêu chí.
+                    - **Phân quyền:** Yêu cầu vai trò `MedicalStaff`, `StaffManager`, hoặc `SchoolAdmin`.
+                    """)
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
             @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
@@ -149,9 +149,9 @@ Lấy danh sách (phân trang) tất cả các sự cố sức khỏe (chưa b�
 
     @Operation(summary = "Lấy danh sách sự cố sức khỏe của tôi (cho nhân viên y tế)",
             description = """
-Lấy danh sách (phân trang) các sự cố sức khỏe do chính nhân viên y tế/quản lý đang đăng nhập ghi nhận. Hỗ trợ lọc theo nhiều tiêu chí.
-- **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
-""")
+                    Lấy danh sách (phân trang) các sự cố sức khỏe do chính nhân viên y tế/quản lý đang đăng nhập ghi nhận. Hỗ trợ lọc theo nhiều tiêu chí.
+                    - **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
+                    """)
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
             @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
@@ -180,13 +180,13 @@ Lấy danh sách (phân trang) các sự cố sức khỏe do chính nhân viên
 
     @Operation(summary = "Cập nhật một sự cố sức khỏe",
             description = """
-Cập nhật thông tin của một sự cố sức khỏe (chưa bị xóa mềm).
-- **Điều kiện:** Chỉ có thể cập nhật trong vòng 1 ngày kể từ khi tạo.
-- **Phân quyền:**
-    - Người tạo sự cố (`MedicalStaff`).
-    - `StaffManager`, `SchoolAdmin`.
-- **Thông báo:** Gửi thông báo đến phụ huynh của học sinh khi cập nhật thành công.
-""")
+                    Cập nhật thông tin của một sự cố sức khỏe (chưa bị xóa mềm).
+                    - **Điều kiện:** Chỉ có thể cập nhật trong vòng 1 ngày kể từ khi tạo.
+                    - **Phân quyền:**
+                        - Người tạo sự cố (`MedicalStaff`).
+                        - `StaffManager`, `SchoolAdmin`.
+                    - **Thông báo:** Gửi thông báo đến phụ huynh của học sinh khi cập nhật thành công.
+                    """)
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Cập nhật thành công",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = HealthIncidentResponseDto.class))),
@@ -206,12 +206,12 @@ Cập nhật thông tin của một sự cố sức khỏe (chưa bị xóa mề
 
     @Operation(summary = "Xóa mềm một sự cố sức khỏe",
             description = """
-Đánh dấu một sự cố sức khỏe là đã xóa và hoàn trả lại số lượng vật tư y tế đã sử dụng.
-- **Điều kiện:** Chỉ có thể xóa trong ngày tạo sự cố.
-- **Phân quyền:**
-    - Người tạo sự cố (`MedicalStaff`).
-    - `StaffManager`, `SchoolAdmin`.
-""")
+                    Đánh dấu một sự cố sức khỏe là đã xóa và hoàn trả lại số lượng vật tư y tế đã sử dụng.
+                    - **Điều kiện:** Chỉ có thể xóa trong ngày tạo sự cố.
+                    - **Phân quyền:**
+                        - Người tạo sự cố (`MedicalStaff`).
+                        - `StaffManager`, `SchoolAdmin`.
+                    """)
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Xóa mềm thành công", content = @Content),
             @ApiResponse(responseCode = "400", description = "Sự cố đã bị xóa trước đó", content = @Content),

@@ -44,11 +44,11 @@ public record ScheduledMedicationTaskResponseDto(
         )
         SchoolSession schoolSession,
 
-        @Schema(
-                description = "Số liều cần uống trong nhiệm vụ",
-                example = "1"
-        )
-        Integer dosesToAdminister,
+//        @Schema(
+//                description = "Số liều cần uống trong nhiệm vụ",
+//                example = "1"
+//        )
+//        Integer dosesToAdminister,
 
         @Schema(
                 description = "Trạng thái nhiệm vụ uống thuốc",

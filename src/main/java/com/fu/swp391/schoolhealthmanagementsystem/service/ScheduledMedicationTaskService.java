@@ -7,6 +7,7 @@ import com.fu.swp391.schoolhealthmanagementsystem.dto.student.medication.SkipMed
 import com.fu.swp391.schoolhealthmanagementsystem.entity.*;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.*;
 import com.fu.swp391.schoolhealthmanagementsystem.exception.FileStorageException;
+import com.fu.swp391.schoolhealthmanagementsystem.exception.InvalidOperationException;
 import com.fu.swp391.schoolhealthmanagementsystem.exception.ResourceNotFoundException;
 import com.fu.swp391.schoolhealthmanagementsystem.mapper.ScheduledMedicationTaskMapper;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.*;
@@ -68,7 +69,7 @@ public class ScheduledMedicationTaskService {
             Student studentOfMedication = studentMedication.getStudent();
             if (studentOfMedication == null) {
                 log.error("Data integrity issue: StudentMedication ID {} has no associated Student.", studentMedicationId);
-                throw new IllegalStateException("Dữ liệu thuốc không hợp lệ, không tìm thấy thông tin học sinh liên quan.");
+                throw new InvalidOperationException("Dữ liệu thuốc không hợp lệ, không tìm thấy thông tin học sinh liên quan.");
             }
             // Sử dụng hàm authorizeParentAction để kiểm tra quyền của phụ huynh đối với học sinh này
             try {
@@ -107,7 +108,7 @@ public class ScheduledMedicationTaskService {
         // Authorization Check
         StudentMedication studentMedication = task.getStudentMedication();
         if (studentMedication == null) {
-            throw new IllegalStateException("Task with ID " + taskId + " is not linked to any medication.");
+            throw new InvalidOperationException("Task with ID " + taskId + " is not linked to any medication.");
         }
         UserRole currentUserRole = currentUser.getRole();
         if (currentUserRole == UserRole.Parent) {
@@ -142,12 +143,12 @@ public class ScheduledMedicationTaskService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy lịch uống thuốc với ID: " + taskId));
 
         if (task.getStatus() != ScheduledMedicationTaskStatus.SCHEDULED) {
-            throw new IllegalStateException("Chỉ có thể xác nhận cho uống đối với lịch đang ở trạng thái 'Đã lên lịch'. Trạng thái hiện tại: " + task.getStatus().getDisplayName());
+            throw new InvalidOperationException("Chỉ có thể xác nhận cho uống đối với lịch đang ở trạng thái 'Đã lên lịch'. Trạng thái hiện tại: " + task.getStatus().getDisplayName());
         }
 
         StudentMedication medication = task.getStudentMedication();
         if (medication == null) {
-            throw new IllegalStateException("Lịch uống thuốc ID " + taskId + " không liên kết với thông tin thuốc nào.");
+            throw new InvalidOperationException("Lịch uống thuốc ID " + taskId + " không liên kết với thông tin thuốc nào.");
         }
 
         // Nếu actualDosesAdministered > dosesToAdministerInTask, cần có quy trình nghiệp vụ rõ ràng (có được phép không?)
@@ -228,7 +229,7 @@ public class ScheduledMedicationTaskService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy lịch uống thuốc với ID: " + taskId));
 
         if (task.getStatus() != ScheduledMedicationTaskStatus.SCHEDULED) {
-            throw new IllegalStateException("Chỉ có thể bỏ qua đối với lịch đang ở trạng thái 'Đã lên lịch'. Trạng thái hiện tại: " + task.getStatus().getDisplayName());
+            throw new InvalidOperationException("Chỉ có thể bỏ qua đối với lịch đang ở trạng thái 'Đã lên lịch'. Trạng thái hiện tại: " + task.getStatus().getDisplayName());
         }
 
         // Cập nhật thông tin task bị bỏ qua

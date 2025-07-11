@@ -32,10 +32,10 @@ public class BlogFileController {
     @Operation(
             summary = "Tải lên ảnh thumbnail cho bài viết",
             description = """
-### Mô tả
-Tải lên một file ảnh để sử dụng làm thumbnail cho bài viết. File sẽ được lưu trữ trên Cloudinary và trả về URL.
-- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`, `MedicalStaff`, hoặc `StaffManager`.
-"""
+                    ### Mô tả
+                    Tải lên một file ảnh để sử dụng làm thumbnail cho bài viết. File sẽ được lưu trữ trên Cloudinary và trả về URL.
+                    - **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`, `MedicalStaff`, hoặc `StaffManager`.
+                    """
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Tải lên thumbnail thành công",
@@ -58,10 +58,10 @@ Tải lên một file ảnh để sử dụng làm thumbnail cho bài viết. Fi
     @Operation(
             summary = "Xóa ảnh thumbnail của bài viết",
             description = """
-### Mô tả
-Xóa ảnh thumbnail khỏi Cloudinary dựa vào URL của ảnh.
-- **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`, `MedicalStaff`, hoặc `StaffManager`.
-"""
+                    ### Mô tả
+                    Xóa ảnh thumbnail khỏi Cloudinary dựa vào URL của ảnh.
+                    - **Phân quyền:** Yêu cầu vai trò `SchoolAdmin`, `MedicalStaff`, hoặc `StaffManager`.
+                    """
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Xóa thumbnail thành công"),

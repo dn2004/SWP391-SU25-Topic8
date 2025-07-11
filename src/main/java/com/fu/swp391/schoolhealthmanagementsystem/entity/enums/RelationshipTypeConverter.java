@@ -13,7 +13,7 @@ public class RelationshipTypeConverter implements AttributeConverter<Relationshi
         if (attribute == null) {
             return null;
         }
-        return attribute.getVietnameseName();
+        return attribute.getDisplayName();
     }
 
     @Override
@@ -24,6 +24,6 @@ public class RelationshipTypeConverter implements AttributeConverter<Relationshi
         if (dbData == null || dbData.trim().isEmpty()) {
             return null; // Hoặc giá trị mặc định nếu muốn
         }
-        return RelationshipType.fromString(dbData);
+        return RelationshipType.fromDisplayName(dbData);
     }
 }

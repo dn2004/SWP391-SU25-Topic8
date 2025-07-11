@@ -26,14 +26,14 @@ public class EnumController {
 
     @Operation(summary = "Lấy danh sách tất cả các danh mục blog",
             description = """
-### Mô tả
-Endpoint công khai để lấy danh sách tất cả các danh mục blog.
-- **Phân quyền:** Công khai.
-"""
+                    ### Mô tả
+                    Endpoint công khai để lấy danh sách tất cả các danh mục blog.
+                    - **Phân quyền:** Công khai.
+                    """
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = CategoryResponseDto.class)))
+            @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = CategoryResponseDto.class)))
     })
     @GetMapping("/blog-categories")
     public ResponseEntity<List<CategoryResponseDto>> getAllBlogCategories() {
@@ -50,14 +50,14 @@ Endpoint công khai để lấy danh sách tất cả các danh mục blog.
 
     @Operation(summary = "Lấy danh sách tất cả các trạng thái blog",
             description = """
-### Mô tả
-Endpoint công khai để lấy danh sách tất cả các trạng thái blog.
-- **Phân quyền:** Công khai.
-"""
+                    ### Mô tả
+                    Endpoint công khai để lấy danh sách tất cả các trạng thái blog.
+                    - **Phân quyền:** Công khai.
+                    """
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = StatusResponseDto.class)))
+            @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = StatusResponseDto.class)))
     })
     @GetMapping("/blog-statuses")
     public ResponseEntity<List<StatusResponseDto>> getAllBlogStatuses() {

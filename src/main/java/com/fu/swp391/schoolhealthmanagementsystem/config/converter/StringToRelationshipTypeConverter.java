@@ -20,7 +20,7 @@ public class StringToRelationshipTypeConverter implements Converter<String, Rela
         }
 
         try {
-            RelationshipType result = RelationshipType.fromString(source);
+            RelationshipType result = RelationshipType.fromDisplayName(source);
             log.debug("Đã chuyển đổi thành công '{}' thành enum '{}'", source, result);
             return result;
         } catch (IllegalArgumentException e) {

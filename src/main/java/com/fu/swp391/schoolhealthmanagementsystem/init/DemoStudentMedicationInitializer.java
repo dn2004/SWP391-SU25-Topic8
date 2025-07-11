@@ -5,6 +5,8 @@ import com.fu.swp391.schoolhealthmanagementsystem.entity.Student;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.StudentMedication;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.User;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.MedicationStatus;
+import com.fu.swp391.schoolhealthmanagementsystem.exception.InvalidOperationException;
+import com.fu.swp391.schoolhealthmanagementsystem.exception.ResourceNotFoundException;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.StudentMedicationRepository;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.StudentRepository;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.UserRepository;
@@ -37,11 +39,11 @@ public class DemoStudentMedicationInitializer implements ApplicationRunner {
         try {
             // Tìm học sinh và người dùng được tạo trong DemoUserInitializer
             Student student = studentRepository.findByFullNameAndDateOfBirth("Alice Student", LocalDate.of(2015, 1, 1))
-                    .orElseThrow(() -> new IllegalStateException("Không tìm thấy học sinh Alice Student. Hãy chạy DemoUserInitializer trước."));
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy học sinh Alice Student. Hãy chạy DemoUserInitializer trước."));
             User parent = userRepository.findByEmail("parent@example.com")
-                    .orElseThrow(() -> new IllegalStateException("Không tìm thấy người dùng parent@example.com."));
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng parent@example.com."));
             User nurse = userRepository.findByEmail("nurse@example.com")
-                    .orElseThrow(() -> new IllegalStateException("Không tìm thấy người dùng nurse@example.com."));
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng nurse@example.com."));
 
             // Kiểm tra xem có nên khởi tạo dữ liệu không
             if (studentMedicationRepository.countByStudent(student) > 0) {
@@ -134,7 +136,7 @@ public class DemoStudentMedicationInitializer implements ApplicationRunner {
 
             log.info("Hoàn tất khởi tạo 5 StudentMedication mẫu.");
 
-        } catch (IllegalStateException e) {
+        } catch (InvalidOperationException e) {
             log.error("Lỗi khi khởi tạo dữ liệu StudentMedication: {}", e.getMessage());
         }
     }

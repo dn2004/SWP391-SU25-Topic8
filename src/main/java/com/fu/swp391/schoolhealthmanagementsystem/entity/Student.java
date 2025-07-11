@@ -1,14 +1,11 @@
 package com.fu.swp391.schoolhealthmanagementsystem.entity;
 
-import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.ClassGroup;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.Class;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.ClassGroup;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.Gender;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentStatus;
 import jakarta.persistence.*;
-
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -23,6 +20,9 @@ import java.util.List;
 })
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Student {
 
     @Id
@@ -36,19 +36,17 @@ public class Student {
     @Column(name = "DateOfBirth", nullable = false)
     private LocalDate dateOfBirth;
 
-    @Column(name = "Gender", nullable = false, length = 10)
+    @Column(name = "Gender", nullable = false)
     private Gender gender;
 
     @Column(name = "ClassGroup", nullable = false)
-    @Enumerated(EnumType.STRING)
     private ClassGroup classGroup;
 
     @Column(name = "ClassValue", nullable = false)
-    @Enumerated(EnumType.STRING)
     private Class classValue;
 
     @Column(name = "Status", nullable = false, length = 20)
-    @Enumerated(EnumType.STRING)
+    @Builder.Default
     private StudentStatus status = StudentStatus.ACTIVE;
 
     @CreationTimestamp
@@ -60,15 +58,18 @@ public class Student {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
     private List<ParentStudentLink> parentLinks = new ArrayList<>();
 
     @Column(name = "InvitationCode", unique = true, length = 20)
     private String invitationCode;
 
     @OneToMany(mappedBy = "student", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @Builder.Default
     List<StudentVaccination> vaccinations = new ArrayList<>();
 
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
     private List<HealthIncident> healthIncidents = new ArrayList<>();
 
     /**

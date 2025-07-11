@@ -27,7 +27,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/student-medications")
@@ -40,11 +39,11 @@ public class StudentMedicationController {
 
     @Operation(summary = "NVYT tạo bản ghi thuốc và lịch trình ban đầu cho học sinh",
             description = """
-### Mô tả
-Nhân viên y tế nhập thông tin thuốc do phụ huynh gửi, bao gồm tên thuốc, số liều, hướng dẫn và lịch trình uống thuốc. Trạng thái thuốc mặc định là `AVAILABLE`.
-- **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
-- **Thông báo:** Gửi thông báo đến phụ huynh khi tạo thành công.
-"""
+                    ### Mô tả
+                    Nhân viên y tế nhập thông tin thuốc do phụ huynh gửi, bao gồm tên thuốc, số liều, hướng dẫn và lịch trình uống thuốc. Trạng thái thuốc mặc định là `AVAILABLE`.
+                    - **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
+                    - **Thông báo:** Gửi thông báo đến phụ huynh khi tạo thành công.
+                    """
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Tạo bản ghi thuốc thành công",
@@ -64,12 +63,12 @@ Nhân viên y tế nhập thông tin thuốc do phụ huynh gửi, bao gồm tê
 
     @Operation(summary = "Lấy thông tin chi tiết một bản ghi thuốc của học sinh",
             description = """
-### Mô tả
-Lấy thông tin chi tiết của một bản ghi thuốc dựa trên ID.
-- **Phân quyền:** 
-    - `Parent`: Chỉ xem được của con mình.
-    - `MedicalStaff`, `StaffManager`, `SchoolAdmin`: Có thể xem của bất kỳ ai.
-"""
+                    ### Mô tả
+                    Lấy thông tin chi tiết của một bản ghi thuốc dựa trên ID.
+                    - **Phân quyền:** 
+                        - `Parent`: Chỉ xem được của con mình.
+                        - `MedicalStaff`, `StaffManager`, `SchoolAdmin`: Có thể xem của bất kỳ ai.
+                    """
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Tìm thấy thông tin thuốc",
@@ -88,12 +87,12 @@ Lấy thông tin chi tiết của một bản ghi thuốc dựa trên ID.
 
     @Operation(summary = "Lấy lịch sử giao dịch của một đơn thuốc",
             description = """
-### Mô tả
-Lấy danh sách các giao dịch liên quan đến một đơn thuốc cụ thể (nhập, dùng, hủy,...).
-- **Phân quyền:** 
-    - `Parent`: Chỉ xem được của con mình.
-    - `MedicalStaff`, `StaffManager`, `SchoolAdmin`: Có thể xem của bất kỳ ai.
-"""
+                    ### Mô tả
+                    Lấy danh sách các giao dịch liên quan đến một đơn thuốc cụ thể (nhập, dùng, hủy,...).
+                    - **Phân quyền:** 
+                        - `Parent`: Chỉ xem được của con mình.
+                        - `MedicalStaff`, `StaffManager`, `SchoolAdmin`: Có thể xem của bất kỳ ai.
+                    """
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lấy lịch sử giao dịch thành công",
@@ -115,20 +114,20 @@ Lấy danh sách các giao dịch liên quan đến một đơn thuốc cụ th�
             @ParameterObject @PageableDefault(size = 10, sort = "transactionDateTime", direction = Sort.Direction.DESC) Pageable pageable) {
 
         Page<StudentMedicationTransactionResponseDto> response = studentMedicationService.getTransactionsForStudentMedication(
-            studentMedicationId,
-            startDateTime,
-            endDateTime,
-            transactionType,
-            pageable);
+                studentMedicationId,
+                startDateTime,
+                endDateTime,
+                transactionType,
+                pageable);
         return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "NVYT cập nhật thông tin cơ bản của thuốc học sinh",
             description = """
-### Mô tả
-Cập nhật các thông tin mô tả như tên thuốc, liều dùng (text), ngày hết hạn, ghi chú. Không dùng để cập nhật số liều hoặc lịch trình.
-- **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
-"""
+                    ### Mô tả
+                    Cập nhật các thông tin mô tả như tên thuốc, liều dùng (text), ngày hết hạn, ghi chú. Không dùng để cập nhật số liều hoặc lịch trình.
+                    - **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
+                    """
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Cập nhật thành công",
@@ -149,11 +148,11 @@ Cập nhật các thông tin mô tả như tên thuốc, liều dùng (text), ng
 
     @Operation(summary = "Cập nhật thông tin lịch trình cho thuốc của học sinh",
             description = """
-### Mô tả
-Cập nhật ngày bắt đầu, các cữ uống trong ngày. Các task cũ trong tương lai sẽ bị hủy và task mới sẽ được tạo.
-- **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
-- **Thông báo:** Gửi thông báo đến phụ huynh khi cập nhật lịch trình.
-"""
+                    ### Mô tả
+                    Cập nhật ngày bắt đầu, các cữ uống trong ngày. Các task cũ trong tương lai sẽ bị hủy và task mới sẽ được tạo.
+                    - **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
+                    - **Thông báo:** Gửi thông báo đến phụ huynh khi cập nhật lịch trình.
+                    """
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Cập nhật thành công",
@@ -174,11 +173,11 @@ Cập nhật ngày bắt đầu, các cữ uống trong ngày. Các task cũ tro
 
     @Operation(summary = "Báo cáo thuốc của học sinh bị thất lạc",
             description = """
-### Mô tả
-Báo cáo thuốc bị thất lạc. Trạng thái thuốc sẽ thành `LOST`, số liều về 0, các lịch trình tương lai bị hủy.
-- **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
-- **Thông báo:** Gửi thông báo đến phụ huynh về việc thuốc bị thất lạc.
-"""
+                    ### Mô tả
+                    Báo cáo thuốc bị thất lạc. Trạng thái thuốc sẽ thành `LOST`, số liều về 0, các lịch trình tương lai bị hủy.
+                    - **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
+                    - **Thông báo:** Gửi thông báo đến phụ huynh về việc thuốc bị thất lạc.
+                    """
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Báo cáo thành công",
@@ -199,11 +198,11 @@ Báo cáo thuốc bị thất lạc. Trạng thái thuốc sẽ thành `LOST`, s
 
     @Operation(summary = "Xác nhận trả thuốc lại cho phụ huynh",
             description = """
-### Mô tả
-Xác nhận đã trả lại thuốc cho phụ huynh. Trạng thái thuốc sẽ thành `RETURNED_TO_PARENT`, số liều về 0, các lịch trình tương lai bị hủy.
-- **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
-- **Thông báo:** Gửi thông báo đến phụ huynh về việc đã trả thuốc.
-"""
+                    ### Mô tả
+                    Xác nhận đã trả lại thuốc cho phụ huynh. Trạng thái thuốc sẽ thành `RETURNED_TO_PARENT`, số liều về 0, các lịch trình tương lai bị hủy.
+                    - **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
+                    - **Thông báo:** Gửi thông báo đến phụ huynh về việc đã trả thuốc.
+                    """
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Xác nhận thành công",
@@ -225,20 +224,20 @@ Xác nhận đã trả lại thuốc cho phụ huynh. Trạng thái thuốc sẽ
 
     @Operation(summary = "Hủy bỏ thuốc đã nhập",
             description = """
-### Mô tả
-Hủy bỏ một đơn thuốc đã nhập.
-- **Điều kiện:** Chỉ người tạo mới được hủy và thuốc chưa được lên lịch.
-- **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
-- **Thông báo:** Gửi thông báo đến phụ huynh về việc hủy thuốc.
-"""
+                    ### Mô tả
+                    Hủy bỏ một đơn thuốc đã nhập.
+                    - **Điều kiện:** Chỉ người tạo mới được hủy và thuốc chưa được lên lịch.
+                    - **Phân quyền:** Yêu cầu vai trò `MedicalStaff` hoặc `StaffManager`.
+                    - **Thông báo:** Gửi thông báo đến phụ huynh về việc hủy thuốc.
+                    """
     )
     @ApiResponses(value = {
-    @ApiResponse(responseCode = "200", description = "Hủy thuốc thành công",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = StudentMedicationResponseDto.class))),
-    @ApiResponse(responseCode = "400", description = "Không thể hủy (thuốc đã có lịch hoặc không ở trạng thái cho phép)", content = @Content),
-    @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
-    @ApiResponse(responseCode = "403", description = "Không có quyền hủy (không phải người tạo thuốc)", content = @Content),
-    @ApiResponse(responseCode = "404", description = "Không tìm thấy thuốc với ID cung cấp", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Hủy thuốc thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = StudentMedicationResponseDto.class))),
+            @ApiResponse(responseCode = "400", description = "Không thể hủy (thuốc đã có lịch hoặc không ở trạng thái cho phép)", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền hủy (không phải người tạo thuốc)", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy thuốc với ID cung cấp", content = @Content)
     })
     @PostMapping("/{studentMedicationId}/cancel")
     @PreAuthorize("hasAnyRole('MedicalStaff', 'StaffManager')")
@@ -252,12 +251,12 @@ Hủy bỏ một đơn thuốc đã nhập.
 
     @Operation(summary = "Lấy danh sách thuốc của một học sinh cụ thể",
             description = """
-### Mô tả
-Lấy danh sách tất cả các loại thuốc đã được gửi cho một học sinh.
-- **Phân quyền:** 
-    - `Parent`: Chỉ xem được của con mình.
-    - `MedicalStaff`, `StaffManager`, `SchoolAdmin`: Có thể xem của bất kỳ ai.
-"""
+                    ### Mô tả
+                    Lấy danh sách tất cả các loại thuốc đã được gửi cho một học sinh.
+                    - **Phân quyền:** 
+                        - `Parent`: Chỉ xem được của con mình.
+                        - `MedicalStaff`, `StaffManager`, `SchoolAdmin`: Có thể xem của bất kỳ ai.
+                    """
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công",
@@ -283,10 +282,10 @@ Lấy danh sách tất cả các loại thuốc đã được gửi cho một h�
 
     @Operation(summary = "Lấy tất cả bản ghi thuốc của học sinh trong hệ thống (cho nhân viên)",
             description = """
-### Mô tả
-Lấy danh sách tất cả các đơn thuốc của học sinh trong hệ thống.
-- **Phân quyền:** Yêu cầu vai trò `MedicalStaff`, `StaffManager`, hoặc `SchoolAdmin`.
-"""
+                    ### Mô tả
+                    Lấy danh sách tất cả các đơn thuốc của học sinh trong hệ thống.
+                    - **Phân quyền:** Yêu cầu vai trò `MedicalStaff`, `StaffManager`, hoặc `SchoolAdmin`.
+                    """
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công",
