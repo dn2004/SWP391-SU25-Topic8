@@ -23,6 +23,6 @@ public class StudentStatusConverter implements AttributeConverter<StudentStatus,
         if (dbData == null || dbData.isEmpty()) {
             return null;
         }
-        return StudentStatus.valueOf(dbData);
+        return StudentStatus.fromDisplayName(dbData);
     }
 }

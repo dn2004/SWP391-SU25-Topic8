@@ -30,10 +30,7 @@ public interface StudentMapper {
     @Mapping(source = "classValue", target = "classValue")
     Student createStudentRequestDtoToStudent(CreateStudentRequestDto dto);
 
-//    @Mapping(source = "gender", target = "gender", qualifiedByName = "genderToDisplayNameString")
-//    @Mapping(source = "status", target = "status", qualifiedByName = "statusToDisplayNameString")
-//    @Mapping(source = "classGroup", target = "classGroup", qualifiedByName = "classGroupToDisplayNameString")
-    @Mapping(source = "className", target = "className") // Sử dụng phương thức getClassName()
+    @Mapping(source = "className", target = "className")
     StudentDto studentToStudentDto(Student student);
 
     @Mapping(target = "id", ignore = true)
