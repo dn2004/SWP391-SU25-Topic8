@@ -2,6 +2,7 @@ package com.fu.swp391.schoolhealthmanagementsystem.dto.student;
 
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.Gender;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.Class;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 
@@ -36,7 +37,7 @@ public record StudentDto(
 
         @Schema(
                 description = "Lớp học của học sinh",
-                example = "A"
+                example = "Mầm A"
         )
         String className,
 
@@ -50,7 +51,7 @@ public record StudentDto(
                 description = "Tên hiển thị của trạng thái",
                 example = "Đang học"
         )
-        String status,
+        StudentStatus status,
 
         @Schema(
                 description = "Mã mời cho phụ huynh",

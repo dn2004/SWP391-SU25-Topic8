@@ -1,12 +1,14 @@
 package com.fu.swp391.schoolhealthmanagementsystem.init;
 
 import com.fu.swp391.schoolhealthmanagementsystem.entity.MedicationTimeSlot;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.ParentStudentLink;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.Student;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.StudentMedication;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.User;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.MedicationStatus;
 import com.fu.swp391.schoolhealthmanagementsystem.exception.InvalidOperationException;
 import com.fu.swp391.schoolhealthmanagementsystem.exception.ResourceNotFoundException;
+import com.fu.swp391.schoolhealthmanagementsystem.repository.ParentStudentLinkRepository;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.StudentMedicationRepository;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.StudentRepository;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.UserRepository;
@@ -20,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 @Slf4j
@@ -30,6 +33,7 @@ public class DemoStudentMedicationInitializer implements ApplicationRunner {
     private final StudentRepository studentRepository;
     private final UserRepository userRepository;
     private final StudentMedicationRepository studentMedicationRepository;
+    private final ParentStudentLinkRepository parentStudentLinkRepository;
 
     @Override
     @Transactional
@@ -37,107 +41,56 @@ public class DemoStudentMedicationInitializer implements ApplicationRunner {
         log.info("Bắt đầu khởi tạo dữ liệu StudentMedication mẫu...");
 
         try {
-            // Tìm học sinh và người dùng được tạo trong DemoUserInitializer
-            Student student = studentRepository.findByFullNameAndDateOfBirth("Alice Student", LocalDate.of(2015, 1, 1))
-                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy học sinh Alice Student. Hãy chạy DemoUserInitializer trước."));
-            User parent = userRepository.findByEmail("parent@example.com")
-                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng parent@example.com."));
-            User nurse = userRepository.findByEmail("nurse@example.com")
-                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng nurse@example.com."));
-
-            // Kiểm tra xem có nên khởi tạo dữ liệu không
-            if (studentMedicationRepository.countByStudent(student) > 0) {
-                log.info("Dữ liệu StudentMedication cho học sinh {} đã tồn tại. Bỏ qua khởi tạo.", student.getFullName());
+            List<Student> students = studentRepository.findAll();
+            if (students.isEmpty()) {
+                log.warn("Không tìm thấy học sinh nào. Hãy chạy DemoUserInitializer trước.");
                 return;
             }
 
-            LocalDate today = LocalDate.now();
+            User nurse = userRepository.findByEmail("nurse@example.com")
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng nurse@example.com."));
 
-            // Thuốc 1: Hết hạn hôm qua
-            createMedication(
-                    student, parent, nurse,
-                    "Panadol 500mg",
-                    "Uống 1 viên khi sốt trên 38.5 độ C",
-                    "1 viên",
-                    20,
-                    10,
-                    today.minusDays(10),
-                    today.minusDays(1), // Ngày hết hạn
-                    "Uống sau bữa ăn sáng",
-                    List.of(
-                            MedicationTimeSlot.builder().timeExpression("08:00").build()
-                    )
-            );
+            int studentsToMedicate = 15;
+            int medicationsCreatedCount = 0;
 
-            // Thuốc 2: Hết hạn 2 ngày trước
-            createMedication(
-                    student, parent, nurse,
-                    "Ibuprofen 200mg",
-                    "Uống khi có chỉ định",
-                    "1 viên",
-                    15,
-                    5,
-                    today.minusDays(20),
-                    today.minusDays(2), // Ngày hết hạn
-                    "Uống khi đau",
-                    List.of(
-                            MedicationTimeSlot.builder().timeExpression("12:30").build()
-                    )
-            );
+            for (int i = 0; i < students.size() && i < studentsToMedicate; i++) {
+                Student student = students.get(i);
 
-            // Thuốc 3: Còn hạn
-            createMedication(
-                    student, parent, nurse,
-                    "Amoxicillin 250mg",
-                    "Uống 3 lần/ngày, mỗi lần 1 viên",
-                    "1 viên",
-                    21,
-                    15,
-                    today.minusDays(8),
-                    today.plusWeeks(1), // Ngày hết hạn
-                    "Uống đủ 7 ngày",
-                    List.of(
-                            MedicationTimeSlot.builder().timeExpression("07:00").build(),
-                            MedicationTimeSlot.builder().timeExpression("13:00").build()
-                    )
-            );
+                if (studentMedicationRepository.countByStudent(student) > 0) {
+                    log.info("Dữ liệu StudentMedication cho học sinh {} đã tồn tại. Bỏ qua khởi tạo.", student.getFullName());
+                    continue;
+                }
 
-            // Thuốc 4: Còn hạn.
-            createMedication(
-                    student, parent, nurse,
-                    "Loratadine 10mg",
-                    "Uống 1 viên mỗi ngày vào buổi sáng",
-                    "1 viên",
-                    30,
-                    20,
-                    today.minusDays(40),
-                    today.plusDays(10),                     "Chống dị ứng",
-                    List.of(
-                            MedicationTimeSlot.builder().timeExpression("08:30").build()
-                    )
-            );
+                Optional<ParentStudentLink> parentLinkOpt = parentStudentLinkRepository.findByStudent(student)
+                        .stream()
+                        .map(obj -> (ParentStudentLink) obj)
+                        .findFirst();
+                if (parentLinkOpt.isEmpty()) {
+                    log.warn("Không tìm thấy phụ huynh cho học sinh {}. Bỏ qua tạo thuốc.", student.getFullName());
+                    continue;
+                }
+                User parent = parentLinkOpt.get().getParent();
 
-            // Thuốc 5:
-            createMedication(
-                    student, parent, nurse,
-                    "Siro ho Prospan",
-                    "Uống 5ml/lần, 2 lần/ngày",
-                    "5ml",
-                    100, // tổng ml
-                    50,  // ml còn lại
-                    today.minusDays(5),
-                    today.plusMonths(1),
-                    "Lắc kỹ trước khi dùng",
-                    List.of(
-                            MedicationTimeSlot.builder().timeExpression("09:00").build(),
-                            MedicationTimeSlot.builder().timeExpression("16:00").build()
-                    )
-            );
+                LocalDate today = LocalDate.now();
 
-            log.info("Hoàn tất khởi tạo 5 StudentMedication mẫu.");
+                // Create 2-3 medications for each student
+                createMedication(student, parent, nurse, "Panadol 500mg", "Uống 1 viên khi sốt trên 38.5 độ C", "1 viên", 20, 10, today.minusDays(10), today.plusDays(20), "Uống sau bữa ăn sáng", List.of(MedicationTimeSlot.builder().timeExpression("08:00").build()));
+                medicationsCreatedCount++;
 
-        } catch (InvalidOperationException e) {
-            log.error("Lỗi khi khởi tạo dữ liệu StudentMedication: {}", e.getMessage());
+                createMedication(student, parent, nurse, "Ibuprofen 200mg", "Uống khi có chỉ định", "1 viên", 15, 5, today.minusDays(5), today.plusDays(15), "Uống khi đau", List.of(MedicationTimeSlot.builder().timeExpression("12:30").build()));
+                medicationsCreatedCount++;
+
+                // Add a third medication for some students
+                if (i % 2 == 0) {
+                    createMedication(student, parent, nurse, "Siro ho Prospan", "Uống 5ml/lần, 2 lần/ngày", "5ml", 100, 50, today.minusDays(2), today.plusMonths(1), "Lắc kỹ trước khi dùng", List.of(MedicationTimeSlot.builder().timeExpression("09:00").build(), MedicationTimeSlot.builder().timeExpression("16:00").build()));
+                    medicationsCreatedCount++;
+                }
+            }
+
+            log.info("Hoàn tất khởi tạo {} StudentMedication mẫu cho {} học sinh.", medicationsCreatedCount, studentsToMedicate);
+
+        } catch (Exception e) {
+            log.error("Lỗi khi khởi tạo dữ liệu StudentMedication: {}", e.getMessage(), e);
         }
     }
 

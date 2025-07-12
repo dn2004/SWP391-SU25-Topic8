@@ -15,7 +15,7 @@ public class StudentStatusConverter implements AttributeConverter<StudentStatus,
         if (attribute == null) {
             return null;
         }
-        return attribute.name();
+        return attribute.getDisplayName();
     }
 
     @Override

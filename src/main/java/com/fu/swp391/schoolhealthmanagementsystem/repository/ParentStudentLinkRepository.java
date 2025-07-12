@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.Optional;
 
 @Repository
@@ -23,4 +24,6 @@ public interface ParentStudentLinkRepository extends JpaRepository<ParentStudent
     boolean existsByStudent(Student student);
     long countByStatus(com.fu.swp391.schoolhealthmanagementsystem.entity.enums.LinkStatus status);
     long countByRelationshipType(com.fu.swp391.schoolhealthmanagementsystem.entity.enums.RelationshipType relationshipType);
+
+    Collection<Object> findByStudent(Student student);
 }

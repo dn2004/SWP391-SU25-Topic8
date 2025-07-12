@@ -36,4 +36,8 @@ public interface VaccinationConsentRepository extends JpaRepository<VaccinationC
     List<VaccinationConsent> findByStatus(ConsentStatus consentStatus);
 
     Long countByStatus(ConsentStatus status);
+
+    boolean existsByCampaignAndStudent(VaccinationCampaign campaign, Student student);
+
+    List<VaccinationConsent> findAllByCampaign(VaccinationCampaign campaign);
 }
