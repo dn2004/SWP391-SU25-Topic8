@@ -52,6 +52,6 @@ public record UpdateStudentRequestDto(
                 description = "Tên lớp học của học sinh",
                 example = "A"
         )
-        @NotBlank(message = "Tên lớp không được để trống")
+        @NotNull(message = "Tên lớp không được để trống")
         Class classValue
 ){}
