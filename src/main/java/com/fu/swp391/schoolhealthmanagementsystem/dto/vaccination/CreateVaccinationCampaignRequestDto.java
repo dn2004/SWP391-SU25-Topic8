@@ -3,10 +3,7 @@ package com.fu.swp391.schoolhealthmanagementsystem.dto.vaccination;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.ClassGroup;
 import com.fu.swp391.schoolhealthmanagementsystem.validation.ValidAgeRange;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.FutureOrPresent;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 
 import java.time.LocalDate;
 
@@ -65,17 +62,16 @@ public record CreateVaccinationCampaignRequestDto(
 
     @Schema(
             description = "Tuổi tối thiểu",
-            example = "12"
+            example = "3    "
     )
-    @Size(min = 0)
+    @Min(3)
     Integer targetAgeMin,
-
 
     @Schema(
             description = "Tuổi tối đa",
-            example = "18"
+            example = "10"
     )
-    @Size(min = 0)
+    @Max(10)
     Integer targetAgeMax,
 
     @Schema(

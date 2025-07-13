@@ -1,6 +1,8 @@
 package com.fu.swp391.schoolhealthmanagementsystem.dto.vaccination;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 
 import java.time.LocalDateTime;
 
@@ -24,10 +26,13 @@ public record PostVaccinationMonitoringResponseDto(
     )
     LocalDateTime monitoringTime,
 
+
     @Schema(
         description = "Nhiệt độ (°C)",
         example = "36.7"
     )
+    @Min(35)
+    @Max(42)
     Float temperature,
 
     @Schema(
