@@ -36,7 +36,6 @@ public class SchoolVaccination {
     private VaccinationConsent consent;
 
     @Column(name = "Status", nullable = false)
-    @Enumerated(EnumType.STRING)
     @Builder.Default
     private SchoolVaccinationStatus status = SchoolVaccinationStatus.SCHEDULED;
 

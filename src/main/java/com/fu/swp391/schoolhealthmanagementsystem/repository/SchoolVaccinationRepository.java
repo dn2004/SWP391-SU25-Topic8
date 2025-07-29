@@ -27,4 +27,6 @@ public interface SchoolVaccinationRepository extends JpaRepository<SchoolVaccina
     long countByStatus(SchoolVaccinationStatus status);
 
     List<SchoolVaccination> findByCampaignAndStatus(VaccinationCampaign campaign, SchoolVaccinationStatus schoolVaccinationStatus);
+
+    Page<SchoolVaccination> findSchoolVaccinationByStudent(Student student, Pageable pageable);
 }

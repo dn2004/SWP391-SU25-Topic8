@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +28,7 @@ import java.util.Optional;
 @Component
 @Slf4j
 @RequiredArgsConstructor
+@Profile("!prod")
 @Order(3)
 public class DemoStudentMedicationInitializer implements ApplicationRunner {
 
@@ -63,7 +65,6 @@ public class DemoStudentMedicationInitializer implements ApplicationRunner {
 
                 Optional<ParentStudentLink> parentLinkOpt = parentStudentLinkRepository.findByStudent(student)
                         .stream()
-                        .map(obj -> (ParentStudentLink) obj)
                         .findFirst();
                 if (parentLinkOpt.isEmpty()) {
                     log.warn("Không tìm thấy phụ huynh cho học sinh {}. Bỏ qua tạo thuốc.", student.getFullName());

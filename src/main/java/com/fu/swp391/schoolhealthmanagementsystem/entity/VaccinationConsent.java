@@ -31,12 +31,7 @@ public class VaccinationConsent {
     @JoinColumn(name = "StudentID", nullable = false)
     private Student student;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ParentUserID")
-    private User parent;
-
     @Column(name = "Status", nullable = false)
-    @Enumerated(EnumType.STRING)
     @Builder.Default
     private ConsentStatus status = ConsentStatus.PENDING;
 

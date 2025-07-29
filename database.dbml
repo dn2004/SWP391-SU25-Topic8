@@ -1,0 +1,432 @@
+//============================================================================
+// Enums
+//============================================================================
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum ClassGroup {
+  MAM
+  CHOI
+  LA
+}
+
+enum ClassValue {
+  A
+  B
+  C
+}
+
+enum StudentStatus {
+  ACTIVE
+  GRADUATED
+  WITHDRAWN
+}
+
+enum UserRole {
+  System
+  Parent
+  MedicalStaff
+  StaffManager
+  SchoolAdmin
+}
+
+enum RelationshipType {
+  FATHER
+  MOTHER
+  GUARDIAN
+  GRANDFATHER
+  GRANDMOTHER
+  OTHER
+}
+
+enum LinkStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum BlogStatus {
+  PUBLIC
+  PRIVATE
+}
+
+enum BlogCategory {
+  HEALTH_NEWS
+  NUTRITION
+  MENTAL_HEALTH
+  DISEASE_PREVENTION
+  FIRST_AID
+  PHYSICAL_ACTIVITY
+  GROWTH_DEVELOPMENT
+  HEALTH_EDUCATION
+  OTHER
+}
+
+enum HealthIncidentType {
+  MINOR_INJURY
+  ILLNESS
+  ALLERGIC_REACTION
+  HEAD_INJURY
+  FEVER
+  STOMACH_ACHE
+  OTHER
+}
+
+enum MedicalSupplyStatus {
+  AVAILABLE
+  OUT_OF_STOCK
+  EXPIRED
+  DISPOSE
+}
+
+enum SupplyTransactionType {
+  RECEIVED
+  USED_FOR_INCIDENT
+  ADJUSTMENT_OUT
+  ADJUSTMENT_IN
+  RETURN_FROM_INCIDENT
+  EXPIRED
+}
+
+enum StudentVaccinationStatus {
+  PENDING
+  APPROVE
+  REJECTED
+}
+
+enum StudentChronicDiseaseStatus {
+  PENDING
+  APPROVE
+  REJECTED
+}
+
+enum MedicationStatus {
+  AVAILABLE
+  OUT_OF_DOSES
+  EXPIRED
+  RETURNED_TO_PARENT
+  LOST
+  CANCEL
+}
+
+enum SchoolSession {
+  MORNING
+  AFTERNOON
+}
+
+enum ScheduledMedicationTaskStatus {
+  SCHEDULED
+  ADMINISTERED
+  SKIPPED_SUPPLY_ISSUE
+  SKIPPED_STUDENT_ABSENT
+  SKIPPED_STUDENT_REFUSED
+  UPDATED_TO_ANOTHER_RECORD
+  SKIPPED_SYSTEM_OVERDUE
+  SKIPPED_MEDICATION_CANCELED
+  NOT_ADMINISTERED_OTHER
+}
+
+enum StudentMedicationTransactionType {
+  INITIAL_STOCK
+  ADMINISTERED
+  LOST
+  EXPIRED_REMOVAL
+  RETURNED_TO_PARENT
+  CANCELLATION_REVERSAL
+}
+
+enum VaccinationCampaignStatus {
+  DRAFT
+  SCHEDULED
+  PREPARING
+  IN_PROGRESS
+  COMPLETED
+  CANCELED
+}
+
+enum ConsentStatus {
+  PENDING
+  APPROVED
+  DECLINED
+}
+
+enum SchoolVaccinationStatus {
+  SCHEDULED
+  COMPLETED
+  ABSENT
+  DECLINED
+}
+
+
+//============================================================================
+// Tables
+//============================================================================
+Table Users {
+  UserID bigint [pk, increment]
+  Password varchar
+  FullName nvarchar(100) [not null]
+  Email varchar(100) [unique, not null]
+  PhoneNumber varchar(10)
+  Role UserRole [not null]
+  CreatedAt timestamp [not null, default: `now()`]
+  UpdatedAt timestamp
+  Active boolean [not null, default: true]
+}
+
+Table student {
+  StudentID bigint [pk, increment]
+  FullName nvarchar(100) [not null]
+  DateOfBirth date [not null]
+  Gender Gender [not null]
+  ClassGroup ClassGroup [not null]
+  ClassValue ClassValue [not null]
+  Status StudentStatus [not null, default: 'ACTIVE']
+  CreatedAt timestamp [not null, default: `now()`]
+  UpdatedAt timestamp
+  InvitationCode varchar(20) [unique]
+}
+
+Table ParentStudentLinks {
+  LinkID bigint [pk, increment]
+  ParentUserID bigint [not null, ref: > Users.UserID]
+  StudentID bigint [not null, ref: > student.StudentID]
+  RelationshipType RelationshipType [not null]
+  Status LinkStatus [not null]
+  CreatedAt timestamp [not null, default: `now()`]
+  UpdatedAt timestamp
+  Note: "Unique constraint on (ParentUserID, StudentID)"
+}
+
+Table Blogs {
+  id bigint [pk, increment]
+  Title varchar [not null]
+  Thumnail varchar [not null]
+  Description varchar(500) [not null]
+  Slug varchar [unique, not null]
+  Content text [not null]
+  UserId bigint [not null, ref: > Users.UserID]
+  Status BlogStatus [not null]
+  Category BlogCategory [not null]
+  CreatedAt timestamp [not null, default: `now()`]
+  UpdatedAt timestamp
+}
+
+Table Notifications {
+  id bigint [pk, increment]
+  RecipientId bigint [not null, ref: > Users.UserID]
+  SenderId bigint [ref: > Users.UserID]
+  content varchar(500) [not null]
+  `Read` boolean [not null, default: false]
+  link varchar(255)
+  CreatedAt timestamp [not null, default: `now()`]
+}
+
+Table HealthIncidents {
+  IncidentID bigint [pk, increment]
+  StudentID bigint [not null, ref: > student.StudentID]
+  RecordedByUserID bigint [not null, ref: > Users.UserID]
+  IncidentDateTime timestamp [not null]
+  IncidentType HealthIncidentType [not null]
+  Description text [not null]
+  ActionTaken text [not null]
+  Location nvarchar(100)
+  CreatedAt timestamp [not null, default: `now()`]
+  UpdatedAt timestamp
+  UpdatedByUserID bigint [ref: > Users.UserID]
+  Deleted boolean [not null, default: false]
+  DeletedAt timestamp
+  DeletedByUserID bigint [ref: > Users.UserID]
+}
+
+Table MedicalSupplies {
+  SupplyID bigint [pk, increment]
+  Name nvarchar(100) [not null]
+  Category nvarchar(50)
+  Unit nvarchar(20)
+  CurrentStock int [not null, default: 0]
+  Description nvarchar(500)
+  ExpiredDate date
+  Status MedicalSupplyStatus [not null, default: 'AVAILABLE']
+  CreatedAt timestamp [not null, default: `now()`]
+  CreatedByUserID bigint [ref: > Users.UserID]
+  LastUpdatedAt timestamp
+  UpdatedByUserID bigint [ref: > Users.UserID]
+}
+
+Table SupplyTransactions {
+  TransactionID bigint [pk, increment]
+  SupplyID bigint [not null, ref: > MedicalSupplies.SupplyID]
+  Quantity int [not null]
+  SupplyTransactionType SupplyTransactionType [not null]
+  IncidentID bigint [ref: > HealthIncidents.IncidentID]
+  Note nvarchar(500)
+  TransactionDateTime timestamp [not null, default: `now()`]
+  PerformedByUserID bigint [not null, ref: > Users.UserID]
+}
+
+Table StudentVaccinations {
+  StudentVaccinationId bigint [pk, increment]
+  StudentId bigint [not null, ref: > student.StudentID]
+  VaccineName varchar(100) [not null]
+  VaccinationDate date
+  Provider varchar(200)
+  Note varchar(500)
+  ProofFileOriginalName varchar(255)
+  ProofFileType varchar(100)
+  ProofPublicId varchar(255)
+  ProofResourceType varchar(50)
+  CreatedAt timestamp [not null, default: `now()`]
+  UpdatedAt timestamp
+  Status StudentVaccinationStatus [not null, default: 'PENDING']
+  ApprovedByUserId bigint [ref: > Users.UserID]
+  ApprovedAt timestamp
+  ApproverNotes varchar(500)
+  CreatedByUserId bigint [ref: > Users.UserID]
+  UpdatedByUserId bigint [ref: > Users.UserID]
+}
+
+Table StudentChronicDiseases {
+  ChronicDiseaseId bigint [pk, increment]
+  StudentId bigint [not null, ref: > student.StudentID]
+  DiseaseName varchar(150) [not null]
+  DiagnosedDate date
+  DiagnosingDoctor varchar(100)
+  Notes varchar(1000)
+  AttachmentFileOriginalName varchar(255)
+  AttachmentFileType varchar(100)
+  AttachmentPublicId varchar(255)
+  AttachmentResourceType varchar(50)
+  Status StudentChronicDiseaseStatus [not null, default: 'PENDING']
+  CreatedAt timestamp [not null, default: `now()`]
+  UpdatedAt timestamp
+  CreatedByUserId bigint [not null, ref: > Users.UserID]
+  UpdatedByUserId bigint [ref: > Users.UserID]
+  ApprovedByUserId bigint [ref: > Users.UserID]
+  ApprovedAt timestamp
+  ApproverNotes varchar(500)
+}
+
+Table StudentMedications {
+  StudentMedicationID bigint [pk, increment]
+  StudentID bigint [not null, ref: > student.StudentID]
+  SubmittedByParentID bigint [not null, ref: > Users.UserID]
+  MedicationName nvarchar(200) [not null]
+  DosagePerAdministrationText nvarchar(100) [not null]
+  TotalDosesProvided int
+  RemainingDoses int
+  ExpiryDate date
+  DateReceived date [not null]
+  ReceivedByMedicalStaffID bigint [ref: > Users.UserID]
+  Status MedicationStatus [not null]
+  Notes nvarchar(1000)
+  UsageInstruction nvarchar(1000)
+  ScheduleStartDate date [not null]
+  NextScheduledTaskGenerationDate date
+  CreatedAt timestamp [not null, default: `now()`]
+  CreatedByUserID bigint [not null, ref: > Users.UserID]
+  UpdatedAt timestamp
+  UpdatedByUserID bigint [ref: > Users.UserID]
+}
+
+Table MedicationTimeSlots {
+  TimeSlotID bigint [pk, increment]
+  StudentMedicationID bigint [not null, ref: > StudentMedications.StudentMedicationID]
+  TimeExpression nvarchar(50) [not null]
+  SchoolSessionHint SchoolSession
+  SpecificNotes nvarchar(200)
+}
+
+Table ScheduledMedicationTasks {
+  ScheduledTaskID bigint [pk, increment]
+  StudentMedicationID bigint [not null, ref: > StudentMedications.StudentMedicationID]
+  ScheduledDate date [not null]
+  ScheduledTimeText nvarchar(50)
+  SchoolSession SchoolSession
+  Status ScheduledMedicationTaskStatus [not null]
+  AdministeredAt timestamp
+  AdministeredByStaffID bigint [ref: > Users.UserID]
+  ProofFileOriginalName varchar(255)
+  ProofFileType varchar(100)
+  ProofPublicId varchar(255)
+  ProofResourceType varchar(50)
+  StaffNotes nvarchar(1000)
+  RequestedAt timestamp [not null, default: `now()`]
+  UpdatedAt timestamp
+}
+
+Table StudentMedicationTransactions {
+  TransactionID bigint [pk, increment]
+  StudentMedicationID bigint [not null, ref: > StudentMedications.StudentMedicationID]
+  TransactionType StudentMedicationTransactionType [not null]
+  DosesChanged int [not null, default: 1]
+  TransactionDateTime timestamp [not null, default: `now()`]
+  PerformedByUserID bigint [not null, ref: > Users.UserID]
+  ScheduledMedicationTaskID bigint [ref: > ScheduledMedicationTasks.ScheduledTaskID]
+  Notes nvarchar(500)
+}
+
+Table VaccinationCampaigns {
+  CampaignID bigint [pk, increment]
+  CampaignName nvarchar(200) [not null]
+  VaccineName nvarchar(100) [not null]
+  Description nvarchar(1000)
+  VaccinationDate date
+  ConsentDeadline date
+  TargetClassGroup ClassGroup
+  Status VaccinationCampaignStatus [not null, default: 'DRAFT']
+  Notes nvarchar(1000)
+  OrganizedByUserID bigint [not null, ref: > Users.UserID]
+  HealthcareProviderName nvarchar(200)
+  HealthcareProviderContact varchar(100)
+  CreatedAt timestamp [not null, default: `now()`]
+  UpdatedAt timestamp
+  UpdatedByUserID bigint [ref: > Users.UserID]
+  RescheduledAt timestamp
+  RescheduledByUserID bigint [ref: > Users.UserID]
+}
+
+Table VaccinationConsents {
+  ConsentID bigint [pk, increment]
+  CampaignID bigint [not null, ref: > VaccinationCampaigns.CampaignID]
+  StudentID bigint [not null, ref: > student.StudentID]
+  Status ConsentStatus [not null, default: 'PENDING']
+  ParentResponse nvarchar(1000)
+  MedicalNotes nvarchar(1000)
+  ConsentFormSentAt timestamp
+  ResponseReceivedAt timestamp
+  ReminderSentAt timestamp
+  CreatedAt timestamp [not null, default: `now()`]
+  UpdatedAt timestamp
+  Note: "Unique constraint on (CampaignID, StudentID)"
+}
+
+Table SchoolVaccinations {
+  SchoolVaccinationId bigint [pk, increment]
+  CampaignID bigint [not null, ref: > VaccinationCampaigns.CampaignID]
+  StudentId bigint [not null, ref: > student.StudentID]
+  ConsentID bigint [not null, ref: > VaccinationConsents.ConsentID]
+  Status SchoolVaccinationStatus [not null, default: 'SCHEDULED']
+  VaccinationDate date
+  DoseNumber int [default: 1]
+  Notes nvarchar(500)
+  AdministeredByUserID bigint [ref: > Users.UserID]
+  CreatedAt timestamp [not null, default: `now()`]
+  UpdatedAt timestamp
+  UpdatedByUserID bigint [ref: > Users.UserID]
+}
+
+Table PostVaccinationMonitoring {
+  MonitoringID bigint [pk, increment]
+  SchoolVaccinationID bigint [unique, not null, ref: > SchoolVaccinations.SchoolVaccinationId]
+  MonitoringTime timestamp [not null]
+  Temperature float
+  HasSideEffects boolean [not null, default: false]
+  SideEffectsDescription nvarchar(1000)
+  ActionsTaken nvarchar(1000)
+  Notes nvarchar(1000)
+  RecordedByUserID bigint [not null, ref: > Users.UserID]
+  CreatedAt timestamp [not null, default: `now()`]
+  UpdatedAt timestamp
+  UpdatedByUserID bigint [ref: > Users.UserID]
+}

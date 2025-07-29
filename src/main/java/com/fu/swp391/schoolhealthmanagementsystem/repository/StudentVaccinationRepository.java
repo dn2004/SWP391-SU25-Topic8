@@ -8,6 +8,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
+import java.util.Optional;
+
 public interface StudentVaccinationRepository extends JpaRepository<StudentVaccination, Long>, JpaSpecificationExecutor<StudentVaccination> {
 
     Page<StudentVaccination> findByStatus(StudentVaccinationStatus status, Pageable pageable);
@@ -15,4 +17,6 @@ public interface StudentVaccinationRepository extends JpaRepository<StudentVacci
     Page<StudentVaccination> findByStudent_IdAndStatus(Long studentId, StudentVaccinationStatus status, Pageable pageable);
 
     long countByStatus(com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentVaccinationStatus status);
+
+    Optional<Object> findByStudent(Student student1);
 }

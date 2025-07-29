@@ -171,7 +171,7 @@ public class SchoolVaccinationController {
             description = """
                     ### Mô tả
                     Lấy bản ghi theo dõi sau tiêm cho một bản ghi tiêm chủng cụ thể.
-                    - **Phân quyền:** Yêu cầu người dùng đã xác thực. Service sẽ kiểm tra quyền truy cập chi tiết.
+                     - **Phân quyền:** Yêu cầu người dùng đã xác thực. Service sẽ kiểm tra quyền truy cập chi tiết (phụ huynh chỉ xem của con mình).
                     """
     )
     @ApiResponses(value = {
@@ -186,5 +186,27 @@ public class SchoolVaccinationController {
     public ResponseEntity<PostVaccinationMonitoringResponseDto> getMonitoringForVaccination(
             @PathVariable Long vaccinationId) {
         return ResponseEntity.ok(schoolVaccinationService.getMonitoringForVaccination(vaccinationId));
+    }
+
+    @GetMapping("/student/{studentId}")
+    @Operation(summary = "Lấy danh sách tiêm chủng của học sinh",
+            description = """
+                    ### Mô tả
+                    Lấy danh sách các bản ghi tiêm chủng của một học sinh cụ thể.
+                    - **Phân quyền:** Yêu cầu người dùng đã xác thực. Service sẽ kiểm tra quyền truy cập chi tiết (phụ huynh chỉ xem của con mình).
+                    """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy học sinh hoặc bản ghi tiêm chủng", content = @Content)
+    })
+    public ResponseEntity<Page<SchoolVaccinationResponseDto>> getVaccinationsByStudentId(
+            @PathVariable Long studentId,
+            @ParameterObject
+            @PageableDefault(size = 10) Pageable pageable) {
+        return ResponseEntity.ok(schoolVaccinationService.getVaccinationsForParentStudent(studentId, pageable));
     }
 }

@@ -61,7 +61,7 @@ public interface StudentVaccinationMapper {
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(source = "originalFilename", target = "proofFileOriginalName")
-    @Mapping(target = "proofFileType", ignore = true)
+    @Mapping(source = "format", target = "proofFileType")
     @Mapping(source = "publicId", target = "proofPublicId")
     @Mapping(source = "resourceType", target = "proofResourceType")
     @Mapping(target = "studentVaccinationId", ignore = true)

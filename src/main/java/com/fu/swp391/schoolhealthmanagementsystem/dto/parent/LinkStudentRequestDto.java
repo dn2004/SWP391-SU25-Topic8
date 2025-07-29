@@ -17,12 +17,11 @@ public record LinkStudentRequestDto(
                 max = 20,
                 message = "Mã mời tối đa 20 ký tự"
         )
-        String invitationCode,
-
-        @Schema(
-                description = "Loại mối quan hệ giữa phụ huynh và học sinh",
-                example = "Bố"
-        )
-        @NotNull(message = "Loại mối quan hệ không được để trống")
-        RelationshipType relationshipType
+        String invitationCode
+//        @Schema(
+//                description = "Loại mối quan hệ giữa phụ huynh và học sinh",
+//                example = "Bố"
+//        )
+//        @NotNull(message = "Loại mối quan hệ không được để trống")
+//        RelationshipType relationshipType
 ) {}

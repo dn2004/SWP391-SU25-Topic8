@@ -220,7 +220,7 @@ public class HealthIncidentController {
             @ApiResponse(responseCode = "404", description = "Không tìm thấy sự cố sức khỏe", content = @Content)
     })
     @DeleteMapping("/{incidentId}")
-    @PreAuthorize("hasAnyRole('StaffManager', 'SchoolAdmin')")
+    @PreAuthorize("hasAnyRole('MedicalStaff', 'StaffManager', 'SchoolAdmin')")
     public ResponseEntity<Void> deleteHealthIncident(
             @Parameter(description = "ID của sự cố cần xóa mềm") @PathVariable Long incidentId) {
         healthIncidentService.deleteHealthIncident(incidentId);

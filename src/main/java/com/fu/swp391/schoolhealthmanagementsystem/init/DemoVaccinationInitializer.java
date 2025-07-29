@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +20,7 @@ import java.util.Optional;
 @Component
 @Slf4j
 @RequiredArgsConstructor
+@Profile("!prod")
 @Order(6) // Ensure it runs after User and Student initializers
 public class DemoVaccinationInitializer implements ApplicationRunner {
 
@@ -81,7 +83,6 @@ public class DemoVaccinationInitializer implements ApplicationRunner {
                     VaccinationConsent consent = VaccinationConsent.builder()
                             .campaign(campaign)
                             .student(student)
-                            .parent(parent)
                             .status(ConsentStatus.PENDING)
                             .consentFormSentAt(LocalDateTime.now())
                             .build();

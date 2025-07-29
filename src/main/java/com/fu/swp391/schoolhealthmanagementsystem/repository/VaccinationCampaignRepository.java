@@ -4,6 +4,7 @@ import com.fu.swp391.schoolhealthmanagementsystem.entity.VaccinationCampaign;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.VaccinationCampaignStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -17,6 +18,7 @@ import java.util.Optional;
 @Repository
 public interface VaccinationCampaignRepository extends JpaRepository<VaccinationCampaign, Long>, JpaSpecificationExecutor<VaccinationCampaign> {
 
+    @EntityGraph(attributePaths = {"vaccinations"})
     List<VaccinationCampaign> findByStatusAndVaccinationDate(VaccinationCampaignStatus status, LocalDate date);
 
     List<VaccinationCampaign> findByStatusAndConsentDeadline(VaccinationCampaignStatus status, LocalDate date);

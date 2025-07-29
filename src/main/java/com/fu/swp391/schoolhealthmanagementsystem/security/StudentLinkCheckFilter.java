@@ -28,7 +28,8 @@ public class StudentLinkCheckFilter extends OncePerRequestFilter {
 
     private static final Set<String> ALLOWED_EXACT_PATHS_FOR_UNLINKED_PARENTS = new HashSet<>(Arrays.asList(
             "/api/auth/logout",
-            "/api/parent/link-student"
+            "/api/parent/link-student",
+            "/api/user/profile/change-password"
     ));
 
     @Override

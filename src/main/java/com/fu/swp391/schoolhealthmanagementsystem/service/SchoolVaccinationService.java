@@ -4,8 +4,8 @@ import com.fu.swp391.schoolhealthmanagementsystem.dto.vaccination.*;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.*;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.ConsentStatus;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.SchoolVaccinationStatus;
-import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.VaccinationCampaignStatus;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.UserRole;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.VaccinationCampaignStatus;
 import com.fu.swp391.schoolhealthmanagementsystem.exception.InvalidOperationException;
 import com.fu.swp391.schoolhealthmanagementsystem.exception.ResourceNotFoundException;
 import com.fu.swp391.schoolhealthmanagementsystem.mapper.PostVaccinationMonitoringMapper;
@@ -39,6 +39,7 @@ public class SchoolVaccinationService {
     private final AuthorizationService authorizationService;
     private final NotificationService notificationService;
     private final SchoolVaccinationSpecification schoolVaccinationSpecification;
+    private final StudentRepository studentRepository;
 
     // Ghi nhận một mũi tiêm chủng (hoàn thành, vắng mặt, từ chối)
     @Transactional
@@ -134,7 +135,7 @@ public class SchoolVaccinationService {
 
         SchoolVaccination vaccination = schoolVaccinationRepository.findById(requestDto.schoolVaccinationId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "School vaccination not found with ID: " + requestDto.schoolVaccinationId()));
+                        "School Không tìm thấy bản ghi vaccine với ID:  " + requestDto.schoolVaccinationId()));
 
         // Verify the vaccination is in POST_MONITORING status
         if (vaccination.getStatus() != SchoolVaccinationStatus.COMPLETED) {
@@ -276,7 +277,7 @@ public class SchoolVaccinationService {
 
     // Notify parents about status update
     private void notifyParentAboutStatusUpdate(SchoolVaccination vaccination, SchoolVaccinationStatus oldStatus,
-                                             SchoolVaccinationStatus newStatus, String reason, User currentUser) {
+                                               SchoolVaccinationStatus newStatus, String reason, User currentUser) {
         Student student = vaccination.getStudent();
         if (student == null || student.getParentLinks().isEmpty()) {
             return;
@@ -329,10 +330,10 @@ public class SchoolVaccinationService {
 
         Specification<SchoolVaccination> spec = Specification
                 .allOf(
-                    schoolVaccinationSpecification.forCampaign(campaignId),
-                    schoolVaccinationSpecification.forStudentName(studentName),
-                    schoolVaccinationSpecification.forStudentClass(className),
-                    schoolVaccinationSpecification.hasStatus(status)
+                        schoolVaccinationSpecification.forCampaign(campaignId),
+                        schoolVaccinationSpecification.forStudentName(studentName),
+                        schoolVaccinationSpecification.forStudentClass(className),
+                        schoolVaccinationSpecification.hasStatus(status)
                 );
 
         Page<SchoolVaccination> vaccinationsPage = schoolVaccinationRepository.findAll(spec, pageable);
@@ -345,7 +346,7 @@ public class SchoolVaccinationService {
         User currentUser = authorizationService.getCurrentUserAndValidate();
 
         SchoolVaccination vaccination = schoolVaccinationRepository.findById(vaccinationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Vaccination not found with ID: " + vaccinationId));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bản ghi vaccine với ID:  " + vaccinationId));
 
         return schoolVaccinationMapper.toDto(vaccination);
     }
@@ -353,16 +354,22 @@ public class SchoolVaccinationService {
     // Get post-vaccination monitoring record for a vaccination
     @Transactional(readOnly = true)
     public PostVaccinationMonitoringResponseDto getMonitoringForVaccination(Long vaccinationId) {
-        authorizationService.getCurrentUserAndValidate();
+         User currentUser = authorizationService.getCurrentUserAndValidate();
 
         SchoolVaccination vaccination = schoolVaccinationRepository.findById(vaccinationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Vaccination not found with ID: " + vaccinationId));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bản ghi vaccine với ID:  " + vaccinationId));
+        
+        if (currentUser.getRole() == UserRole.Parent) {
+            // Phụ huynh chỉ có thể xem thông tin tiêm chủng của con mình
+            authorizationService.authorizeParentAction(currentUser, vaccination.getStudent(),
+                    "xem thông tin theo dõi sau tiêm chủng");
+        }
 
         Optional<PostVaccinationMonitoring> monitoringRecord =
                 postVaccinationMonitoringRepository.findBySchoolVaccination(vaccination);
 
         if (monitoringRecord.isEmpty()) {
-            throw new ResourceNotFoundException("No monitoring record found for vaccination ID: " + vaccinationId);
+            throw new ResourceNotFoundException("Không tìm thấy bản ghi sau tiêm chủng với bản ghi tiêm chung có ID " + vaccinationId);
         }
 
         return monitoringMapper.toDto(monitoringRecord.get());
@@ -377,7 +384,7 @@ public class SchoolVaccinationService {
         User currentUser = authorizationService.getCurrentUserAndValidate();
 
         PostVaccinationMonitoring monitoring = postVaccinationMonitoringRepository.findById(monitoringId)
-                .orElseThrow(() -> new ResourceNotFoundException("Monitoring record not found with ID: " + monitoringId));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bản ghi sau tiêm chủng với ID:  " + monitoringId));
 
         SchoolVaccination vaccination = monitoring.getSchoolVaccination();
         VaccinationCampaign campaign = vaccination.getCampaign();
@@ -415,18 +422,18 @@ public class SchoolVaccinationService {
 
         PostVaccinationMonitoring updatedMonitoring = postVaccinationMonitoringRepository.save(monitoring);
 
-        log.info("User {} updated monitoring record ID: {}. Reason: {}",
+        log.info("Người dùng {} đã cập nhật bản ghi sau tiêm chủng với của tiêm chủng có ID: {}. Reason: {}",
                 currentUser.getEmail(), monitoringId, requestDto.reasonForUpdate());
 
         // gửi thông báo
-            notifyAboutMonitoringUpdate(updatedMonitoring, vaccination, requestDto.reasonForUpdate(), currentUser);
+        notifyAboutMonitoringUpdate(updatedMonitoring, vaccination, requestDto.reasonForUpdate(), currentUser);
 
         return monitoringMapper.toDto(updatedMonitoring);
     }
 
     // Thông báo về cập nhật theo dõi
     private void notifyAboutMonitoringUpdate(PostVaccinationMonitoring monitoring, SchoolVaccination vaccination,
-                                           String reason, User currentUser) {
+                                             String reason, User currentUser) {
         Student student = vaccination.getStudent();
         if (student == null) {
             return;
@@ -437,8 +444,8 @@ public class SchoolVaccinationService {
                 student.getFullName(),
                 monitoring.getTemperature() != null ? monitoring.getTemperature() : 0.0f,
                 Boolean.TRUE.equals(monitoring.getHasSideEffects())
-                    ? "Có phản ứng phụ: " + monitoring.getSideEffectsDescription()
-                    : "Không có phản ứng phụ",
+                        ? "Có phản ứng phụ: " + monitoring.getSideEffectsDescription()
+                        : "Không có phản ứng phụ",
                 reason != null && !reason.trim().isEmpty() ? "Lý do cập nhật: " + reason : "");
 
         String link = "/vaccination/monitoring/" + monitoring.getMonitoringId();
@@ -457,17 +464,33 @@ public class SchoolVaccinationService {
                             notificationService.createAndSendNotification(
                                     parent.getEmail(), content, link, currentUser.getEmail());
                         } catch (Exception e) {
-                            log.error("Failed to send monitoring update notification to parent: {}", e.getMessage());
+                            log.error("Thất bại khi gửi thông báo sau khi tiêm chủng của học sinh đến phụ huynh.  {}", e.getMessage());
                         }
                     }
                 });
             }
 
-            log.info("Sent monitoring update notification for student ID: {}, monitoring ID: {}",
+            log.info("Gửi thông báo cập nhật sau tiêm chủng đối với học sinh có ID: {}, bản ghi có ID: {}",
                     student.getId(), monitoring.getMonitoringId());
         } catch (Exception e) {
-            log.error("Failed to send monitoring update notification for monitoring ID: {}. Error: {}",
+            log.error("Thất bại khi gửi thông báo cập nhật sau tiêm chủng với ID: {}. Lỗi: {}",
                     monitoring.getMonitoringId(), e.getMessage());
         }
     }
+
+    //Phụ huynh có thể xem vaccination của học sinh của mình
+    public Page<SchoolVaccinationResponseDto> getVaccinationsForParentStudent(Long studentId, Pageable pageable) {
+        User currentUser = authorizationService.getCurrentUserAndValidate();
+
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy học sinh với ID: " + studentId));
+
+        // Kiểm tra xem người dùng có phải là phụ huynh của học sinh này không
+        authorizationService.authorizeParentAction(currentUser, student, "xem thông tin tiêm chủng của học sinh");
+
+        Page<SchoolVaccination> vaccinationsPage = schoolVaccinationRepository.findSchoolVaccinationByStudent(student, pageable);
+
+        return vaccinationsPage.map(schoolVaccinationMapper::toDto);
+    }
+
 }

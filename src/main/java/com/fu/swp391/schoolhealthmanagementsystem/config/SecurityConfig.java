@@ -1,5 +1,6 @@
 package com.fu.swp391.schoolhealthmanagementsystem.config;
 
+import com.fu.swp391.schoolhealthmanagementsystem.prop.FrontEndProperties;
 import com.fu.swp391.schoolhealthmanagementsystem.security.JwtAuthenticationFilter;
 import com.fu.swp391.schoolhealthmanagementsystem.security.StudentLinkCheckFilter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,10 @@ public class SecurityConfig {
             "/api/auth/**",
             "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html",
             "/api/blogs",
+            "/api/enums/**",
+            "/api/blogs/",
+            "/api/blogs/{id}",
+            "/api/blogs/slug/{slug}",
     };
 
     @Autowired
@@ -34,6 +39,9 @@ public class SecurityConfig {
 
     @Autowired
     private StudentLinkCheckFilter studentLinkCheckFilter;
+
+    @Autowired
+    private FrontEndProperties frontEndProperties;
 
 
     @Bean
@@ -57,7 +65,9 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:5173", "http://localhost:5174"));
+        configuration.setAllowedOrigins(Arrays.asList(
+                frontEndProperties.baseUrl()
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type", "X-Requested-With", "Accept"));
         configuration.setAllowCredentials(true);

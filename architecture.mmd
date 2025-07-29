@@ -1,0 +1,87 @@
+graph TD
+    subgraph "Root: com.fu.swp391.schoolhealthmanagementsystem"
+        direction LR
+        subgraph "1. API Layer"
+            direction TB
+            controller("controller (API Endpoints)")
+        end
+        subgraph "2. Business Logic Layer"
+            direction TB
+            service("service (Business Logic)")
+            scheduler("scheduler (Scheduled Tasks)")
+        end
+        subgraph "3. Data Access Layer"
+            direction TB
+            subgraph "repository"
+                repository_node["repository (Data Access)"]
+                specification("└─ specification")
+            end
+        end
+        subgraph "4. Data & Domain Model"
+            direction TB
+            subgraph "entity"
+                entity_node["entity (JPA Entities)"]
+                enums("└─ enums")
+            end
+            subgraph "dto"
+                dto_node["dto (Data Transfer Objects)"]
+                dto_children("└─ admin, auth, blog...")
+            end
+            mapper("mapper (Object Mapping)")
+        end
+        subgraph "5. Cross-Cutting Concerns"
+            direction TB
+            subgraph "config"
+                config_node["config (App & Security Config)"]
+                converter("└─ converter")
+            end
+            security("security (JWT, Filters, Auth)")
+            exception("exception (Global Handlers)")
+            util("util (Utility Classes)")
+            prop("prop (Configuration Properties)")
+            validation("validation (Custom Validators)")
+        end
+        subgraph "6. Initialization"
+            direction TB
+            init("init (Database Seeding)")
+        end
+    end
+    
+    %% Relationships
+    controller --> service
+    controller --> dto_node
+    controller --> mapper
+    service --> repository_node
+    service --> mapper
+    service --> dto_node
+    service --> exception
+    scheduler --> service
+    repository_node --> entity_node
+    mapper --> dto_node
+    mapper --> entity_node
+    security --> service
+    security --> config_node
+    init --> service
+    init --> repository_node
+
+    %% Sub-package relationships
+    repository_node --> specification
+    entity_node --> enums
+    dto_node --> dto_children
+    config_node --> converter
+    converter --> enums
+
+    %% Styling
+    classDef apiLayer fill:#82b1ff,stroke:#333,stroke-width:2px,color:#000
+    classDef logicLayer fill:#4caf50,stroke:#333,stroke-width:2px,color:#fff
+    classDef dataAccessLayer fill:#ff9800,stroke:#333,stroke-width:2px,color:#000
+    classDef dataModelLayer fill:#9e9e9e,stroke:#333,stroke-width:2px,color:#fff
+    classDef crossCuttingLayer fill:#f44336,stroke:#333,stroke-width:2px,color:#fff
+    classDef initLayer fill:#cddc39,stroke:#333,stroke-width:2px,color:#000
+    
+    class controller apiLayer
+    class service,scheduler logicLayer
+    class repository_node,specification dataAccessLayer
+    class entity_node,enums,dto_node,dto_children,mapper dataModelLayer
+    class config_node,converter,security,exception,util,prop,validation crossCuttingLayer
+    class init initLayer

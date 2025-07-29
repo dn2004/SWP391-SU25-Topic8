@@ -7,6 +7,7 @@ import com.fu.swp391.schoolhealthmanagementsystem.exception.InvalidOperationExce
 import com.fu.swp391.schoolhealthmanagementsystem.exception.ResourceNotFoundException;
 import com.fu.swp391.schoolhealthmanagementsystem.mapper.VaccinationCampaignMapper;
 import com.fu.swp391.schoolhealthmanagementsystem.mapper.VaccinationConsentMapper;
+import com.fu.swp391.schoolhealthmanagementsystem.repository.ParentStudentLinkRepository;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.StudentRepository;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.VaccinationCampaignRepository;
 import com.fu.swp391.schoolhealthmanagementsystem.repository.VaccinationConsentRepository;
@@ -20,7 +21,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -41,6 +41,7 @@ public class VaccinationService {
     private final NotificationService notificationService;
     private final VaccinationCampaignSpecification campaignSpecification;
     private final VaccinationConsentSpecification consentSpecification;
+    private final ParentStudentLinkRepository parentStudentLinkRepository;
 
     // Create a new vaccination campaign
     @Transactional
@@ -296,28 +297,31 @@ public class VaccinationService {
     private void sendConsentNotificationsToParents(VaccinationCampaign campaign) {
         List<VaccinationConsent> consents = vaccinationConsentRepository.findByCampaign(campaign);
 
-        for (VaccinationConsent consent : consents) {
-            User parent = consent.getParent();
-            if (parent != null) {
-                String content = String.format(
-                        "Phiếu đồng ý tiêm chủng '%s' cho học sinh %s đã được gửi. Vui lòng xác nhận trước ngày %s.",
-                        campaign.getCampaignName(), consent.getStudent().getFullName(),
-                        campaign.getConsentDeadline().toString());
+        consents.forEach(consent -> {
+            List<ParentStudentLink> parentLinks = parentStudentLinkRepository.findByStudent(consent.getStudent());
+            parentLinks.forEach(parentLink -> {
+                User parent = parentLink.getParent();
+                if (parent != null) {
+                    String content = String.format(
+                            "Phiếu đồng ý tiêm chủng '%s' cho học sinh %s đã được gửi. Vui lòng xác nhận trước ngày %s.",
+                            campaign.getCampaignName(), consent.getStudent().getFullName(),
+                            campaign.getConsentDeadline().toString());
 
-                String link = "/vaccination/consent/" + consent.getConsentId();
+                    String link = "/vaccination/consent/" + consent.getConsentId();
 
-                try {
-                    notificationService.createAndSendNotification(
-                            parent.getEmail(), content, link, campaign.getOrganizedByUser().getEmail());
+                    try {
+                        notificationService.createAndSendNotification(
+                                parent.getEmail(), content, link, campaign.getOrganizedByUser().getEmail());
 
-                    log.info("Sent consent notification for student ID: {} to parent: {}",
-                            consent.getStudent().getId(), parent.getEmail());
-                } catch (Exception e) {
-                    log.error("Failed to send consent notification to parent ID: {}, Email: {}. Error: {}",
-                            parent.getUserId(), parent.getEmail(), e.getMessage());
+                        log.info("Sent consent notification for student ID: {} to parent: {}",
+                                consent.getStudent().getId(), parent.getEmail());
+                    } catch (Exception e) {
+                        log.error("Failed to send consent notification to parent ID: {}, Email: {}. Error: {}",
+                                parent.getUserId(), parent.getEmail(), e.getMessage());
+                    }
                 }
-            }
-        }
+            });
+        });
     }
 
     // Send reminder notifications to parents who haven't responded
@@ -335,32 +339,37 @@ public class VaccinationService {
         List<VaccinationConsent> pendingConsents = vaccinationConsentRepository.findPendingConsentsWithNoReminder(campaignId);
         log.info("Found {} pending consents without reminders for campaign ID: {}", pendingConsents.size(), campaignId);
 
-        for (VaccinationConsent consent : pendingConsents) {
-            User parent = consent.getParent();
-            if (parent != null) {
-                String content = String.format(
-                        "Nhắc nhở: Vui lòng xác nhận phiếu đồng ý tiêm chủng '%s' cho học sinh %s trước ngày %s.",
-                        campaign.getCampaignName(), consent.getStudent().getFullName(),
-                        campaign.getConsentDeadline().toString());
+        pendingConsents.forEach(consent -> {
+            List<ParentStudentLink> parentLinks = parentStudentLinkRepository.findByStudent(consent.getStudent());
+            parentLinks.forEach(parentLink -> {
+                User parent = parentLink.getParent();
 
-                String link = "/vaccination/consent/" + consent.getConsentId();
+                if (parent != null) {
+                    String content = String.format(
+                            "Nhắc nhở: Vui lòng xác nhận phiếu đồng ý tiêm chủng '%s' cho học sinh %s trước ngày %s.",
+                            campaign.getCampaignName(), consent.getStudent().getFullName(),
+                            campaign.getConsentDeadline().toString());
 
-                try {
-                    notificationService.createAndSendNotification(
-                            parent.getEmail(), content, link, campaign.getOrganizedByUser().getEmail());
+                    String link = "/vaccination/consent/" + consent.getConsentId();
 
-                    // Mark reminder as sent
-                    consent.setReminderSentAt(LocalDateTime.now());
-                    vaccinationConsentRepository.save(consent);
+                    try {
+                        notificationService.createAndSendNotification(
+                                parent.getEmail(), content, link, campaign.getOrganizedByUser().getEmail());
 
-                    log.info("Sent consent reminder for student ID: {} to parent: {}",
-                            consent.getStudent().getId(), parent.getEmail());
-                } catch (Exception e) {
-                    log.error("Failed to send consent reminder to parent ID: {}, Email: {}. Error: {}",
-                            parent.getUserId(), parent.getEmail(), e.getMessage());
+                        // Mark reminder as sent
+                        consent.setReminderSentAt(LocalDateTime.now());
+                        vaccinationConsentRepository.save(consent);
+
+                        log.info("Sent consent reminder for student ID: {} to parent: {}",
+                                consent.getStudent().getId(), parent.getEmail());
+                    } catch (Exception e) {
+                        log.error("Failed to send consent reminder to parent ID: {}, Email: {}. Error: {}",
+                                parent.getUserId(), parent.getEmail(), e.getMessage());
+                    }
                 }
-            }
-        }
+
+            });
+        });
     }
 
     // Notify medical staff about campaign preparation phase
@@ -444,23 +453,25 @@ public class VaccinationService {
             notificationService.createAndSendNotificationToRole(
                     UserRole.StaffManager, content, link, currentUser.getEmail());
 
-            // If consents have been sent, notify parents about cancellation
+            // Nếu đã gửi consent, gửi thông báo cho phụ huynh về việc hủy
             List<VaccinationConsent> consents = vaccinationConsentRepository.findByCampaign(campaign);
-            for (VaccinationConsent consent : consents) {
-                User parent = consent.getParent();
-                if (parent != null) {
-                    String parentContent = String.format(
-                            "Chiến dịch tiêm chủng '%s' cho học sinh %s đã bị hủy.",
-                            campaign.getCampaignName(), consent.getStudent().getFullName());
+            consents.forEach(consent -> {
+                List<ParentStudentLink> parentLinks = parentStudentLinkRepository.findByStudent(consent.getStudent());
+                parentLinks.forEach(parentLink -> {
+                    User parent = parentLink.getParent();
+                    if (parent != null) {
+                        String parentContent = String.format(
+                                "Chiến dịch tiêm chủng '%s' cho học sinh %s đã bị hủy.",
+                                campaign.getCampaignName(), consent.getStudent().getFullName());
+                        notificationService.createAndSendNotification(
+                                parent.getEmail(), parentContent, link, currentUser.getEmail());
+                    }
+                });
+            });
 
-                    notificationService.createAndSendNotification(
-                            parent.getEmail(), parentContent, link, currentUser.getEmail());
-                }
-            }
-
-            log.info("Sent cancellation notification for campaign ID: {}", campaign.getCampaignId());
+            log.info("Đã gửi thông báo hủy chiến dịch cho ID: {}", campaign.getCampaignId());
         } catch (Exception e) {
-            log.error("Failed to send cancellation notification for campaign ID: {}. Error: {}",
+            log.error("Gửi thông báo hủy chiến dịch thất bại cho ID: {}. Lỗi: {}",
                     campaign.getCampaignId(), e.getMessage());
         }
     }
@@ -486,10 +497,10 @@ public class VaccinationService {
                 consent.setConsentFormSentAt(LocalDateTime.now());
 
                 // Find parent for this student (assuming first parent link)
-                if (!student.getParentLinks().isEmpty()) {
-                    ParentStudentLink parentLink = student.getParentLinks().get(0);
-                    consent.setParent(parentLink.getParent());
-                }
+//                if (!student.getParentLinks().isEmpty()) {
+//                    ParentStudentLink parentLink = student.getParentLinks().get(0);
+//                    consent.setParent(parentLink.getParent());
+//                }
 
                 consentsToCreate.add(consent);
             }
@@ -501,7 +512,7 @@ public class VaccinationService {
         }
     }
 
-    // Tìm kiếm học sinh mục tiêu dựa trên khối lớp
+    // Tìm kiếm học sinh mục tiêu dựa trên khối lớp có trạng thái active.
     private List<Student> findTargetStudentsForCampaign(VaccinationCampaign campaign) {
         log.info("Finding target students for campaign ID: {}", campaign.getCampaignId());
 
@@ -509,7 +520,6 @@ public class VaccinationService {
         if (campaign.getTargetClassGroup() != null) {
             ClassGroup targetGroup = campaign.getTargetClassGroup();
             log.info("Targeting class group: {}", targetGroup);
-            // Lấy tất cả học sinh thuộc khối được chọn và có trạng thái ACTIVE
             return studentRepository.findByClassGroupAndStatus(targetGroup, StudentStatus.ACTIVE);
         }
 
@@ -532,7 +542,8 @@ public class VaccinationService {
 
     // Get all consents for a campaign with pagination and filtering
     @Transactional(readOnly = true)
-    public Page<VaccinationConsentResponseDto> getConsentsForCampaign(Long campaignId, Pageable pageable, String studentName, String className) {
+    public Page<VaccinationConsentResponseDto> getConsentsForCampaign(Long campaignId, Pageable pageable, String
+            studentName, String className) {
         authorizationService.getCurrentUserAndValidate();
 
         VaccinationCampaign campaign = vaccinationCampaignRepository.findById(campaignId)
@@ -608,8 +619,13 @@ public class VaccinationService {
                 currentUser.getEmail(), consentId, updatedConsent.getStatus());
 
         // Send notification to medical staff about consent response
-        notifyStaffAboutConsentResponse(updatedConsent, oldStatus, consent.getParent());
-
+        List<ParentStudentLink> parentLinks = parentStudentLinkRepository.findByStudent(consent.getStudent());
+        parentLinks.forEach(link -> {
+            User parent = link.getParent();
+            if (parent != null) {
+                notifyStaffAboutConsentResponse(updatedConsent, oldStatus, parent);
+            }
+        });
         return consentMapper.toDto(updatedConsent);
     }
 
@@ -697,7 +713,8 @@ public class VaccinationService {
      * @return DTO của chiến dịch đã được cập nhật.
      */
     @Transactional
-    public VaccinationCampaignResponseDto rescheduleCampaign(Long campaignId, RescheduleCampaignRequestDto requestDto) {
+    public VaccinationCampaignResponseDto rescheduleCampaign(Long campaignId, RescheduleCampaignRequestDto
+            requestDto) {
         User currentUser = authorizationService.getCurrentUserAndValidate();
         VaccinationCampaign campaign = vaccinationCampaignRepository.findById(campaignId)
                 .orElseThrow(() -> new ResourceNotFoundException("Vaccination campaign not found with ID: " + campaignId));
@@ -738,35 +755,37 @@ public class VaccinationService {
     // Notify parents about campaign reschedule
     private void notifyParentsAboutReschedule(VaccinationCampaign campaign, LocalDate oldDate, String reason) {
         List<VaccinationConsent> consents = vaccinationConsentRepository.findByCampaign(campaign);
+        consents.forEach(consent -> {
+            List<ParentStudentLink> parentLinks = parentStudentLinkRepository.findByStudent(consent.getStudent());
+            parentLinks.forEach(parentLink -> {
+                User parent = parentLink.getParent();
+                if (parent != null) {
+                    String reasonText = (reason != null && !reason.trim().isEmpty())
+                            ? " Lý do: " + reason
+                            : "";
 
-        for (VaccinationConsent consent : consents) {
-            User parent = consent.getParent();
-            if (parent != null) {
-                String reasonText = (reason != null && !reason.trim().isEmpty())
-                    ? " Lý do: " + reason
-                    : "";
+                    String content = String.format(
+                            "Thông báo thay đổi lịch: Chiến dịch tiêm chủng '%s' cho học sinh %s đã được dời từ ngày %s sang ngày %s.%s",
+                            campaign.getCampaignName(),
+                            consent.getStudent().getFullName(),
+                            oldDate.toString(),
+                            campaign.getVaccinationDate().toString(),
+                            reasonText);
 
-                String content = String.format(
-                        "Thông báo thay đổi lịch: Chiến dịch tiêm chủng '%s' cho học sinh %s đã được dời từ ngày %s sang ngày %s.%s",
-                        campaign.getCampaignName(),
-                        consent.getStudent().getFullName(),
-                        oldDate.toString(),
-                        campaign.getVaccinationDate().toString(),
-                        reasonText);
+                    String link = "/vaccination/consent/" + consent.getConsentId();
 
-                String link = "/vaccination/consent/" + consent.getConsentId();
+                    try {
+                        notificationService.createAndSendNotification(
+                                parent.getEmail(), content, link, campaign.getRescheduledByUser().getEmail());
 
-                try {
-                    notificationService.createAndSendNotification(
-                            parent.getEmail(), content, link, campaign.getRescheduledByUser().getEmail());
-
-                    log.info("Sent reschedule notification for student ID: {} to parent: {}",
-                            consent.getStudent().getId(), parent.getEmail());
-                } catch (Exception e) {
-                    log.error("Failed to send reschedule notification to parent ID: {}, Email: {}. Error: {}",
-                            parent.getUserId(), parent.getEmail(), e.getMessage());
+                        log.info("Đã gửi thông báo dời lịch cho học sinh ID: {} đến phụ huynh: {}",
+                                consent.getStudent().getId(), parent.getEmail());
+                    } catch (Exception e) {
+                        log.error("Gửi thông báo dời lịch thất bại cho phụ huynh ID: {}, Email: {}. Lỗi: {}",
+                                parent.getUserId(), parent.getEmail(), e.getMessage());
+                    }
                 }
-            }
-        }
+            });
+        });
     }
 }

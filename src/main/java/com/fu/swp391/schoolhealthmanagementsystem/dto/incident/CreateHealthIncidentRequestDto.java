@@ -5,10 +5,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Size;
 
-import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 public record CreateHealthIncidentRequestDto(
@@ -20,12 +19,20 @@ public record CreateHealthIncidentRequestDto(
         Long studentId,
 
         @Schema(
-                description = "Thời gian xảy ra sự cố",
-                example = "2025-06-13T10:15:30"
+                description = "Thời gian xảy ra sự cố trong ngày",
+                example = "15:30"
         )
         @NotNull(message = "Thời gian xảy ra sự cố không được để trống")
-        @PastOrPresent(message = "Thời gian xảy ra sự cố phải là quá khứ hoặc hiện tại")
-        LocalDateTime incidentDateTime,
+        LocalTime incidentTime,
+
+        //Chỉnh lại Time -> Mapper chuyển sang LocalDateTime trong đó Date là ngày hôm nay.
+//        @Schema(
+//                description = "Thời gian xảy ra sự cố trong ngày",
+//                example = "15:30"
+//        )
+//        @NotNull(message = "Thời gian xảy ra sự cố không được để trống")
+//        @PastOrPresent(message = "Thời gian xảy ra sự cố phải là quá khứ hoặc hiện tại")
+//        LocalDateTime incidentDateTime,
 
         @Schema(
                 description = "Loại sự cố",
@@ -70,4 +77,5 @@ public record CreateHealthIncidentRequestDto(
 
         @Schema(description = "Danh sách sử dụng vật tư y tế")
         List<@Valid HealthIncidentSupplyUsageDto> supplyUsages
-) {}
+) {
+}

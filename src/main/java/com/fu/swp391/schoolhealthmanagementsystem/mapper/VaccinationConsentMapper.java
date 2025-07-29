@@ -15,8 +15,6 @@ public interface VaccinationConsentMapper {
     @Mapping(source = "student.id", target = "studentId")
     @Mapping(source = "student.fullName", target = "studentName")
     @Mapping(source = "student.className", target = "studentClass")
-    @Mapping(source = "parent.userId", target = "parentId")
-    @Mapping(source = "parent.fullName", target = "parentName")
     @Mapping(source = "medicalNotes", target = "medicalNotes")
     VaccinationConsentResponseDto toDto(VaccinationConsent entity);
 
@@ -24,7 +22,6 @@ public interface VaccinationConsentMapper {
     @Mapping(target = "consentId", ignore = true)
     @Mapping(target = "campaign", ignore = true)
     @Mapping(target = "student", ignore = true)
-    @Mapping(target = "parent", ignore = true)
     @Mapping(target = "consentFormSentAt", ignore = true)
     @Mapping(target = "responseReceivedAt", ignore = true)
     @Mapping(target = "reminderSentAt", ignore = true)

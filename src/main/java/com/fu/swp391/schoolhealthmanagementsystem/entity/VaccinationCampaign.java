@@ -42,11 +42,9 @@ public class VaccinationCampaign {
     private LocalDate consentDeadline;
 
     @Column(name = "TargetClassGroup")
-    @Enumerated(EnumType.STRING)
     private ClassGroup targetClassGroup; // Thay đổi từ String targetClassGroup
 
     @Column(name = "Status", nullable = false)
-    @Enumerated(EnumType.STRING)
     @Builder.Default
     private VaccinationCampaignStatus status = VaccinationCampaignStatus.DRAFT;
 

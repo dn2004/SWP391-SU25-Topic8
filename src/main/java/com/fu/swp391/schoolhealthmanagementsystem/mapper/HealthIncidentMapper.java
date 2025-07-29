@@ -14,7 +14,7 @@ import org.mapstruct.factory.Mappers;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Mapper(componentModel = "spring") // Bỏ UserMapper nếu không dùng hoặc dùng cách khác
+@Mapper(componentModel = "spring")
 public interface HealthIncidentMapper {
 
     @Mapping(target = "incidentId", ignore = true)
@@ -27,6 +27,7 @@ public interface HealthIncidentMapper {
     @Mapping(target = "deleted", constant = "false")
     @Mapping(target = "deletedAt", ignore = true)
     @Mapping(target = "deletedByUser", ignore = true)
+    @Mapping(target = "incidentDateTime", expression = "java(java.time.LocalDateTime.of(java.time.LocalDate.now(), dto.incidentTime()))")
     HealthIncident toEntity(CreateHealthIncidentRequestDto dto);
 
     @Mapping(source = "student.id", target = "studentId")
@@ -38,8 +39,6 @@ public interface HealthIncidentMapper {
     @Mapping(source = "updatedByUser.fullName", target = "updatedByUserName") // Thêm
     @Mapping(source = "supplyUsages", target = "supplyUsages", qualifiedByName = "transactionsToResponseDtos")
     HealthIncidentResponseDto toDto(HealthIncident entity);
-
-    List<HealthIncidentResponseDto> toDtos(List<HealthIncident> entities);
 
     @Named("transactionsToResponseDtos")
     default List<HealthIncidentSupplyUsageResponseDto> transactionsToResponseDtos(List<SupplyTransaction> transactions) {

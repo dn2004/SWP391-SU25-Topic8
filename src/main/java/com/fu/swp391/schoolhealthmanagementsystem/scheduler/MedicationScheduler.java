@@ -17,7 +17,7 @@ public class MedicationScheduler {
     private final ScheduledTaskCleanupService taskCleanupService;
     private final StudentMedicationService studentMedicationService;
 
-    @Scheduled(cron = "0 * * * * ?")
+    @Scheduled(cron = "0 * * * * *")
     public void generateDailyMedicationTasks() {
         log.info("Scheduler: Running daily medication task generation job.");
         try {
@@ -28,7 +28,7 @@ public class MedicationScheduler {
         log.info("Scheduler: Finished daily medication task generation job.");
     }
 
-    @Scheduled(cron = "0 0 16 * * ?")
+    @Scheduled(cron = "0 * * * * *")
     public void cleanupOverdueMedicationTasks() {
         log.info("Scheduler: Running job to cleanup overdue medication tasks.");
         try {
@@ -39,7 +39,7 @@ public class MedicationScheduler {
         log.info("Scheduler: Finished overdue medication tasks cleanup job.");
     }
 
-    @Scheduled(cron = "0 */3 * * * ?") // Run every 3 minutes
+    @Scheduled(cron = "0 * * * * *")
     public void processExpiredMedicationsJob() {
         log.info("Scheduler: Running job to process expired medications.");
         try {

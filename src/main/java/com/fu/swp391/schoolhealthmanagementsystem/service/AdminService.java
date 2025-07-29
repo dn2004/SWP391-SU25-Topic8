@@ -140,7 +140,7 @@ public class AdminService {
         // Ensure it meets complexity if you have strict rules, e.g., add a number and symbol
         // Example: pass + random.nextInt(10) + "!@#$%^&*".charAt(random.nextInt(8));
         // Keep it simple for this example, or use a library like Passay
-        log.debug("Mật khẩu ngẫu nhiên đã được tạo.");
-        return pass.substring(0, Math.min(pass.length(), 16)); // Ensure max length
+        log.info("Mật khẩu ngẫu nhiên đã được tạo.");
+        return pass.substring(0, Math.min(pass.length(), 8)); // Ensure max length
     }
 }

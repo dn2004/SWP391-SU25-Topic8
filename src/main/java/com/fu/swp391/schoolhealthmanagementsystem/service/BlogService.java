@@ -181,8 +181,9 @@ public class BlogService {
 
         boolean isAuthor = blog.getAuthor().getUserId().equals(currentUser.getUserId());
         boolean isAdmin = currentUser.getRole().equals(UserRole.SchoolAdmin);
+        boolean isManager = currentUser.getRole().equals(UserRole.StaffManager);
 
-        if (!isAdmin && !isAuthor) {
+        if (!isAdmin && !isAuthor && !isManager) {
             log.warn("Người dùng '{}' cố gắng xóa blog ID: {} nhưng không có quyền", currentUser.getEmail(), blogId);
             throw new AccessDeniedException("Bạn không có quyền xóa bài đăng này.");
         }

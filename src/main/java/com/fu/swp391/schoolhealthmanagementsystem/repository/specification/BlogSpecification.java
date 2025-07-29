@@ -74,10 +74,9 @@ public class BlogSpecification {
             }
             String searchPattern = "%" + keyword.toLowerCase() + "%";
             return criteriaBuilder.or(
-                criteriaBuilder.like(criteriaBuilder.lower(root.get("title")), searchPattern),
-                criteriaBuilder.like(criteriaBuilder.lower(root.get("description")), searchPattern),
-                criteriaBuilder.like(criteriaBuilder.lower(root.get("content")), searchPattern)
-            );
+                    criteriaBuilder.like(criteriaBuilder.lower(root.get("title")), searchPattern),
+                    criteriaBuilder.like(criteriaBuilder.lower(root.get("description")), searchPattern),
+                    criteriaBuilder.like(root.get("content"), searchPattern));
         };
     }
 

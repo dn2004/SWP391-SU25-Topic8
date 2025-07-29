@@ -17,7 +17,7 @@ public class NotificationCleanupScheduler {
      * Chạy tác vụ vào lúc 1:00 AM mỗi ngày để dọn dẹp thông báo cũ.
      * Cron expression: second, minute, hour, day of month, month, day(s) of week
      */
-    @Scheduled(cron = "0 0 1 * * ?")
+    @Scheduled(cron = "0 * * * * *")
     public void cleanupOldNotifications() {
         log.info("Bắt đầu tác vụ định kỳ dọn dẹp thông báo cũ.");
         try {
