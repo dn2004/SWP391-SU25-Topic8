@@ -1,7 +1,10 @@
 package com.fu.swp391.schoolhealthmanagementsystem.dto.student.disease;
 
+import com.fu.swp391.schoolhealthmanagementsystem.validation.ValidFile;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import org.springframework.web.multipart.MultipartFile;
@@ -26,12 +29,15 @@ public record StudentChronicDiseaseRequestDto(
                 description = "Ngày được chẩn đoán",
                 example = "2020-05-10"
         )
+        @NotNull(message = "Ngày tiêm chủng không được để trống")
+        @PastOrPresent(message = "Ngày sinh phải là một ngày trong quá khứ hoặc hiện tại")
         LocalDate diagnosedDate,
 
         @Schema(
                 description = "Bác sĩ chẩn đoán",
                 example = "BS. Nguyễn Thị B"
         )
+        @NotBlank(message = "Tên bác sĩ không được để trống")
         @Size(
                 max = 100,
                 message = "Tên bác sĩ không được vượt quá 100 ký tự"
@@ -51,6 +57,7 @@ public record StudentChronicDiseaseRequestDto(
         @Schema(
                 description = "File đính kèm (ví dụ: giấy khám bệnh, đơn thuốc). File mới sẽ thay thế file cũ nếu đã tồn tại."
         )
+        @ValidFile(required = true, message = "File bằng chứng tiêm chủng không hợp lệ hoặc bị thiếu.")
         MultipartFile attachmentFile
 ) {
 }

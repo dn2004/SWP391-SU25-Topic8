@@ -4,6 +4,7 @@ import com.fu.swp391.schoolhealthmanagementsystem.entity.ParentStudentLink;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.Student;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.User;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.LinkStatus;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.RelationshipType;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -21,8 +22,7 @@ public interface ParentStudentLinkRepository extends JpaRepository<ParentStudent
     boolean existsByParentAndStudentAndStatus(User currentUser, Student student, LinkStatus linkStatus);
 
     boolean existsByStudent(Student student);
-    long countByStatus(com.fu.swp391.schoolhealthmanagementsystem.entity.enums.LinkStatus status);
-    long countByRelationshipType(com.fu.swp391.schoolhealthmanagementsystem.entity.enums.RelationshipType relationshipType);
+    long countByStatus(LinkStatus status);
 
     @EntityGraph(attributePaths = {"parent", "student"})
     List<ParentStudentLink> findByStudent(Student student);

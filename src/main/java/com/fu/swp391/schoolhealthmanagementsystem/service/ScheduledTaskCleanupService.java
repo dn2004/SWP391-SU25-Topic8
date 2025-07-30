@@ -25,15 +25,14 @@ public class ScheduledTaskCleanupService {
     @Transactional
     public void markOverdueTasksAsSkipped() {
         LocalDate today = LocalDate.now();
-        log.info("Running job to mark overdue scheduled medication tasks as SKIPPED_SYSTEM_OVERDUE for dates before {}.", today);
-
+log.info("Đang chạy tác vụ đánh dấu các lịch uống thuốc quá hạn trước ngày {} thành SKIPPED_SYSTEM_OVERDUE.", today);
         List<ScheduledMedicationTask> overdueTasks = taskRepository.findByScheduledDateBeforeAndStatus(
                 today,
                 ScheduledMedicationTaskStatus.SCHEDULED
         );
 
         if (overdueTasks.isEmpty()) {
-            log.info("No overdue scheduled tasks found to mark as skipped.");
+            log.info("Không tìm thấy lịch uống thuốc quá hạn nào để đánh dấu là đã bỏ qua.");
             return;
         }
 
@@ -63,7 +62,7 @@ public class ScheduledTaskCleanupService {
         // Hoặc trả về null nếu không có user hệ thống riêng.
         // Nếu trả về null, trường administeredByStaff của task sẽ là null.
         // Trong thực tế, bạn nên có một tài khoản hệ thống cho các tác vụ tự động.
-        return userRepository.findAll().stream().findFirst().orElse(null); // Ví dụ rất đơn giản, không nên dùng trong production
+        return userRepository.findByFullName("System"); // Ví dụ rất đơn giản, không nên dùng trong production
     }
 
 }

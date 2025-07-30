@@ -2,6 +2,7 @@ package com.fu.swp391.schoolhealthmanagementsystem.mapper;
 
 import com.fu.swp391.schoolhealthmanagementsystem.dto.vaccination.CreatePostVaccinationMonitoringRequestDto;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.vaccination.PostVaccinationMonitoringResponseDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.vaccination.UpdatePostVaccinationMonitoringRequestDto;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.PostVaccinationMonitoring;
 import org.mapstruct.*;
 
@@ -23,4 +24,14 @@ public interface PostVaccinationMonitoringMapper {
     @Mapping(source = "recordedByUser.userId", target = "recordedByUserId")
     @Mapping(source = "recordedByUser.fullName", target = "recordedByUserName")
     PostVaccinationMonitoringResponseDto toDto(PostVaccinationMonitoring entity);
+
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "monitoringId", ignore = true)
+    @Mapping(target = "schoolVaccination", ignore = true)
+    @Mapping(target = "monitoringTime", ignore = true)
+    @Mapping(target = "recordedByUser", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "updatedByUser", ignore = true)
+    void updateEntityFromDto(UpdatePostVaccinationMonitoringRequestDto dto, @MappingTarget PostVaccinationMonitoring entity);
 }

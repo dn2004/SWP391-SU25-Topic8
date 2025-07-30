@@ -9,11 +9,7 @@ import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.ClassGroup;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.Gender;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentStatus;
 import com.fu.swp391.schoolhealthmanagementsystem.validation.ClassNameValidator;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.Named;
-import org.mapstruct.AfterMapping;
+import org.mapstruct.*;
 
 @Mapper(componentModel = "spring")
 public interface StudentMapper {
@@ -43,5 +39,6 @@ public interface StudentMapper {
     @Mapping(target = "status", ignore = true)
     @Mapping(source = "classGroup", target = "classGroup")
     @Mapping(source = "classValue", target = "classValue")
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateStudentFromDto(UpdateStudentRequestDto dto, @MappingTarget Student student);
 }

@@ -16,10 +16,6 @@ public class SkipStatusValidator implements ConstraintValidator<ValidSkipStatus,
     );
 
     @Override
-    public void initialize(ValidSkipStatus constraintAnnotation) {
-    }
-
-    @Override
     public boolean isValid(ScheduledMedicationTaskStatus value, ConstraintValidatorContext context) {
         if (value == null) {
             return false; // @NotNull will handle this, but good practice to be safe

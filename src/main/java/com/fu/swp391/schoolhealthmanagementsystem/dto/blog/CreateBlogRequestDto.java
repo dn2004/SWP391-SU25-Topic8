@@ -2,6 +2,7 @@ package com.fu.swp391.schoolhealthmanagementsystem.dto.blog;
 
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.BlogCategory;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.BlogStatus;
+import com.fu.swp391.schoolhealthmanagementsystem.validation.UniqueBlogTitle;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -14,6 +15,7 @@ public record CreateBlogRequestDto(
                 example = "Cách giữ gìn sức khỏe học đường"
         )
         @NotEmpty(message = "Tiêu đề là bắt buộc")
+        @UniqueBlogTitle
         String title,
 
         @Schema(

@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -35,14 +36,14 @@ public class NotificationService {
     @Transactional
     public void createAndSendNotification(String recipientUsername, String content, String link, String senderUsername) {
         User recipient = userRepository.findByEmail(recipientUsername)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + recipientUsername));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng với email: " + recipientUsername));
 
         User sender = null;
         if (senderUsername != null && !senderUsername.equalsIgnoreCase(SYSTEM_SENDER)) {
             sender = userRepository.findByEmail(senderUsername)
                     .orElse(null); // Không ném lỗi nếu không tìm thấy người gửi, chỉ log
             if (sender == null) {
-                log.warn("Sender with username '{}' not found. Notification will be sent as from system.", senderUsername);
+                log.warn("Không tìm thấy người gửi với username '{}'. Thông báo sẽ được gửi dưới tên hệ thống.", senderUsername);
             }
         }
 
@@ -55,20 +56,14 @@ public class NotificationService {
                 .build();
 
         Notification savedNotification = notificationRepository.save(notification);
-        log.info("Saved notification ID {} for user {} from sender {}", savedNotification.getId(), recipientUsername, senderUsername);
+        log.info("Đã lưu thông báo ID {} cho người dùng {} từ người gửi {}", savedNotification.getId(), recipientUsername, senderUsername);
 
-        // Convert to DTO to send via WebSocket
+        // Chuyển đổi sang DTO để gửi qua WebSocket
         NotificationResponseDto notificationDto = notificationMapper.toDto(savedNotification);
 
-        // Send real-time notification via WebSocket
+        // Gửi thông báo realtime qua WebSocket
         simpMessagingTemplate.convertAndSendToUser(recipientUsername, "/queue/notifications", notificationDto);
-        log.info("Sent real-time notification to user {}", recipientUsername);
-    }
-
-    @Transactional
-    public void createAndSendNotificationToCurrentUser(String content, String link, String senderUsername) {
-        User currentUser = authorizationService.getCurrentUserAndValidate();
-        createAndSendNotification(currentUser.getEmail(), content, link, senderUsername);
+        log.info("Đã gửi thông báo realtime tới người dùng {}", recipientUsername);
     }
 
     @Transactional
@@ -103,27 +98,28 @@ public class NotificationService {
     @Transactional
     public NotificationResponseDto markAsRead(Long notificationId, Long userId) {
         Notification notification = notificationRepository.findById(notificationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Notification not found with id: " + notificationId));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thông báo với ID: " + notificationId));
 
         if (!notification.getRecipient().getUserId().equals(userId)) {
-            throw new AccessDeniedException("You are not authorized to access this notification.");
+            throw new AccessDeniedException("Bạn không có quyền truy cập thông báo này.");
         }
 
         notification.setRead(true);
         Notification updatedNotification = notificationRepository.save(notification);
+        log.info("Đã đánh dấu thông báo ID {} là đã đọc cho user ID {}", notificationId, userId);
         return notificationMapper.toDto(updatedNotification);
     }
 
     @Transactional
     public void markAllAsRead(Long userId) {
         notificationRepository.markAllAsReadByUserId(userId);
-        log.info("Marked all notifications as read for user ID {}", userId);
+        log.info("Đã đánh dấu tất cả thông báo là đã đọc cho user ID {}", userId);
     }
 
     @Transactional
     public void deleteOldNotifications() {
         LocalDateTime fifteenDaysAgo = LocalDateTime.now().minusDays(15);
-        log.info("Deleting notifications created before {}", fifteenDaysAgo);
+        log.info("Đang xóa các thông báo được tạo trước ngày {}", fifteenDaysAgo);
         notificationRepository.deleteByCreatedAtBefore(fifteenDaysAgo);
     }
 }

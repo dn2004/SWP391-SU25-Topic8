@@ -3,6 +3,7 @@ package com.fu.swp391.schoolhealthmanagementsystem.controller;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.ErrorResponseDto;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.student.vaccination.StudentVaccinationRequestDto;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.student.vaccination.StudentVaccinationResponseDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.student.vaccination.StudentVaccinationUpdateRequestDto;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.student.vaccination.VaccinationStatusUpdateRequestDto;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentVaccinationStatus;
 import com.fu.swp391.schoolhealthmanagementsystem.service.StudentVaccinationService;
@@ -126,13 +127,12 @@ public class StudentVaccinationController {
     @PutMapping(value = "/vaccinations/{vaccinationId}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<StudentVaccinationResponseDto> updateVaccination(
             @Parameter(description = "ID của bản ghi tiêm chủng cần cập nhật") @PathVariable Long vaccinationId,
-            @Valid @ModelAttribute StudentVaccinationRequestDto vaccinationDto) {
+            @Valid @ModelAttribute StudentVaccinationUpdateRequestDto vaccinationDto) {
         log.info("API PUT /api/vaccinations/{} được gọi", vaccinationId);
         StudentVaccinationResponseDto updatedVaccinationDto =
                 vaccinationService.updateVaccinationForCurrentUser(vaccinationId, vaccinationDto);
         return ResponseEntity.ok(updatedVaccinationDto);
     }
-
     @Operation(summary = "Duyệt/Thay đổi trạng thái bản ghi tiêm chủng",
             description = """
                     ### Mô tả
@@ -180,7 +180,7 @@ public class StudentVaccinationController {
             @ApiResponse(responseCode = "404", description = "Bản ghi tiêm chủng không tìm thấy",
                     content = @Content)
     })
-    @PreAuthorize("hasAnyRole('Parent', 'SchoolAdmin')") // Chỉ Parent hoặc SchoolAdmin được gọi API này
+    @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/vaccinations/{vaccinationId}")
     public ResponseEntity<Void> deleteVaccination(
             @Parameter(description = "ID của bản ghi tiêm chủng cần xóa") @PathVariable Long vaccinationId) {
@@ -190,7 +190,7 @@ public class StudentVaccinationController {
     }
 
     @Operation(summary = "Lấy danh sách tất cả thông tin tiêm chủng của một học sinh (phân trang)",
-            description = """
+            description =   """
                     ### Mô tả
                     Lấy danh sách các mũi tiêm đã ghi nhận cho một học sinh.
                     - **Phân quyền:**

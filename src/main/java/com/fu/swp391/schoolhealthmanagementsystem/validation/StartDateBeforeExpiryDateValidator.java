@@ -9,11 +9,6 @@ import java.time.LocalDate;
 public class StartDateBeforeExpiryDateValidator implements ConstraintValidator<StartDateBeforeExpiryDate, CreateStudentMedicationByStaffRequestDto> {
 
     @Override
-    public void initialize(StartDateBeforeExpiryDate constraintAnnotation) {
-        // Không cần khởi tạo gì
-    }
-
-    @Override
     public boolean isValid(CreateStudentMedicationByStaffRequestDto dto, ConstraintValidatorContext context) {
         // Nếu expiryDate là null thì không cần kiểm tra
         if (dto.expiryDate() == null) {

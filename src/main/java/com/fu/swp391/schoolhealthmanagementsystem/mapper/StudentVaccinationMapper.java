@@ -3,6 +3,7 @@ package com.fu.swp391.schoolhealthmanagementsystem.mapper;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.cloudinary.CloudinaryUploadResponse;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.student.vaccination.StudentVaccinationRequestDto;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.student.vaccination.StudentVaccinationResponseDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.student.vaccination.StudentVaccinationUpdateRequestDto;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.StudentVaccination;
 import org.mapstruct.*;
 
@@ -18,7 +19,7 @@ public interface StudentVaccinationMapper {
     @Mapping(source = "createdByUser.fullName", target = "createdByUserFullName")
     @Mapping(source = "updatedByUser.userId", target = "updatedByUserId")
     @Mapping(source = "updatedByUser.fullName", target = "updatedByUserFullName")
-    @Mapping(target = "hasProofFile", ignore = true)
+    @Mapping(target = "hasProofFile", expression = "java(entity.getProofPublicId() != null && !entity.getProofPublicId().isBlank())")
     StudentVaccinationResponseDto toDto(StudentVaccination entity);
 
 
@@ -38,26 +39,24 @@ public interface StudentVaccinationMapper {
     @Mapping(target = "updatedByUser", ignore = true)
     StudentVaccination requestDtoToEntity(StudentVaccinationRequestDto dto);
 
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    @Mapping(target = "studentVaccinationId", ignore = true)
-    @Mapping(target = "student", ignore = true)
-    @Mapping(target = "vaccineName", ignore = true)
-    @Mapping(target = "vaccinationDate", ignore = true)
-    @Mapping(target = "provider", ignore = true)
-    @Mapping(target = "notes", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "status", ignore = true)
-    @Mapping(target = "approvedByUser", ignore = true)
-    @Mapping(target = "approvedAt", ignore = true)
-    @Mapping(target = "approverNotes", ignore = true)
-    @Mapping(target = "createdByUser", ignore = true)
-    @Mapping(target = "updatedByUser", ignore = true)
-    @Mapping(target = "proofFileOriginalName", ignore = true)
-    @Mapping(target = "proofFileType", ignore = true)
-    @Mapping(target = "proofPublicId", ignore = true)
-    @Mapping(target = "proofResourceType", ignore = true)
-    void updateEntityFromRequestDto(StudentVaccinationRequestDto dto, @MappingTarget StudentVaccination targetEntity);
+    default void updateEntityFromDto(StudentVaccinationUpdateRequestDto dto, @MappingTarget StudentVaccination entity) {
+        if (dto == null) {
+            return;
+        }
+
+        if (dto.vaccineName() != null && !dto.vaccineName().isBlank()) {
+            entity.setVaccineName(dto.vaccineName());
+        }
+        if (dto.provider() != null && !dto.provider().isBlank()) {
+            entity.setProvider(dto.provider());
+        }
+        if (dto.notes() != null && !dto.notes().isBlank()) {
+            entity.setNotes(dto.notes());
+        }
+        if (dto.vaccinationDate() != null) {
+            entity.setVaccinationDate(dto.vaccinationDate());
+        }
+    }
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(source = "originalFilename", target = "proofFileOriginalName")

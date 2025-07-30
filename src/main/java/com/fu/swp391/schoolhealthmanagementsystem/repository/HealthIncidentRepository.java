@@ -2,6 +2,7 @@ package com.fu.swp391.schoolhealthmanagementsystem.repository;
 
 import com.fu.swp391.schoolhealthmanagementsystem.entity.HealthIncident;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.Student;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.HealthIncidentType;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,7 +24,7 @@ public interface HealthIncidentRepository extends JpaRepository<HealthIncident, 
     @Query("SELECT hi FROM HealthIncident hi WHERE hi.incidentId = :incidentId")
     Optional<HealthIncident> findIncidentEvenIfDeletedWithUsages(@Param("incidentId") Long incidentId);
 
-    long countByIncidentType(com.fu.swp391.schoolhealthmanagementsystem.entity.enums.HealthIncidentType type);
+    long countByIncidentType(HealthIncidentType type);
 
     long countByCreatedAtAfter(java.time.LocalDateTime dateTime);
 

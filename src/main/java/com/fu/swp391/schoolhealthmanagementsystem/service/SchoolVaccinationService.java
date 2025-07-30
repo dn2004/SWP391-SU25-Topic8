@@ -51,16 +51,19 @@ public class SchoolVaccinationService {
 
         VaccinationCampaign campaign = consent.getCampaign();
         if (campaign.getStatus() != VaccinationCampaignStatus.IN_PROGRESS) {
+            log.warn("[TIÊM CHỦNG] Không thể ghi nhận tiêm chủng cho chiến dịch không ở trạng thái IN_PROGRESS. Campaign ID: {}", campaign.getCampaignId());
             throw new InvalidOperationException("Chỉ có thể ghi nhận tiêm chủng cho chiến dịch đang diễn ra");
         }
 
         // Kiểm tra xem việc tiêm chủng đã được ghi nhận cho chấp thuận này chưa
         schoolVaccinationRepository.findByConsent(consent).ifPresent(v -> {
+            log.warn("[TIÊM CHỦNG] Đã tồn tại bản ghi tiêm chủng cho chấp thuận ID: {}", consent.getConsentId());
             throw new InvalidOperationException("Tiêm chủng đã được ghi nhận cho chấp thuận có ID: " + consent.getConsentId());
         });
 
         // Nếu trạng thái chấp thuận không phải là APPROVED và đang cố gắng đánh dấu là COMPLETED, báo lỗi
         if (consent.getStatus() != ConsentStatus.APPROVED && requestDto.status() == SchoolVaccinationStatus.COMPLETED) {
+            log.warn("[TIÊM CHỦNG] Không thể đánh dấu hoàn thành khi chấp thuận chưa được phê duyệt. Consent ID: {}", consent.getConsentId());
             throw new InvalidOperationException("Không thể đánh dấu là hoàn thành khi chưa có chấp thuận được phê duyệt");
         }
 
@@ -74,7 +77,7 @@ public class SchoolVaccinationService {
         vaccination.setAdministeredByUser(currentUser);
 
         SchoolVaccination savedVaccination = schoolVaccinationRepository.save(vaccination);
-        log.info("Người dùng {} đã ghi nhận tiêm chủng ID: {} với trạng thái: {} cho học sinh ID: {}",
+        log.info("[TIÊM CHỦNG] Người dùng {} đã ghi nhận tiêm chủng ID: {} với trạng thái: {} cho học sinh ID: {}",
                 currentUser.getEmail(), savedVaccination.getSchoolVaccinationId(),
                 savedVaccination.getStatus(), consent.getStudent().getId());
 
@@ -87,7 +90,7 @@ public class SchoolVaccinationService {
     private void notifyParentAboutVaccinationStatus(SchoolVaccination vaccination, User currentUser) {
         Student student = vaccination.getStudent();
         if (student == null || student.getParentLinks().isEmpty()) {
-            log.warn("Không thể gửi thông báo về trạng thái tiêm chủng. Không có phụ huynh được liên kết với học sinh ID: {}",
+            log.warn("[TIÊM CHỦNG] Không thể gửi thông báo về trạng thái tiêm chủng. Không có phụ huynh được liên kết với học sinh ID: {}",
                     student != null ? student.getId() : "null");
             return;
         }
@@ -103,10 +106,10 @@ public class SchoolVaccinationService {
                     notificationService.createAndSendNotification(
                             parent.getEmail(), content, link, currentUser.getEmail());
 
-                    log.info("Đã gửi thông báo trạng thái tiêm chủng cho học sinh ID: {} đến phụ huynh: {}",
+                    log.info("[TIÊM CHỦNG] Đã gửi thông báo trạng thái tiêm chủng cho học sinh ID: {} đến phụ huynh: {}",
                             student.getId(), parent.getEmail());
                 } catch (Exception e) {
-                    log.error("Không thể gửi thông báo trạng thái tiêm chủng đến phụ huynh ID: {}, Email: {}. Lỗi: {}",
+                    log.error("[TIÊM CHỦNG] Không thể gửi thông báo trạng thái tiêm chủng đến phụ huynh ID: {}, Email: {}. Lỗi: {}",
                             parent.getUserId(), parent.getEmail(), e.getMessage());
                 }
             }
@@ -158,7 +161,7 @@ public class SchoolVaccinationService {
         monitoring.setRecordedByUser(currentUser);
 
         PostVaccinationMonitoring savedMonitoring = postVaccinationMonitoringRepository.save(monitoring);
-        log.info("Người dùng {} đã ghi nhận theo dõi sau tiêm ID: {} cho tiêm chủng ID: {}",
+        log.info("[TIÊM CHỦNG] Người dùng {} đã ghi nhận theo dõi sau tiêm ID: {} cho tiêm chủng ID: {}",
                 currentUser.getEmail(), savedMonitoring.getMonitoringId(), vaccination.getSchoolVaccinationId());
 
         // If side effects reported, notify parents and school management
@@ -173,7 +176,7 @@ public class SchoolVaccinationService {
     private void notifyAboutSideEffects(PostVaccinationMonitoring monitoring, SchoolVaccination vaccination, User currentUser) {
         Student student = vaccination.getStudent();
         if (student == null) {
-            log.warn("Không thể gửi thông báo về phản ứng phụ. Không có thông tin học sinh cho tiêm chủng ID: {}",
+            log.warn("[TIÊM CHỦNG] Không thể gửi thông báo về phản ứng phụ. Không có thông tin học sinh cho tiêm chủng ID: {}",
                     vaccination.getSchoolVaccinationId());
             return;
         }
@@ -199,10 +202,10 @@ public class SchoolVaccinationService {
             // Notify parents
             notifyParentsAboutSideEffects(student, content, link, currentUser.getEmail());
 
-            log.info("Đã gửi thông báo về phản ứng phụ cho học sinh ID: {}, theo dõi ID: {}",
+            log.info("[TIÊM CHỦNG] Đã gửi thông báo về phản ứng phụ cho học sinh ID: {}, theo dõi ID: {}",
                     student.getId(), monitoring.getMonitoringId());
         } catch (Exception e) {
-            log.error("Không thể gửi thông báo về phản ứng phụ cho theo dõi ID: {}. Lỗi: {}",
+            log.error("[TIÊM CHỦNG] Không thể gửi thông báo về phản ứng phụ cho theo dõi ID: {}. Lỗi: {}",
                     monitoring.getMonitoringId(), e.getMessage());
         }
     }
@@ -210,7 +213,7 @@ public class SchoolVaccinationService {
     // Notify parents about side effects
     private void notifyParentsAboutSideEffects(Student student, String content, String link, String senderEmail) {
         if (student.getParentLinks().isEmpty()) {
-            log.warn("Không thể gửi thông báo về phản ứng phụ đến phụ huynh. Không có phụ huynh được liên kết với học sinh ID: {}",
+            log.warn("[TIÊM CHỦNG] Không thể gửi thông báo về phản ứng phụ đến phụ huynh. Không có phụ huynh được liên kết với học sinh ID: {}",
                     student.getId());
             return;
         }
@@ -222,7 +225,7 @@ public class SchoolVaccinationService {
                     notificationService.createAndSendNotification(
                             parent.getEmail(), content, link, senderEmail);
                 } catch (Exception e) {
-                    log.error("Không thể gửi thông báo về phản ứng phụ đến phụ huynh ID: {}, Email: {}. Lỗi: {}",
+                    log.error("[TIÊM CHỦNG] Không thể gửi thông báo về phản ứng phụ đến phụ huynh ID: {}, Email: {}. Lỗi: {}",
                             parent.getUserId(), parent.getEmail(), e.getMessage());
                 }
             }
@@ -243,11 +246,13 @@ public class SchoolVaccinationService {
 
         // Kiểm tra campaign chưa hoàn thành
         if (campaign.getStatus() == VaccinationCampaignStatus.COMPLETED) {
+            log.warn("[TIÊM CHỦNG] Không thể cập nhật record khi chiến dịch đã hoàn thành. Campaign ID: {}", campaign.getCampaignId());
             throw new InvalidOperationException("Không thể cập nhật record khi chiến dịch đã hoàn thành");
         }
 
         // Kiểm tra campaign phải đang IN_PROGRESS
         if (campaign.getStatus() != VaccinationCampaignStatus.IN_PROGRESS) {
+            log.warn("[TIÊM CHỦNG] Chỉ có thể cập nhật record khi chiến dịch đang diễn ra (IN_PROGRESS). Campaign ID: {}", campaign.getCampaignId());
             throw new InvalidOperationException("Chỉ có thể cập nhật record khi chiến dịch đang diễn ra (IN_PROGRESS)");
         }
 
@@ -257,6 +262,7 @@ public class SchoolVaccinationService {
         // Kiểm tra consent status khi cập nhật sang COMPLETED
         VaccinationConsent consent = vaccination.getConsent();
         if (newStatus == SchoolVaccinationStatus.COMPLETED && consent.getStatus() != ConsentStatus.APPROVED) {
+            log.warn("[TIÊM CHỦNG] Không thể đánh dấu COMPLETED khi chưa có chấp thuận được phê duyệt. Consent ID: {}", consent.getConsentId());
             throw new InvalidOperationException("Không thể đánh dấu COMPLETED khi chưa có chấp thuận được phê duyệt");
         }
 
@@ -267,7 +273,7 @@ public class SchoolVaccinationService {
 
         SchoolVaccination updatedVaccination = schoolVaccinationRepository.save(vaccination);
 
-        log.info("User {} updated vaccination record ID: {} from {} to {}. Reason: {}",
+        log.info("[TIÊM CHỦNG] Người dùng {} đã cập nhật record tiêm chủng ID: {} từ {} sang {}. Lý do: {}",
                 currentUser.getEmail(), vaccinationId, oldStatus, newStatus, requestDto.reasonForChange());
 
         // Gửi thông báo về thay đổi trạng thái
@@ -308,7 +314,7 @@ public class SchoolVaccinationService {
                     notificationService.createAndSendNotification(
                             parent.getEmail(), content, link, currentUser.getEmail());
                 } catch (Exception e) {
-                    log.error("Failed to send status update notification to parent: {}", e.getMessage());
+                    log.error("[TIÊM CHỦNG] Thất bại khi gửi thông báo cập nhật trạng thái tiêm chủng tới phụ huynh: {}", e.getMessage());
                 }
             }
         });
@@ -326,8 +332,7 @@ public class SchoolVaccinationService {
         authorizationService.getCurrentUserAndValidate();
 
         vaccinationCampaignRepository.findById(campaignId)
-                .orElseThrow(() -> new ResourceNotFoundException("Campaign not found with ID: " + campaignId));
-
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy chiến dịch với ID: " + campaignId));
         Specification<SchoolVaccination> spec = Specification
                 .allOf(
                         schoolVaccinationSpecification.forCampaign(campaignId),
@@ -391,38 +396,22 @@ public class SchoolVaccinationService {
 
         // Kiểm tra campaign chưa hoàn thành
         if (campaign.getStatus() == VaccinationCampaignStatus.COMPLETED) {
+            log.warn("[TIÊM CHỦNG] Không thể cập nhật bản ghi theo dõi khi chiến dịch đã hoàn thành. Campaign ID: {}", campaign.getCampaignId());
             throw new InvalidOperationException("Không thể cập nhật bản ghi theo dõi khi chiến dịch đã hoàn thành");
         }
 
         // Kiểm tra vaccination phải đang COMPLETED
         if (vaccination.getStatus() != SchoolVaccinationStatus.COMPLETED) {
+            log.warn("[TIÊM CHỦNG] Chỉ có thể cập nhật bản ghi theo dõi khi vaccination đang ở trạng thái COMPLETED. Vaccination ID: {}", vaccination.getSchoolVaccinationId());
             throw new InvalidOperationException("Chỉ có thể cập nhật bản ghi theo dõi khi vaccination đang ở trạng thái COMPLETED");
         }
 
-        // Lưu thông tin cũ để so sánh
-        Boolean oldHasSideEffects = monitoring.getHasSideEffects();
-        Float oldTemperature = monitoring.getTemperature();
-
-        // Cập nhật thông tin
-        if (requestDto.temperature() != null) {
-            monitoring.setTemperature(requestDto.temperature());
-        }
-        if (requestDto.hasSideEffects() != null) {
-            monitoring.setHasSideEffects(requestDto.hasSideEffects());
-        }
-        if (requestDto.sideEffectsDescription() != null) {
-            monitoring.setSideEffectsDescription(requestDto.sideEffectsDescription());
-        }
-        if (requestDto.actionsTaken() != null) {
-            monitoring.setActionsTaken(requestDto.actionsTaken());
-        }
-        if (requestDto.notes() != null) {
-            monitoring.setNotes(requestDto.notes());
-        }
+        // Cập nhật thông tin sử dụng mapper
+        monitoringMapper.updateEntityFromDto(requestDto, monitoring);
 
         PostVaccinationMonitoring updatedMonitoring = postVaccinationMonitoringRepository.save(monitoring);
 
-        log.info("Người dùng {} đã cập nhật bản ghi sau tiêm chủng với của tiêm chủng có ID: {}. Reason: {}",
+        log.info("[TIÊM CHỦNG] Người dùng {} đã cập nhật bản ghi sau tiêm chủng với của tiêm chủng có ID: {}. Lý do: {}",
                 currentUser.getEmail(), monitoringId, requestDto.reasonForUpdate());
 
         // gửi thông báo
@@ -464,16 +453,16 @@ public class SchoolVaccinationService {
                             notificationService.createAndSendNotification(
                                     parent.getEmail(), content, link, currentUser.getEmail());
                         } catch (Exception e) {
-                            log.error("Thất bại khi gửi thông báo sau khi tiêm chủng của học sinh đến phụ huynh.  {}", e.getMessage());
+                            log.error("[TIÊM CHỦNG] Thất bại khi gửi thông báo sau khi tiêm chủng của học sinh đến phụ huynh.  {}", e.getMessage());
                         }
                     }
                 });
             }
 
-            log.info("Gửi thông báo cập nhật sau tiêm chủng đối với học sinh có ID: {}, bản ghi có ID: {}",
+            log.info("[TIÊM CHỦNG] Gửi thông báo cập nhật sau tiêm chủng đối với học sinh có ID: {}, bản ghi có ID: {}",
                     student.getId(), monitoring.getMonitoringId());
         } catch (Exception e) {
-            log.error("Thất bại khi gửi thông báo cập nhật sau tiêm chủng với ID: {}. Lỗi: {}",
+            log.error("[TIÊM CHỦNG] Thất bại khi gửi thông báo cập nhật sau tiêm chủng với ID: {}. Lỗi: {}",
                     monitoring.getMonitoringId(), e.getMessage());
         }
     }

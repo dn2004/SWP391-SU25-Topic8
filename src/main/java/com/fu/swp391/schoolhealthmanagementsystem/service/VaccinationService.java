@@ -43,73 +43,84 @@ public class VaccinationService {
     private final VaccinationConsentSpecification consentSpecification;
     private final ParentStudentLinkRepository parentStudentLinkRepository;
 
-    // Create a new vaccination campaign
+    /**
+     * Tạo mới một chiến dịch tiêm chủng
+     * @param requestDto thông tin chiến dịch
+     * @return VaccinationCampaignResponseDto
+     * @throws InvalidOperationException nếu ngày tiêm chủng không hợp lệ
+     */
     @Transactional
     public VaccinationCampaignResponseDto createVaccinationCampaign(CreateVaccinationCampaignRequestDto requestDto) {
         User currentUser = authorizationService.getCurrentUserAndValidate();
-
+        log.info("[VACCINATION] [USER: {}] Yêu cầu tạo chiến dịch tiêm chủng mới: {}", currentUser.getEmail(), requestDto.campaignName());
         if (requestDto.vaccinationDate().isBefore(LocalDate.now())) {
-            throw new InvalidOperationException("Vaccination date cannot be in the past");
+            log.warn("[VACCINATION] Ngày tiêm chủng không hợp lệ (trong quá khứ): {}", requestDto.vaccinationDate());
+            throw new InvalidOperationException("Ngày tiêm chủng không được ở trong quá khứ.");
         }
-
         LocalDate consentDeadline = requestDto.vaccinationDate().minusDays(2);
-
         VaccinationCampaign campaign = campaignMapper.toEntity(requestDto);
         campaign.setStatus(VaccinationCampaignStatus.DRAFT);
         campaign.setOrganizedByUser(currentUser);
         campaign.setConsentDeadline(consentDeadline);
-
         VaccinationCampaign savedCampaign = vaccinationCampaignRepository.save(campaign);
-        log.info("User {} created a new vaccination campaign: {}", currentUser.getEmail(), savedCampaign.getCampaignId());
-
+        log.info("[VACCINATION] Đã tạo chiến dịch tiêm chủng mới với ID: {}", savedCampaign.getCampaignId());
         VaccinationCampaignResponseDto responseDto = campaignMapper.toDto(savedCampaign);
-        // Set counts to zero for a new campaign
         responseDto = enrichCampaignWithStatistics(responseDto, 0, 0, 0);
-
         return responseDto;
     }
 
-    // Update a campaign
+    /**
+     * Cập nhật thông tin chiến dịch tiêm chủng
+     * @param campaignId ID chiến dịch
+     * @param requestDto thông tin cập nhật
+     * @return VaccinationCampaignResponseDto
+     * @throws ResourceNotFoundException nếu không tìm thấy chiến dịch
+     * @throws InvalidOperationException nếu trạng thái không hợp lệ
+     */
     @Transactional
     public VaccinationCampaignResponseDto updateVaccinationCampaign(Long campaignId, CreateVaccinationCampaignRequestDto requestDto) {
         User currentUser = authorizationService.getCurrentUserAndValidate();
-
+        log.info("[VACCINATION] [USER: {}] Yêu cầu cập nhật chiến dịch ID: {}", currentUser.getEmail(), campaignId);
         VaccinationCampaign campaign = vaccinationCampaignRepository.findById(campaignId)
-                .orElseThrow(() -> new ResourceNotFoundException("Vaccination campaign not found with ID: " + campaignId));
-
+                .orElseThrow(() -> {
+                    log.warn("[VACCINATION] Không tìm thấy chiến dịch với ID: {}", campaignId);
+                    return new ResourceNotFoundException("Không tìm thấy chiến dịch tiêm chủng với ID: " + campaignId);
+                });
         if (campaign.getStatus() != VaccinationCampaignStatus.DRAFT) {
-            throw new InvalidOperationException("Can only update campaigns in DRAFT status");
+            log.warn("[VACCINATION] Không thể cập nhật chiến dịch ID: {} vì không ở trạng thái Nháp.", campaignId);
+            throw new InvalidOperationException("Chỉ có thể cập nhật chiến dịch ở trạng thái Nháp.");
         }
-
         campaignMapper.updateEntityFromDto(requestDto, campaign);
         campaign.setUpdatedByUser(currentUser);
-
+        campaign.setVaccinationDate(requestDto.vaccinationDate().minusDays(2));
         VaccinationCampaign updatedCampaign = vaccinationCampaignRepository.save(campaign);
-        log.info("User {} updated vaccination campaign: {}", currentUser.getEmail(), updatedCampaign.getCampaignId());
-
+        log.info("[VACCINATION] Đã cập nhật chiến dịch ID: {}", updatedCampaign.getCampaignId());
         VaccinationCampaignResponseDto responseDto = campaignMapper.toDto(updatedCampaign);
-        // Get current statistics
         int totalStudents = vaccinationCampaignRepository.countConsentsForCampaign(campaignId);
         int approvedConsents = vaccinationCampaignRepository.countApprovedConsentsForCampaign(campaignId);
         int declinedConsents = vaccinationCampaignRepository.countDeclinedConsentsForCampaign(campaignId);
-
         return enrichCampaignWithStatistics(responseDto, totalStudents, approvedConsents, declinedConsents);
     }
 
-    // Get a campaign by ID
+    /**
+     * Lấy thông tin chi tiết của một chiến dịch tiêm chủng
+     * @param campaignId ID chiến dịch
+     * @return VaccinationCampaignResponseDto
+     * @throws ResourceNotFoundException nếu không tìm thấy chiến dịch
+     */
     @Transactional(readOnly = true)
     public VaccinationCampaignResponseDto getVaccinationCampaignById(Long campaignId) {
         User currentUser = authorizationService.getCurrentUserAndValidate();
-
+        log.info("[VACCINATION] [USER: {}] Yêu cầu xem chi tiết chiến dịch ID: {}", currentUser.getEmail(), campaignId);
         VaccinationCampaign campaign = vaccinationCampaignRepository.findById(campaignId)
-                .orElseThrow(() -> new ResourceNotFoundException("Vaccination campaign not found with ID: " + campaignId));
-
+                .orElseThrow(() -> {
+                    log.warn("[VACCINATION] Không tìm thấy chiến dịch với ID: {}", campaignId);
+                    return new ResourceNotFoundException("Không tìm thấy chiến dịch tiêm chủng với ID: " + campaignId);
+                });
         VaccinationCampaignResponseDto responseDto = campaignMapper.toDto(campaign);
-        // Get current statistics
         int totalStudents = vaccinationCampaignRepository.countConsentsForCampaign(campaignId);
         int approvedConsents = vaccinationCampaignRepository.countApprovedConsentsForCampaign(campaignId);
         int declinedConsents = vaccinationCampaignRepository.countDeclinedConsentsForCampaign(campaignId);
-
         return enrichCampaignWithStatistics(responseDto, totalStudents, approvedConsents, declinedConsents);
     }
 
@@ -150,7 +161,7 @@ public class VaccinationService {
     @Transactional(readOnly = true)
     public Page<VaccinationCampaignResponseDto> getAllVaccinationCampaigns(Pageable pageable) {
         authorizationService.getCurrentUserAndValidate();
-
+        log.info("[VACCINATION] Yêu cầu xem danh sách tất cả các chiến dịch tiêm chủng");
         Page<VaccinationCampaign> campaignPage = vaccinationCampaignRepository.findAll(pageable);
         return campaignPage.map(campaign -> {
             VaccinationCampaignResponseDto dto = campaignMapper.toDto(campaign);
@@ -174,9 +185,13 @@ public class VaccinationService {
     public VaccinationCampaignResponseDto scheduleCampaign(Long campaignId) {
         User currentUser = authorizationService.getCurrentUserAndValidate();
         VaccinationCampaign campaign = vaccinationCampaignRepository.findById(campaignId)
-                .orElseThrow(() -> new ResourceNotFoundException("Vaccination campaign not found with ID: " + campaignId));
+                .orElseThrow(() -> {
+                    log.warn("[VACCINATION] Không tìm thấy chiến dịch với ID: {}", campaignId);
+                    return new ResourceNotFoundException("Không tìm thấy chiến dịch tiêm chủng với ID: " + campaignId);
+                });
 
         if (campaign.getStatus() != VaccinationCampaignStatus.DRAFT) {
+            log.warn("[VACCINATION] Không thể lên lịch chiến dịch ID: {} vì không ở trạng thái Nháp.", campaignId);
             throw new InvalidOperationException("Chỉ có thể lên lịch cho chiến dịch đang ở trạng thái Nháp (DRAFT).");
         }
 
@@ -186,7 +201,7 @@ public class VaccinationService {
         campaign.setStatus(VaccinationCampaignStatus.SCHEDULED);
         campaign.setUpdatedByUser(currentUser);
         VaccinationCampaign updatedCampaign = vaccinationCampaignRepository.save(campaign);
-        log.info("User {} scheduled vaccination campaign {}", currentUser.getEmail(), campaignId);
+        log.info("[VACCINATION] [USER: {}] Đã lên lịch chiến dịch tiêm chủng ID: {}", currentUser.getEmail(), campaignId);
 
         // Send notifications to parents
         sendConsentNotificationsToParents(updatedCampaign);
@@ -204,13 +219,18 @@ public class VaccinationService {
     public VaccinationCampaignResponseDto startCampaign(Long campaignId) {
         User currentUser = authorizationService.getCurrentUserAndValidate();
         VaccinationCampaign campaign = vaccinationCampaignRepository.findById(campaignId)
-                .orElseThrow(() -> new ResourceNotFoundException("Vaccination campaign not found with ID: " + campaignId));
+                .orElseThrow(() -> {
+                    log.warn("[VACCINATION] Không tìm thấy chiến dịch với ID: {}", campaignId);
+                    return new ResourceNotFoundException("Không tìm thấy chiến dịch tiêm chủng với ID: " + campaignId);
+                });
 
         if (campaign.getStatus() != VaccinationCampaignStatus.PREPARING) {
+            log.warn("[VACCINATION] Không thể bắt đầu chiến dịch ID: {} vì không ở trạng thái Chuẩn bị.", campaignId);
             throw new InvalidOperationException("Chỉ có thể bắt đầu chiến dịch đang ở trạng thái Chuẩn bị (PREPARING).");
         }
 
         if (LocalDate.now().isBefore(campaign.getVaccinationDate())) {
+            log.warn("[VACCINATION] Không thể bắt đầu chiến dịch trước ngày tiêm chủng đã lên lịch.");
             throw new InvalidOperationException("Không thể bắt đầu chiến dịch trước ngày tiêm chủng đã lên lịch.");
         }
 
@@ -220,7 +240,7 @@ public class VaccinationService {
         campaign.setStatus(VaccinationCampaignStatus.IN_PROGRESS);
         campaign.setUpdatedByUser(currentUser);
         VaccinationCampaign updatedCampaign = vaccinationCampaignRepository.save(campaign);
-        log.info("User {} started vaccination campaign {}", currentUser.getEmail(), campaignId);
+        log.info("[VACCINATION] [USER: {}] Đã bắt đầu chiến dịch tiêm chủng ID: {}", currentUser.getEmail(), campaignId);
 
         return enrichCampaignWithFullStatistics(updatedCampaign);
     }
@@ -235,9 +255,13 @@ public class VaccinationService {
     public VaccinationCampaignResponseDto completeCampaign(Long campaignId) {
         User currentUser = authorizationService.getCurrentUserAndValidate();
         VaccinationCampaign campaign = vaccinationCampaignRepository.findById(campaignId)
-                .orElseThrow(() -> new ResourceNotFoundException("Vaccination campaign not found with ID: " + campaignId));
+                .orElseThrow(() -> {
+                    log.warn("[VACCINATION] Không tìm thấy chiến dịch với ID: {}", campaignId);
+                    return new ResourceNotFoundException("Không tìm thấy chiến dịch tiêm chủng với ID: " + campaignId);
+                });
 
         if (campaign.getStatus() != VaccinationCampaignStatus.IN_PROGRESS) {
+            log.warn("[VACCINATION] Không thể hoàn thành chiến dịch ID: {} vì không ở trạng thái Đang diễn ra.", campaignId);
             throw new InvalidOperationException("Chỉ có thể hoàn thành chiến dịch đang ở trạng thái Đang diễn ra (IN_PROGRESS).");
         }
 
@@ -247,9 +271,18 @@ public class VaccinationService {
         notifyAboutCampaignCompletion(campaign, currentUser);
 
         campaign.setStatus(VaccinationCampaignStatus.COMPLETED);
+
+        List<SchoolVaccination> scheduledVaccination = campaign.getVaccinations().stream()
+                .filter(sv -> sv.getStatus() == SchoolVaccinationStatus.SCHEDULED)
+                .toList();
+        scheduledVaccination.forEach(schoolVaccination -> {
+            log.info("Bộ lập lịch: Cập nhật trạng thái tiêm chủng ID {} từ SCHEDULED sang ABSENT.", schoolVaccination.getSchoolVaccinationId());
+            schoolVaccination.setStatus(SchoolVaccinationStatus.ABSENT);
+        });
+
         campaign.setUpdatedByUser(currentUser);
         VaccinationCampaign updatedCampaign = vaccinationCampaignRepository.save(campaign);
-        log.info("User {} completed vaccination campaign {}", currentUser.getEmail(), campaignId);
+        log.info("[VACCINATION] [USER: {}] Đã hoàn thành chiến dịch tiêm chủng ID: {}", currentUser.getEmail(), campaignId);
 
         return enrichCampaignWithFullStatistics(updatedCampaign);
     }
@@ -264,10 +297,14 @@ public class VaccinationService {
     public VaccinationCampaignResponseDto cancelCampaign(Long campaignId) {
         User currentUser = authorizationService.getCurrentUserAndValidate();
         VaccinationCampaign campaign = vaccinationCampaignRepository.findById(campaignId)
-                .orElseThrow(() -> new ResourceNotFoundException("Vaccination campaign not found with ID: " + campaignId));
+                .orElseThrow(() -> {
+                    log.warn("[VACCINATION] Không tìm thấy chiến dịch với ID: {}", campaignId);
+                    return new ResourceNotFoundException("Không tìm thấy chiến dịch tiêm chủng với ID: " + campaignId);
+                });
 
         VaccinationCampaignStatus currentStatus = campaign.getStatus();
         if (currentStatus == VaccinationCampaignStatus.COMPLETED || currentStatus == VaccinationCampaignStatus.CANCELED) {
+            log.warn("[VACCINATION] Không thể hủy chiến dịch ID: {} vì đã hoàn thành hoặc đã bị hủy.", campaignId);
             throw new InvalidOperationException("Không thể hủy chiến dịch đã Hoàn thành (COMPLETED) hoặc đã bị Hủy (CANCELED).");
         }
 
@@ -277,7 +314,7 @@ public class VaccinationService {
         campaign.setStatus(VaccinationCampaignStatus.CANCELED);
         campaign.setUpdatedByUser(currentUser);
         VaccinationCampaign updatedCampaign = vaccinationCampaignRepository.save(campaign);
-        log.info("User {} canceled vaccination campaign {}", currentUser.getEmail(), campaignId);
+        log.info("[VACCINATION] [USER: {}] Đã hủy chiến dịch tiêm chủng ID: {}", currentUser.getEmail(), campaignId);
 
         return enrichCampaignWithFullStatistics(updatedCampaign);
     }
@@ -293,10 +330,12 @@ public class VaccinationService {
 
     // ---- END REFACTOR ----
 
-    // Send notifications to parents
+    /**
+     * Gửi thông báo phiếu đồng ý tiêm chủng cho phụ huynh
+     */
     private void sendConsentNotificationsToParents(VaccinationCampaign campaign) {
+        log.info("[VACCINATION] Bắt đầu gửi thông báo phiếu đồng ý cho phụ huynh chiến dịch ID: {}", campaign.getCampaignId());
         List<VaccinationConsent> consents = vaccinationConsentRepository.findByCampaign(campaign);
-
         consents.forEach(consent -> {
             List<ParentStudentLink> parentLinks = parentStudentLinkRepository.findByStudent(consent.getStudent());
             parentLinks.forEach(parentLink -> {
@@ -306,17 +345,14 @@ public class VaccinationService {
                             "Phiếu đồng ý tiêm chủng '%s' cho học sinh %s đã được gửi. Vui lòng xác nhận trước ngày %s.",
                             campaign.getCampaignName(), consent.getStudent().getFullName(),
                             campaign.getConsentDeadline().toString());
-
                     String link = "/vaccination/consent/" + consent.getConsentId();
-
                     try {
                         notificationService.createAndSendNotification(
                                 parent.getEmail(), content, link, campaign.getOrganizedByUser().getEmail());
-
-                        log.info("Sent consent notification for student ID: {} to parent: {}",
+                        log.info("[VACCINATION] Đã gửi thông báo phiếu đồng ý cho học sinh ID: {} tới phụ huynh: {}",
                                 consent.getStudent().getId(), parent.getEmail());
                     } catch (Exception e) {
-                        log.error("Failed to send consent notification to parent ID: {}, Email: {}. Error: {}",
+                        log.error("[VACCINATION] Lỗi gửi thông báo phiếu đồng ý cho phụ huynh ID: {}, Email: {}. Lỗi: {}",
                                 parent.getUserId(), parent.getEmail(), e.getMessage());
                     }
                 }
@@ -324,136 +360,117 @@ public class VaccinationService {
         });
     }
 
-    // Send reminder notifications to parents who haven't responded
+    /**
+     * Gửi nhắc nhở phiếu đồng ý tiêm chủng cho phụ huynh chưa phản hồi
+     */
     @Transactional
     public void sendConsentReminderNotifications(Long campaignId) {
+        log.info("[VACCINATION] Bắt đầu gửi nhắc nhở phiếu đồng ý cho chiến dịch ID: {}", campaignId);
         VaccinationCampaign campaign = vaccinationCampaignRepository.findById(campaignId)
-                .orElseThrow(() -> new ResourceNotFoundException("Vaccination campaign not found with ID: " + campaignId));
-
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy chiến dịch tiêm chủng với ID: " + campaignId));
         if (campaign.getStatus() != VaccinationCampaignStatus.SCHEDULED) {
-            log.info("Campaign ID {} is not in SCHEDULED status, skipping consent reminders", campaignId);
+            log.info("[VACCINATION] Chiến dịch ID {} không ở trạng thái Đã lên lịch, bỏ qua gửi nhắc nhở.", campaignId);
             return;
         }
-
-        // Find all pending consents with no reminder yet
         List<VaccinationConsent> pendingConsents = vaccinationConsentRepository.findPendingConsentsWithNoReminder(campaignId);
-        log.info("Found {} pending consents without reminders for campaign ID: {}", pendingConsents.size(), campaignId);
-
+        log.info("[VACCINATION] Có {} phiếu đồng ý chưa nhắc nhở cho chiến dịch ID: {}", pendingConsents.size(), campaignId);
         pendingConsents.forEach(consent -> {
             List<ParentStudentLink> parentLinks = parentStudentLinkRepository.findByStudent(consent.getStudent());
             parentLinks.forEach(parentLink -> {
                 User parent = parentLink.getParent();
-
                 if (parent != null) {
                     String content = String.format(
                             "Nhắc nhở: Vui lòng xác nhận phiếu đồng ý tiêm chủng '%s' cho học sinh %s trước ngày %s.",
                             campaign.getCampaignName(), consent.getStudent().getFullName(),
                             campaign.getConsentDeadline().toString());
-
                     String link = "/vaccination/consent/" + consent.getConsentId();
-
                     try {
                         notificationService.createAndSendNotification(
                                 parent.getEmail(), content, link, campaign.getOrganizedByUser().getEmail());
-
-                        // Mark reminder as sent
                         consent.setReminderSentAt(LocalDateTime.now());
                         vaccinationConsentRepository.save(consent);
-
-                        log.info("Sent consent reminder for student ID: {} to parent: {}",
+                        log.info("[VACCINATION] Đã gửi nhắc nhở phiếu đồng ý cho học sinh ID: {} tới phụ huynh: {}",
                                 consent.getStudent().getId(), parent.getEmail());
                     } catch (Exception e) {
-                        log.error("Failed to send consent reminder to parent ID: {}, Email: {}. Error: {}",
+                        log.error("[VACCINATION] Lỗi gửi nhắc nhở phiếu đồng ý cho phụ huynh ID: {}, Email: {}. Lỗi: {}",
                                 parent.getUserId(), parent.getEmail(), e.getMessage());
                     }
                 }
-
             });
         });
     }
 
-    // Notify medical staff about campaign preparation phase
+    /**
+     * Gửi thông báo cho nhân viên y tế về giai đoạn chuẩn bị chiến dịch
+     */
     private void notifyMedicalStaffAboutPreparation(VaccinationCampaign campaign, User currentUser) {
         String content = String.format(
                 "Chiến dịch tiêm chủng '%s' đã chuyển sang giai đoạn chuẩn bị. Vui lòng chuẩn bị sẵn sàng cho ngày %s.",
                 campaign.getCampaignName(), campaign.getVaccinationDate().toString());
-
         String link = "/vaccination/campaigns/" + campaign.getCampaignId();
-
         try {
             notificationService.createAndSendNotificationToRole(
                     UserRole.MedicalStaff, content, link, currentUser.getEmail());
-
-            log.info("Sent preparation notification to medical staff for campaign ID: {}",
+            log.info("[VACCINATION] Đã gửi thông báo chuẩn bị chiến dịch tới nhân viên y tế cho chiến dịch ID: {}",
                     campaign.getCampaignId());
         } catch (Exception e) {
-            log.error("Failed to send preparation notification to medical staff for campaign ID: {}. Error: {}",
+            log.error("[VACCINATION] Lỗi gửi thông báo chuẩn bị chiến dịch tới nhân viên y tế cho chiến dịch ID: {}. Lỗi: {}",
                     campaign.getCampaignId(), e.getMessage());
         }
     }
 
-    // Notify medical staff about campaign start
+    /**
+     * Gửi thông báo cho nhân viên y tế khi bắt đầu chiến dịch
+     */
     private void notifyMedicalStaffCampaignStarted(VaccinationCampaign campaign, User currentUser) {
         String content = String.format(
                 "Chiến dịch tiêm chủng '%s' đã bắt đầu. Vui lòng thực hiện tiêm chủng theo kế hoạch.",
                 campaign.getCampaignName());
-
         String link = "/vaccination/campaigns/" + campaign.getCampaignId();
-
         try {
             notificationService.createAndSendNotificationToRole(
                     UserRole.MedicalStaff, content, link, currentUser.getEmail());
-
-            log.info("Sent campaign start notification to medical staff for campaign ID: {}",
+            log.info("[VACCINATION] Đã gửi thông báo bắt đầu chiến dịch tới nhân viên y tế cho chiến dịch ID: {}",
                     campaign.getCampaignId());
         } catch (Exception e) {
-            log.error("Failed to send campaign start notification to medical staff for campaign ID: {}. Error: {}",
+            log.error("[VACCINATION] Lỗi gửi thông báo bắt đầu chiến dịch tới nhân viên y tế cho chiến dịch ID: {}. Lỗi: {}",
                     campaign.getCampaignId(), e.getMessage());
         }
     }
 
-    // Notify about campaign completion
+    /**
+     * Gửi thông báo hoàn thành chiến dịch
+     */
     private void notifyAboutCampaignCompletion(VaccinationCampaign campaign, User currentUser) {
         String content = String.format(
                 "Chiến dịch tiêm chủng '%s' đã hoàn thành.",
                 campaign.getCampaignName());
-
         String link = "/vaccination/campaigns/" + campaign.getCampaignId();
-
         try {
-            // Notify medical staff
             notificationService.createAndSendNotificationToRole(
                     UserRole.MedicalStaff, content, link, currentUser.getEmail());
-
-            // Notify managers
             notificationService.createAndSendNotificationToRole(
                     UserRole.StaffManager, content, link, currentUser.getEmail());
-
-            log.info("Sent completion notification for campaign ID: {}", campaign.getCampaignId());
+            log.info("[VACCINATION] Đã gửi thông báo hoàn thành chiến dịch cho ID: {}", campaign.getCampaignId());
         } catch (Exception e) {
-            log.error("Failed to send completion notification for campaign ID: {}. Error: {}",
+            log.error("[VACCINATION] Lỗi gửi thông báo hoàn thành chiến dịch cho ID: {}. Lỗi: {}",
                     campaign.getCampaignId(), e.getMessage());
         }
     }
 
-    // Notify about campaign cancellation
+    /**
+     * Gửi thông báo hủy chiến dịch
+     */
     private void notifyAboutCampaignCancellation(VaccinationCampaign campaign, User currentUser) {
         String content = String.format(
                 "Chiến dịch tiêm chủng '%s' đã bị hủy.",
                 campaign.getCampaignName());
-
         String link = "/vaccination/campaigns/" + campaign.getCampaignId();
-
         try {
-            // Notify medical staff
             notificationService.createAndSendNotificationToRole(
                     UserRole.MedicalStaff, content, link, currentUser.getEmail());
-
-            // Notify managers
             notificationService.createAndSendNotificationToRole(
                     UserRole.StaffManager, content, link, currentUser.getEmail());
-
-            // Nếu đã gửi consent, gửi thông báo cho phụ huynh về việc hủy
             List<VaccinationConsent> consents = vaccinationConsentRepository.findByCampaign(campaign);
             consents.forEach(consent -> {
                 List<ParentStudentLink> parentLinks = parentStudentLinkRepository.findByStudent(consent.getStudent());
@@ -468,63 +485,48 @@ public class VaccinationService {
                     }
                 });
             });
-
-            log.info("Đã gửi thông báo hủy chiến dịch cho ID: {}", campaign.getCampaignId());
+            log.info("[VACCINATION] Đã gửi thông báo hủy chiến dịch cho ID: {}", campaign.getCampaignId());
         } catch (Exception e) {
-            log.error("Gửi thông báo hủy chiến dịch thất bại cho ID: {}. Lỗi: {}",
+            log.error("[VACCINATION] Lỗi gửi thông báo hủy chiến dịch cho ID: {}. Lỗi: {}",
                     campaign.getCampaignId(), e.getMessage());
         }
     }
 
-    // Generate consent forms for all eligible students in the campaign
+    /**
+     * Tạo phiếu đồng ý tiêm chủng cho tất cả học sinh mục tiêu
+     */
     @Transactional
     public void generateConsentFormsForCampaign(VaccinationCampaign campaign, User currentUser) {
-        log.info("Generating consent forms for campaign ID: {}", campaign.getCampaignId());
-
-        // Get target students based on campaign criteria
+        log.info("[VACCINATION] Bắt đầu tạo phiếu đồng ý cho chiến dịch ID: {}", campaign.getCampaignId());
         List<Student> targetStudents = findTargetStudentsForCampaign(campaign);
         List<VaccinationConsent> consentsToCreate = new ArrayList<>();
-
         for (Student student : targetStudents) {
-            // Check if consent already exists
             boolean consentExists = vaccinationConsentRepository.findByCampaignAndStudent(campaign, student).isPresent();
-
             if (!consentExists) {
                 VaccinationConsent consent = new VaccinationConsent();
                 consent.setCampaign(campaign);
                 consent.setStudent(student);
                 consent.setStatus(ConsentStatus.PENDING);
                 consent.setConsentFormSentAt(LocalDateTime.now());
-
-                // Find parent for this student (assuming first parent link)
-//                if (!student.getParentLinks().isEmpty()) {
-//                    ParentStudentLink parentLink = student.getParentLinks().get(0);
-//                    consent.setParent(parentLink.getParent());
-//                }
-
                 consentsToCreate.add(consent);
             }
         }
-
         if (!consentsToCreate.isEmpty()) {
             vaccinationConsentRepository.saveAll(consentsToCreate);
-            log.info("Created {} consent forms for campaign ID: {}", consentsToCreate.size(), campaign.getCampaignId());
+            log.info("[VACCINATION] Đã tạo {} phiếu đồng ý cho chiến dịch ID: {}", consentsToCreate.size(), campaign.getCampaignId());
         }
     }
 
-    // Tìm kiếm học sinh mục tiêu dựa trên khối lớp có trạng thái active.
+    /**
+     * Tìm kiếm học sinh mục tiêu dựa trên khối lớp hoặc trạng thái hoạt động
+     */
     private List<Student> findTargetStudentsForCampaign(VaccinationCampaign campaign) {
-        log.info("Finding target students for campaign ID: {}", campaign.getCampaignId());
-
-        // Kiểm tra nếu chiến dịch có chỉ định khối lớp cụ thể
         if (campaign.getTargetClassGroup() != null) {
             ClassGroup targetGroup = campaign.getTargetClassGroup();
-            log.info("Targeting class group: {}", targetGroup);
+            log.info("[VACCINATION] Tìm học sinh mục tiêu theo khối lớp: {}", targetGroup);
             return studentRepository.findByClassGroupAndStatus(targetGroup, StudentStatus.ACTIVE);
         }
-
-        // Nếu không có tiêu chí khối lớp, trả về tất cả học sinh đang hoạt động
-        log.info("No specific targeting criteria found, returning all active students");
+        log.info("[VACCINATION] Không có tiêu chí khối lớp, lấy tất cả học sinh đang hoạt động");
         return studentRepository.findByStatus(StudentStatus.ACTIVE);
     }
 
@@ -534,7 +536,10 @@ public class VaccinationService {
         authorizationService.getCurrentUserAndValidate();
 
         VaccinationCampaign campaign = vaccinationCampaignRepository.findById(campaignId)
-                .orElseThrow(() -> new ResourceNotFoundException("Vaccination campaign not found with ID: " + campaignId));
+                .orElseThrow(() -> {
+                    log.warn("[VACCINATION] Không tìm thấy chiến dịch với ID: {}", campaignId);
+                    return new ResourceNotFoundException("Không tìm thấy chiến dịch tiêm chủng với ID: " + campaignId);
+                });
 
         Page<VaccinationConsent> consentsPage = vaccinationConsentRepository.findByCampaign(campaign, pageable);
         return consentsPage.map(consentMapper::toDto);
@@ -547,7 +552,10 @@ public class VaccinationService {
         authorizationService.getCurrentUserAndValidate();
 
         VaccinationCampaign campaign = vaccinationCampaignRepository.findById(campaignId)
-                .orElseThrow(() -> new ResourceNotFoundException("Vaccination campaign not found with ID: " + campaignId));
+                .orElseThrow(() -> {
+                    log.warn("[VACCINATION] Không tìm thấy chiến dịch với ID: {}", campaignId);
+                    return new ResourceNotFoundException("Không tìm thấy chiến dịch tiêm chủng với ID: " + campaignId);
+                });
 
         Specification<VaccinationConsent> spec = Specification.allOf(
                 consentSpecification.forCampaign(campaign),
@@ -565,24 +573,24 @@ public class VaccinationService {
         User currentUser = authorizationService.getCurrentUserAndValidate();
 
         VaccinationConsent consent = vaccinationConsentRepository.findById(consentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Consent not found with ID: " + consentId));
+                .orElseThrow(() -> {
+                    log.warn("[VACCINATION] Không tìm thấy phiếu đồng ý với ID: {}", consentId);
+                    return new ResourceNotFoundException("Không tìm thấy phiếu đồng ý với ID: " + consentId);
+                });
 
         Student student = consent.getStudent();
 
         // If user is a parent, verify they are a parent of this student with ACTIVE status
         if (currentUser.getRole() == UserRole.Parent) {
             try {
-                // Use AuthorizationService to check if the current user is an active parent of the student
                 authorizationService.authorizeParentAction(currentUser, student, "xem phiếu đồng ý tiêm chủng");
             } catch (AccessDeniedException e) {
-                log.warn("Parent {} attempted to access consent ID {} for student {} without proper link",
+                log.warn("[VACCINATION] Phụ huynh {} cố truy cập phiếu đồng ý ID {} cho học sinh {} không hợp lệ.",
                         currentUser.getEmail(), consentId, student.getId());
-                throw new AccessDeniedException("Bạn không có quyền xem phiếu đồng ý tiêm chủng này");
+                throw new AccessDeniedException("Bạn không có quyền xem phiếu đồng ý tiêm chủng này.");
             }
         }
-
-        // For staff and admin, allow access without additional checks
-        log.info("User {} accessed consent ID: {} for student: {}",
+        log.info("[VACCINATION] Người dùng {} truy cập phiếu đồng ý ID: {} cho học sinh: {}",
                 currentUser.getEmail(), consentId, student.getFullName());
         return consentMapper.toDto(consent);
     }
@@ -594,17 +602,20 @@ public class VaccinationService {
         User currentUser = authorizationService.getCurrentUserAndValidate();
 
         VaccinationConsent consent = vaccinationConsentRepository.findById(consentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Consent not found with ID: " + consentId));
+                .orElseThrow(() -> {
+                    log.warn("[VACCINATION] Không tìm thấy phiếu đồng ý với ID: {}", consentId);
+                    return new ResourceNotFoundException("Không tìm thấy phiếu đồng ý với ID: " + consentId);
+                });
 
         // Check if campaign is still accepting consent responses
         VaccinationCampaign campaign = consent.getCampaign();
         if (campaign.getStatus() != VaccinationCampaignStatus.SCHEDULED) {
-            throw new InvalidOperationException("Campaign is no longer accepting consent responses");
+            log.warn("[VACCINATION] Chiến dịch ID: {} không còn nhận phản hồi đồng ý.", campaign.getCampaignId());
+            throw new InvalidOperationException("Chiến dịch không còn nhận phản hồi đồng ý.");
         }
-
-        // Check if consent deadline has passed
         if (LocalDate.now().isAfter(campaign.getConsentDeadline())) {
-            throw new InvalidOperationException("Consent deadline has passed");
+            log.warn("[VACCINATION] Đã quá hạn phản hồi đồng ý cho chiến dịch ID: {}", campaign.getCampaignId());
+            throw new InvalidOperationException("Đã quá hạn phản hồi đồng ý.");
         }
 
         // Store old status for notification
@@ -615,8 +626,8 @@ public class VaccinationService {
         consent.setResponseReceivedAt(LocalDateTime.now());
 
         VaccinationConsent updatedConsent = vaccinationConsentRepository.save(consent);
-        log.info("Staff {} updated consent ID: {} to status: {}",
-                currentUser.getEmail(), consentId, updatedConsent.getStatus());
+        log.info("[VACCINATION] Đã cập nhật trạng thái phiếu đồng ý ID: {} thành {} bởi nhân viên {}",
+                consentId, updatedConsent.getStatus(), currentUser.getEmail());
 
         // Send notification to medical staff about consent response
         List<ParentStudentLink> parentLinks = parentStudentLinkRepository.findByStudent(consent.getStudent());
@@ -646,27 +657,22 @@ public class VaccinationService {
         String link = "/vaccination/campaigns/" + campaign.getCampaignId() + "/consents";
 
         try {
-            // Notify campaign organizer
             User organizer = campaign.getOrganizedByUser();
             if (organizer != null) {
                 notificationService.createAndSendNotification(
                         organizer.getEmail(), content, link, "hệ thống");
             }
-
-            log.info("Sent consent response notification for student ID: {} to campaign organizer",
+            log.info("[VACCINATION] Đã gửi thông báo phản hồi đồng ý cho học sinh ID: {} đến người tổ chức chiến dịch.",
                     student.getId());
         } catch (Exception e) {
-            log.error("Failed to send consent response notification for student ID: {}. Error: {}",
+            log.error("[VACCINATION] Gửi thông báo phản hồi đồng ý thất bại cho học sinh ID: {}. Lỗi: {}",
                     student.getId(), e.getMessage());
         }
     }
 
     // Verify all vaccinations are completed
     private void verifyAllVaccinationsCompleted(Long campaignId) {
-        // Implementation would check if all students with approved consent
-        // have been vaccinated or marked as absent/declined
-        // For now, we'll just log
-        log.info("Verifying vaccinations for campaign ID: {}", campaignId);
+        log.info("[VACCINATION] Đang kiểm tra hoàn thành tiêm chủng cho chiến dịch ID: {}", campaignId);
     }
 
     // Get all campaigns with pagination and filtering
@@ -717,10 +723,14 @@ public class VaccinationService {
             requestDto) {
         User currentUser = authorizationService.getCurrentUserAndValidate();
         VaccinationCampaign campaign = vaccinationCampaignRepository.findById(campaignId)
-                .orElseThrow(() -> new ResourceNotFoundException("Vaccination campaign not found with ID: " + campaignId));
+                .orElseThrow(() -> {
+                    log.warn("[VACCINATION] Không tìm thấy chiến dịch với ID: {}", campaignId);
+                    return new ResourceNotFoundException("Không tìm thấy chiến dịch tiêm chủng với ID: " + campaignId);
+                });
 
         if (campaign.getStatus() != VaccinationCampaignStatus.PREPARING) {
-            throw new InvalidOperationException("Chỉ có thể dời lịch cho chiến dịch đang ở trạng thái Chuẩn bị (PREPARING).");
+            log.warn("[VACCINATION] Không thể dời lịch chiến dịch ID: {} vì không ở trạng thái Chuẩn bị.", campaignId);
+            throw new InvalidOperationException("Chỉ có thể dời lịch cho chiến dịch đang ở trạng thái Chuẩn bị.");
         }
 
         LocalDate newDate = requestDto.newVaccinationDate();
@@ -728,11 +738,11 @@ public class VaccinationService {
 
         // Kiểm tra ngày mới phải trong hôm nay hoặc tương lai
         if (newDate.isBefore(LocalDate.now())) {
+            log.warn("[VACCINATION] Ngày tiêm chủng mới không hợp lệ: {}", newDate);
             throw new InvalidOperationException("Ngày tiêm chủng mới phải từ hôm nay trở đi.");
         }
-
-        // Kiểm tra ngày mới phải khác ngày hiện tại
         if (newDate.equals(currentDate)) {
+            log.warn("[VACCINATION] Ngày tiêm chủng mới trùng với ngày hiện tại.");
             throw new InvalidOperationException("Ngày tiêm chủng mới phải khác với ngày hiện tại.");
         }
 
@@ -743,7 +753,7 @@ public class VaccinationService {
         campaign.setUpdatedByUser(currentUser);
 
         VaccinationCampaign updatedCampaign = vaccinationCampaignRepository.save(campaign);
-        log.info("User {} rescheduled vaccination campaign {} from {} to {}",
+        log.info("[VACCINATION] [USER: {}] Đã dời lịch chiến dịch tiêm chủng ID: {} từ {} sang {}",
                 currentUser.getEmail(), campaignId, currentDate, newDate);
 
         // Gửi thông báo cho phụ huynh về việc thay đổi lịch
@@ -778,10 +788,10 @@ public class VaccinationService {
                         notificationService.createAndSendNotification(
                                 parent.getEmail(), content, link, campaign.getRescheduledByUser().getEmail());
 
-                        log.info("Đã gửi thông báo dời lịch cho học sinh ID: {} đến phụ huynh: {}",
+                        log.info("[VACCINATION] Đã gửi thông báo dời lịch cho học sinh ID: {} đến phụ huynh: {}",
                                 consent.getStudent().getId(), parent.getEmail());
                     } catch (Exception e) {
-                        log.error("Gửi thông báo dời lịch thất bại cho phụ huynh ID: {}, Email: {}. Lỗi: {}",
+                        log.error("[VACCINATION] Gửi thông báo dời lịch thất bại cho phụ huynh ID: {}, Email: {}. Lỗi: {}",
                                 parent.getUserId(), parent.getEmail(), e.getMessage());
                     }
                 }

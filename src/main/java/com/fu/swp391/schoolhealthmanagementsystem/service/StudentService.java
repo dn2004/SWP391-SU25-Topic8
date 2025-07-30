@@ -42,6 +42,7 @@ public class StudentService {
 
     @Transactional
     public StudentDto createStudent(CreateStudentRequestDto dto) {
+        log.info("[STUDENT] Bắt đầu tạo mới học sinh với tên: {}", dto.fullName());
         Student student = studentMapper.createStudentRequestDtoToStudent(dto);
 
         // Tạo invitation code duy nhất
@@ -53,18 +54,17 @@ public class StudentService {
         student.setStatus(StudentStatus.ACTIVE); // Đảm bảo active khi tạo
 
         Student savedStudent = studentRepository.save(student);
-        log.info("Đã tạo thành công học sinh: {} - Mã mời: {}", savedStudent.getFullName(), savedStudent.getInvitationCode());
+        log.info("[STUDENT] Đã tạo thành công học sinh: {} - Mã mời: {}", savedStudent.getFullName(), savedStudent.getInvitationCode());
         return studentMapper.studentToStudentDto(savedStudent);
     }
 
     @Transactional
     public StudentDto updateStudent(Long studentId, UpdateStudentRequestDto dto) {
         User currentUser = userService.getCurrentAuthenticatedUser();
-        log.info("Yêu cầu cập nhật thông tin cho học sinh ID: {}", studentId);
-
+        log.info("[STUDENT] [UPDATE] Người dùng '{}' yêu cầu cập nhật thông tin cho học sinh ID: {}", currentUser != null ? currentUser.getEmail() : "unknown", studentId);
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> {
-                    log.warn("Không tìm thấy học sinh với ID: {}", studentId);
+                    log.warn("[STUDENT] [UPDATE] Không tìm thấy học sinh với ID: {}", studentId);
                     return new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy học sinh với ID: " + studentId);
                 });
 
@@ -72,6 +72,7 @@ public class StudentService {
             studentMapper.updateStudentFromDto(dto, student);
 
         Student updatedStudent = studentRepository.save(student);
+        log.info("[STUDENT] [UPDATE] Đã cập nhật thành công thông tin cho học sinh: {} (ID: {})", updatedStudent.getFullName(), updatedStudent.getId());
 
         // Gửi thông báo cho phụ huynh
         notifyParents(updatedStudent,
@@ -79,16 +80,15 @@ public class StudentService {
             "/profile/student/" + updatedStudent.getId(),
             currentUser);
 
-        log.info("Đã cập nhật thành công thông tin cho học sinh: {}", updatedStudent.getFullName());
         return studentMapper.studentToStudentDto(updatedStudent);
     }
 
     @Transactional(readOnly = true)
     public StudentDto getStudentById(Long studentId) {
-        log.info("Yêu cầu lấy thông tin học sinh với ID: {}", studentId);
+        log.info("[STUDENT] [GET] Yêu cầu lấy thông tin học sinh với ID: {}", studentId);
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> {
-                    log.warn("Không tìm thấy học sinh với ID: {}", studentId);
+                    log.warn("[STUDENT] [GET] Không tìm thấy học sinh với ID: {}", studentId);
                     return new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy học sinh với ID: " + studentId);
                 });
 
@@ -99,23 +99,22 @@ public class StudentService {
             if (currentParent.getRole() == UserRole.SchoolAdmin ||
                     currentParent.getRole() == UserRole.StaffManager ||
                     currentParent.getRole() == UserRole.MedicalStaff) {
-                log.info("Admin/Nhân viên {} truy cập thông tin học sinh ID: {}", currentParent.getEmail(), studentId);
+                log.info("[STUDENT] [GET] Admin/Nhân viên '{}' truy cập thông tin học sinh ID: {}", currentParent.getEmail(), studentId);
                 return studentMapper.studentToStudentDto(student);
             }
             // Nếu là Phụ huynh, kiểm tra xem có liên kết với học sinh này không
             if (currentParent.getRole() == UserRole.Parent) {
                 boolean isLinked = parentStudentLinkRepository.existsByParentAndStudent(currentParent, student);
                 if (isLinked) {
-                    log.info("Phụ huynh {} truy cập thông tin học sinh ID: {} (đã liên kết)", currentParent.getEmail(), studentId);
+                    log.info("[STUDENT] [GET] Phụ huynh '{}' truy cập thông tin học sinh ID: {} (đã liên kết)", currentParent.getEmail(), studentId);
                     return studentMapper.studentToStudentDto(student);
                 } else {
-                    log.warn("Phụ huynh {} cố gắng truy cập thông tin học sinh ID: {} mà không có liên kết.", currentParent.getEmail(), studentId);
+                    log.warn("[STUDENT] [GET] Phụ huynh '{}' cố gắng truy cập thông tin học sinh ID: {} mà không có liên kết.", currentParent.getEmail(), studentId);
                     throw new AppException(HttpStatus.FORBIDDEN, "Bạn không có quyền xem thông tin học sinh này.");
                 }
             }
         }
-        // Nếu không rơi vào các trường hợp trên, hoặc không xác thực -> từ chối
-        log.warn("Truy cập không được phép vào thông tin học sinh ID: {}", studentId);
+        log.warn("[STUDENT] [GET] Truy cập không được phép vào thông tin học sinh ID: {}", studentId);
         throw new AppException(HttpStatus.FORBIDDEN, "Bạn không có quyền xem thông tin học sinh này.");
     }
 
@@ -187,7 +186,7 @@ public class StudentService {
         if (!(currentUser.getRole() == UserRole.SchoolAdmin ||
                 currentUser.getRole() == UserRole.StaffManager ||
                 currentUser.getRole() == UserRole.MedicalStaff)) {
-            throw new AppException(HttpStatus.FORBIDDEN, "You do not have permission to perform this action.");
+            throw new AppException(HttpStatus.FORBIDDEN, "Bạn không có quyền thực hiện thao tác này.");
         }
 
         Specification<Student> spec = studentSpecification.search(search)
@@ -204,7 +203,8 @@ public class StudentService {
     @Transactional
     public StudentDto graduateStudent(Long studentId) {
         User currentUser = userService.getCurrentAuthenticatedUser();
-        log.info("Yêu cầu đánh dấu tốt nghiệp cho học sinh ID: {}", studentId);
+        log.info("[STUDENT] Yêu cầu đánh dấu tốt nghiệp cho học sinh ID: {} bởi người dùng: {}", studentId, currentUser != null ? currentUser.getEmail() : "unknown");
+
         Student student = findStudentByIdAndCheckStatus(studentId, StudentStatus.ACTIVE, "Chỉ học sinh đang hoạt động mới có thể được đánh dấu tốt nghiệp.");
         student.setStatus(StudentStatus.GRADUATED);
         Student savedStudent = studentRepository.save(student);
@@ -215,14 +215,15 @@ public class StudentService {
             "/profile/student/" + savedStudent.getId(),
             currentUser);
 
-        log.info("Đã đánh dấu tốt nghiệp thành công cho học sinh: {}", savedStudent.getFullName());
+        log.info("[STUDENT] Đã đánh dấu tốt nghiệp thành công cho học sinh: {}", savedStudent.getFullName());
         return studentMapper.studentToStudentDto(savedStudent);
     }
 
     @Transactional
     public StudentDto withdrawStudent(Long studentId) {
         User currentUser = userService.getCurrentAuthenticatedUser();
-        log.info("Yêu cầu đánh dấu thôi học cho học sinh ID: {}", studentId);
+        log.info("[STUDENT] Yêu cầu đánh dấu thôi học cho học sinh ID: {} bởi người dùng: {}", studentId, currentUser != null ? currentUser.getEmail() : "unknown");
+
         Student student = findStudentByIdAndCheckStatus(studentId, StudentStatus.ACTIVE, "Chỉ học sinh đang hoạt động mới có thể được đánh dấu thôi học.");
         student.setStatus(StudentStatus.WITHDRAWN);
         Student savedStudent = studentRepository.save(student);
@@ -233,14 +234,15 @@ public class StudentService {
             "/profile/student/" + savedStudent.getId(),
             currentUser);
 
-        log.info("Đã đánh dấu thôi học thành công cho học sinh: {}", savedStudent.getFullName());
+        log.info("[STUDENT] Đã đánh dấu thôi học thành công cho học sinh: {}", savedStudent.getFullName());
         return studentMapper.studentToStudentDto(savedStudent);
     }
 
     @Transactional
     public StudentDto reactivateStudent(Long studentId) {
         User currentUser = userService.getCurrentAuthenticatedUser();
-        log.info("Yêu cầu kích hoạt lại cho học sinh ID: {}", studentId);
+        log.info("[STUDENT] Yêu cầu kích hoạt lại cho học sinh ID: {} bởi người dùng: {}", studentId, currentUser != null ? currentUser.getEmail() : "unknown");
+
         Student student = findStudentByIdAndCheckStatus(studentId, StudentStatus.WITHDRAWN, "Chỉ học sinh đã thôi học mới có thể được kích hoạt lại.");
         student.setStatus(StudentStatus.ACTIVE);
         Student savedStudent = studentRepository.save(student);
@@ -251,7 +253,7 @@ public class StudentService {
             "/profile/student/" + savedStudent.getId(),
             currentUser);
 
-        log.info("Đã kích hoạt lại thành công cho học sinh: {}", savedStudent.getFullName());
+        log.info("[STUDENT] Đã kích hoạt lại thành công cho học sinh: {}", savedStudent.getFullName());
         return studentMapper.studentToStudentDto(savedStudent);
     }
 
@@ -261,6 +263,7 @@ public class StudentService {
             User parent = parentLink.getParent();
             if (parent != null && parent.getEmail() != null) {
                 notificationService.createAndSendNotification(parent.getEmail(), content, link, senderEmail);
+                log.info("[STUDENT] [NOTIFY] Đã gửi thông báo cho phụ huynh '{}' về học sinh ID: {}", parent.getEmail(), student.getId());
             }
         }
     }
@@ -270,7 +273,7 @@ public class StudentService {
                 .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy học sinh với ID: " + studentId));
 
         if (student.getStatus() != expectedStatus) {
-            log.warn("Thao tác không hợp lệ cho học sinh ID: {}. Trạng thái hiện tại: {}, Trạng thái yêu cầu: {}", studentId, student.getStatus(), expectedStatus);
+            log.warn("[STUDENT] [CHECK] Thao tác không hợp lệ cho học sinh ID: {}. Trạng thái hiện tại: {}, Trạng thái yêu cầu: {}", studentId, student.getStatus(), expectedStatus);
             throw new AppException(HttpStatus.CONFLICT, errorMessage);
         }
         return student;
@@ -278,34 +281,34 @@ public class StudentService {
 
     @Transactional
     public boolean deleteStudent(Long studentId) {
-        log.info("Yêu cầu xóa học sinh với ID: {}", studentId);
+        log.info("[STUDENT] Yêu cầu xóa học sinh với ID: {}", studentId);
 
         // Kiểm tra quyền hạn - chỉ admin hoặc staff manager có thể xóa học sinh
         User currentUser = userService.getCurrentAuthenticatedUser();
         if (!(currentUser.getRole() == UserRole.SchoolAdmin ||
                 currentUser.getRole() == UserRole.StaffManager)) {
-            log.warn("Người dùng {} không có quyền xóa học sinh", currentUser.getEmail());
+            log.warn("[STUDENT] Người dùng {} không có quyền xóa học sinh", currentUser.getEmail());
             throw new AppException(HttpStatus.FORBIDDEN, "Bạn không có quyền xóa học sinh");
         }
 
         // Tìm học sinh theo ID
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> {
-                    log.warn("Không tìm thấy học sinh với ID: {}", studentId);
+                    log.warn("[STUDENT] Không tìm thấy học sinh với ID: {}", studentId);
                     return new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy học sinh với ID: " + studentId);
                 });
 
         // Kiểm tra xem học sinh có phụ huynh liên kết không
         boolean hasParentLinks = parentStudentLinkRepository.existsByStudent(student);
         if (hasParentLinks) {
-            log.warn("Không thể xóa học sinh ID: {} vì đã có phụ huynh liên kết", studentId);
+            log.warn("[STUDENT] Không thể xóa học sinh ID: {} vì đã có phụ huynh liên kết", studentId);
             throw new AppException(HttpStatus.CONFLICT,
                     "Không thể xóa học sinh này vì đã có phụ huynh liên kết. Hãy gỡ bỏ tất cả liên kết phụ huynh trước khi xóa.");
         }
 
         // Kiểm tra xem học sinh có sự cố sức khỏe liên quan không
         if (!student.getHealthIncidents().isEmpty()) {
-            log.warn("Không thể xóa học sinh ID: {} vì đã có {} sự cố sức khỏe liên quan",
+            log.warn("[STUDENT] Không thể xóa học sinh ID: {} vì đã có {} sự cố sức khỏe liên quan",
                     studentId, student.getHealthIncidents().size());
             throw new AppException(HttpStatus.CONFLICT,
                     "Không thể xóa học sinh này vì đã có sự cố sức khỏe liên quan. Hãy đặt trạng thái thành không hoạt động thay vì xóa.");
@@ -313,7 +316,7 @@ public class StudentService {
 
         // Kiểm tra xem học sinh có thông tin tiêm chủng không
         if (!student.getVaccinations().isEmpty()) {
-            log.warn("Không thể xóa học sinh ID: {} vì đã có {} thông tin tiêm chủng",
+            log.warn("[STUDENT] Không thể xóa học sinh ID: {} vì đã có {} thông tin tiêm chủng",
                     studentId, student.getVaccinations().size());
             throw new AppException(HttpStatus.CONFLICT,
                     "Không thể xóa học sinh này vì đã có thông tin tiêm chủng. Hãy đặt trạng thái thành không hoạt động thay vì xóa.");
@@ -322,10 +325,10 @@ public class StudentService {
         // Nếu tất cả điều kiện đều thỏa mãn, tiến hành xóa học sinh
         try {
             studentRepository.delete(student);
-            log.info("Đã xóa thành công học sinh với ID: {}", studentId);
+            log.info("[STUDENT] Đã xóa thành công học sinh với ID: {}", studentId);
             return true;
         } catch (Exception ex) {
-            log.error("Lỗi khi xóa học sinh ID: {}", studentId, ex);
+            log.error("[STUDENT] Lỗi khi xóa học sinh ID: {}", studentId, ex);
             throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi khi xóa học sinh: " + ex.getMessage());
         }
     }

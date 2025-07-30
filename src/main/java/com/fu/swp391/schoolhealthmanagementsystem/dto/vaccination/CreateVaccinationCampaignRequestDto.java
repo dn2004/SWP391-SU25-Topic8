@@ -1,6 +1,8 @@
 package com.fu.swp391.schoolhealthmanagementsystem.dto.vaccination;
 
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.ClassGroup;
+import com.fu.swp391.schoolhealthmanagementsystem.validation.FutureDate;
+import com.fu.swp391.schoolhealthmanagementsystem.validation.IsWorkday;
 import com.fu.swp391.schoolhealthmanagementsystem.validation.ValidAgeRange;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
@@ -43,7 +45,8 @@ public record CreateVaccinationCampaignRequestDto(
             example = "2025-07-15"
     )
     @NotNull(message = "Ngày tiêm chủng không được để trống")
-    @FutureOrPresent(message = "Ngày tiêm chủng phải từ hôm nay trở đi")
+    @FutureDate(days = 5, message = "Ngày tiêm chủng phải cách ngày hiện tại ít nhất 5 ngày")
+    @IsWorkday
     LocalDate vaccinationDate,
 
 //    @Schema(

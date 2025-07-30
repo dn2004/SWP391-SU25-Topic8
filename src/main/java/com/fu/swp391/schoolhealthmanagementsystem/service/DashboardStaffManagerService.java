@@ -160,12 +160,6 @@ public class DashboardStaffManagerService {
         for (LinkStatus status : LinkStatus.values()) {
             parentStudentLinksByStatus.put(status, parentStudentLinkRepository.countByStatus(status));
         }
-
-        Map<RelationshipType, Long> parentStudentLinksByRelationship = new EnumMap<>(RelationshipType.class);
-        for (RelationshipType type : RelationshipType.values()) {
-            parentStudentLinksByRelationship.put(type, parentStudentLinkRepository.countByRelationshipType(type));
-        }
-
         // Content Management
         long totalBlogs = blogRepository.count();
         long recentBlogs = blogRepository.countByCreatedAtAfter(thirtyDaysAgo);
@@ -241,7 +235,6 @@ public class DashboardStaffManagerService {
             totalParentStudentLinks,
             activeParentStudentLinks,
             parentStudentLinksByStatus,
-            parentStudentLinksByRelationship,
             totalBlogs,
             recentBlogs,
             blogsByStatus,

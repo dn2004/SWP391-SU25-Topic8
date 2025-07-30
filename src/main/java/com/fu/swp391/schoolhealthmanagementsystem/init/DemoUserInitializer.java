@@ -101,7 +101,6 @@ public class DemoUserInitializer implements ApplicationRunner {
                     ParentStudentLink link1 = new ParentStudentLink();
                     link1.setParent(parent1);
                     link1.setStudent(student);
-                    link1.setRelationshipType(RelationshipType.FATHER); // Mặc định là FATHER
                     link1.setStatus(LinkStatus.ACTIVE);
                     parentStudentLinkRepository.save(link1);
                     log.info("Đã liên kết Phụ huynh 1 (FATHER) {} với Học sinh {}.", parent1.getEmail(), student.getFullName());
@@ -122,7 +121,6 @@ public class DemoUserInitializer implements ApplicationRunner {
                             ParentStudentLink link2 = new ParentStudentLink();
                             link2.setParent(parent2);
                             link2.setStudent(student);
-                            link2.setRelationshipType(RelationshipType.MOTHER); // Phụ huynh 2 là MOTHER
                             link2.setStatus(LinkStatus.ACTIVE);
                             parentStudentLinkRepository.save(link2);
                             log.info("Đã liên kết Phụ huynh 2 (MOTHER) {} với Học sinh {}.", parent2.getEmail(), student.getFullName());

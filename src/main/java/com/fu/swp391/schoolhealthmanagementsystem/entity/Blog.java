@@ -27,7 +27,7 @@ public class Blog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "Title", nullable = false)
+    @Column(name = "Title", nullable = false, unique = true, columnDefinition = "VARCHAR(255)")
     private String title;
 
     @Column(name = "Thumnail", nullable = false)

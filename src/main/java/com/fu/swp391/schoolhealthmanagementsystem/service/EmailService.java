@@ -35,7 +35,7 @@ public class EmailService {
 
     @Async // Gửi email bất đồng bộ
     public void sendNewStaffCredentialsEmail(User staff, String rawPassword) {
-        log.info("Chuẩn bị gửi email thông tin tài khoản cho nhân viên mới: {}", staff.getEmail());
+        log.info("[EMAIL] Chuẩn bị gửi email thông tin tài khoản cho nhân viên mới: {}", staff.getEmail());
         String subject = "Thông tin tài khoản Hệ thống Quản lý Sức khỏe Học đường";
 
         Context thymeleafContext = new Context();
@@ -50,17 +50,15 @@ public class EmailService {
 
         try {
             sendHtmlEmail(staff.getEmail(), subject, htmlBody); // Gọi method có throws
-            log.info("Đã gửi email thông tin tài khoản cho: {}", staff.getEmail());
+            log.info("[EMAIL] Đã gửi email thông tin tài khoản cho: {}", staff.getEmail());
         } catch (MessagingException e) {
-            // Log đã được thực hiện trong sendHtmlEmail
-            // Nếu muốn, có thể log thêm context ở đây
-            log.error("Không thể gửi email thông tin tài khoản cho {} do lỗi: {}", staff.getEmail(), e.getMessage());
+            log.error("[EMAIL] Không thể gửi email thông tin tài khoản cho {} do lỗi: {}", staff.getEmail(), e.getMessage());
         }
     }
 
     @Async
     public void sendOtpEmail(String email, String otp) {
-        log.info("Chuẩn bị gửi email OTP cho: {}", email);
+        log.info("[EMAIL] Chuẩn bị gửi email OTP cho: {}", email);
         String subject = "Mã OTP đặt lại mật khẩu Hệ thống Quản lý Sức khỏe Học đường";
 
         Context thymeleafContext = new Context();
@@ -71,9 +69,9 @@ public class EmailService {
         String htmlBody = thymeleafTemplateEngine.process("emails/otp-email", thymeleafContext);
         try {
             sendHtmlEmail(email, subject, htmlBody); // Gọi method có throws
-            log.info("Đã gửi email OTP cho: {}", email);
+            log.info("[EMAIL] Đã gửi email OTP cho: {}", email);
         } catch (MessagingException e) {
-            log.error("Không thể gửi email OTP cho {} do lỗi: {}", email, e.getMessage());
+            log.error("[EMAIL] Không thể gửi email OTP cho {} do lỗi: {}", email, e.getMessage());
         }
     }
 
@@ -91,12 +89,12 @@ public class EmailService {
             if (logoResource.exists()) {
                 helper.addInline(logoProperties.cid(), logoResource, "image/png");
             } else {
-                log.warn("Không tìm thấy file logo tại: static/images/logo.png");
+                log.warn("[EMAIL] Không tìm thấy file logo tại: static/images/logo.png");
             }
 
             mailSender.send(mimeMessage);
         } catch (MessagingException e) {
-            log.error("Lỗi khi gửi email HTML tới {}: {}", to, e.getMessage());
+            log.error("[EMAIL] Lỗi khi gửi email HTML tới {}: {}", to, e.getMessage());
             throw e;
         }
     }

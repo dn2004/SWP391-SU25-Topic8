@@ -16,6 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/user/profile")
 @RequiredArgsConstructor
@@ -43,8 +45,7 @@ public class UserController {
     })
     public ResponseEntity<UserDto> getCurrentUser() {
         log.info("API: Yêu cầu lấy thông tin người dùng hiện tại");
-        UserDto userDto = userService.getCurrentUserDto();
-        return ResponseEntity.ok(userDto);
+        return ResponseEntity.ok(userService.getCurrentUserDto());
     }
 
     @PutMapping("/change-password")
@@ -57,14 +58,12 @@ public class UserController {
                     """
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Thay đổi mật khẩu thành công", content = @Content),
-            @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ hoặc mật khẩu cũ không chính xác", content = @Content),
-            @ApiResponse(responseCode = "401", description = "Chưa xác thực", content = @Content),
+            @ApiResponse(responseCode = "200", description = "Thay đổi mật khẩu thành công", content = @Content(schema = @Schema(implementation = Map.class))),
             @ApiResponse(responseCode = "403", description = "Không có quyền truy cập", content = @Content)
     })
-    public ResponseEntity<Void> changePassword(@Valid @RequestBody ChangePasswordRequestDto requestDto) {
+    public ResponseEntity<Map<String, String>> changePassword(@Valid @RequestBody ChangePasswordRequestDto requestDto) {
         log.info("API: Yêu cầu thay đổi mật khẩu");
         userService.changePassword(requestDto);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(Map.of("message", "Đổi mật khẩu thành công"));
     }
 }

@@ -32,5 +32,5 @@ public interface ScheduledMedicationTaskRepository extends JpaRepository<Schedul
     @Query("SELECT COUNT(s) > 0 FROM ScheduledMedicationTask s WHERE s.studentMedication.studentMedicationId = :studentMedicationId AND s.status = com.fu.swp391.schoolhealthmanagementsystem.entity.enums.ScheduledMedicationTaskStatus.ADMINISTERED")
     boolean existsAdministeredTasksByStudentMedicationId(@Param("studentMedicationId") Long studentMedicationId);
 
-    long countByStatus(com.fu.swp391.schoolhealthmanagementsystem.entity.enums.ScheduledMedicationTaskStatus status);
+    long countByStatus(ScheduledMedicationTaskStatus status);
 }

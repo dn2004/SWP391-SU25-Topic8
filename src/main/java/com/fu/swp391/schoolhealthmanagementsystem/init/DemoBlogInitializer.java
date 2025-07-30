@@ -13,6 +13,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 
 @Component
@@ -26,6 +27,7 @@ public class DemoBlogInitializer implements ApplicationRunner {
     private final UserRepository userRepository;
 
     @Override
+    @Transactional
     public void run(ApplicationArguments args) throws Exception {
         // Chỉ tạo dữ liệu nếu bảng blog đang trống
         if (blogRepository.count() > 0) {

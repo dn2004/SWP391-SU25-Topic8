@@ -29,7 +29,7 @@ public class UserInitializer implements ApplicationRunner { // Thay đổi ở �
 
     private static final String SYSTEM_EMAIL = "system@example.com";
     private static final String SYSTEM_PASSWORD = "StrongP@ssw0rd!123";
-    private static final String SYSTEM_NAME = "System User";
+    private static final String SYSTEM_NAME = "System";
 
     @Override
     @Transactional

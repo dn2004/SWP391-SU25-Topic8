@@ -176,11 +176,6 @@ public class DashboardAdminService {
             parentStudentLinksByStatus.put(status, parentStudentLinkRepository.countByStatus(status));
         }
 
-        Map<RelationshipType, Long> parentStudentLinksByRelationship = new EnumMap<>(RelationshipType.class);
-        for (RelationshipType type : RelationshipType.values()) {
-            parentStudentLinksByRelationship.put(type, parentStudentLinkRepository.countByRelationshipType(type));
-        }
-
         // Post Vaccination Monitoring
         long totalPostVaccinationMonitoring = postVaccinationMonitoringRepository.count();
         long monitoringWithSideEffects = postVaccinationMonitoringRepository.countByHasSideEffectsTrue();
@@ -238,7 +233,6 @@ public class DashboardAdminService {
             unreadNotifications,
             totalParentStudentLinks,
             parentStudentLinksByStatus,
-            parentStudentLinksByRelationship,
             totalPostVaccinationMonitoring,
             monitoringWithSideEffects,
             totalMedicationTimeSlots,

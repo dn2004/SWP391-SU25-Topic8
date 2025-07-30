@@ -1,5 +1,6 @@
 package com.fu.swp391.schoolhealthmanagementsystem.dto.student;
 
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.ClassGroup;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.Gender;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.Class;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentStatus;
@@ -45,7 +46,7 @@ public record StudentDto(
                 description = "Khối lớp (Mầm, Chồi, Lá)",
                 example = "Mầm"
         )
-        String classGroup,
+        ClassGroup classGroup,
 
         @Schema(
                 description = "Tên hiển thị của trạng thái",

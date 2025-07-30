@@ -29,6 +29,13 @@ public record ResetPasswordRequestDto(
         )
         String newPassword,
 
+        @NotBlank(message = "Mật khẩu mới không được để trống")
+        @Size(
+                min = 6,
+                message = "Mật khẩu phải có ít nhất 6 ký tự"
+        )
+        String confirmNewPassword,
+
         @Schema(
                 description = "Mã OTP",
                 example = "123456"

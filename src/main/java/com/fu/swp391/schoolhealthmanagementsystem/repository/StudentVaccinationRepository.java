@@ -16,7 +16,7 @@ public interface StudentVaccinationRepository extends JpaRepository<StudentVacci
 
     Page<StudentVaccination> findByStudent_IdAndStatus(Long studentId, StudentVaccinationStatus status, Pageable pageable);
 
-    long countByStatus(com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentVaccinationStatus status);
+    long countByStatus(StudentVaccinationStatus status);
 
     Optional<Object> findByStudent(Student student1);
 }

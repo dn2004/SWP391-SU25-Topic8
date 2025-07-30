@@ -69,12 +69,12 @@ public class ParentStudentLinkService {
         ParentStudentLink link = new ParentStudentLink();
         link.setParent(parent);
         link.setStudent(student);
-        link.setRelationshipType(dto.relationshipType());
+//        link.setRelationshipType(dto.relationshipType());
         link.setStatus(LinkStatus.ACTIVE);
 
         parentStudentLinkRepository.save(link);
-        log.info("Phụ huynh {} đã liên kết thành công với học sinh {} (Mã: {}) với vai trò {}. Trạng thái: ACTIVE",
-                parent.getEmail(), student.getFullName(), student.getId(), dto.relationshipType());
+        log.info("Phụ huynh {} đã liên kết thành công với học sinh {} (Mã: {}), Trạng thái: ACTIVE",
+                parent.getEmail(), student.getFullName(), student.getId());
 
         // Gửi thông báo cho quản trị viên và quản lý nhân viên
         sendLinkNotificationToAdmins(parent, student);

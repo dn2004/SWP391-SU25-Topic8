@@ -18,4 +18,6 @@ public interface BlogRepository extends JpaRepository<Blog, Long>, JpaSpecificat
     long countByCategory(com.fu.swp391.schoolhealthmanagementsystem.entity.enums.BlogCategory category);
 
     long countByCreatedAtAfter(java.time.LocalDateTime dateTime);
+
+    boolean existsByTitleIgnoreCase(String title);
 }

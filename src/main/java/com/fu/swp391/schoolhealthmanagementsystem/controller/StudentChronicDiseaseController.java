@@ -3,6 +3,7 @@ package com.fu.swp391.schoolhealthmanagementsystem.controller;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.student.disease.ChronicDiseaseStatusUpdateRequestDto;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.student.disease.StudentChronicDiseaseRequestDto;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.student.disease.StudentChronicDiseaseResponseDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.student.disease.StudentChronicDiseaseUpdateRequestDto;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentChronicDiseaseStatus;
 import com.fu.swp391.schoolhealthmanagementsystem.service.StudentChronicDiseaseService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -166,7 +167,7 @@ public class StudentChronicDiseaseController {
     @PutMapping(value = "/chronic-diseases/{chronicDiseaseId}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<StudentChronicDiseaseResponseDto> updateChronicDisease(
             @Parameter(description = "ID của bản ghi bệnh mãn tính cần cập nhật") @PathVariable Long chronicDiseaseId,
-            @Valid @ModelAttribute StudentChronicDiseaseRequestDto dto) {
+            @Valid @ModelAttribute StudentChronicDiseaseUpdateRequestDto dto) {
         log.info("API PUT /api/chronic-diseases/{} được gọi", chronicDiseaseId);
         StudentChronicDiseaseResponseDto updatedDto = chronicDiseaseService.updateChronicDiseaseForCurrentUser(chronicDiseaseId, dto);
         return ResponseEntity.ok(updatedDto);

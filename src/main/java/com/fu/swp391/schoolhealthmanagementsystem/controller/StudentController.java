@@ -129,7 +129,7 @@ public class StudentController {
     })
     @PreAuthorize("hasAnyRole('SchoolAdmin', 'StaffManager', 'MedicalStaff')")
     public ResponseEntity<List<StudentDto>> getStudentsByClassGroupAndClass(
-            @Parameter(description = "Khối lớp (MAM, CHOI, LA)") @PathVariable ClassGroup classGroup,
+            @Parameter(description = "Khối lớp (Mầm, Chồi, Lá)") @PathVariable ClassGroup classGroup,
             @Parameter(description = "Lớp (A, B, C, D...)") @PathVariable Class classValue) {
 
         log.info("API: Yêu cầu lấy danh sách học sinh theo khối {} và lớp {}", classGroup, classValue);

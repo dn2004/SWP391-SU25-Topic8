@@ -35,8 +35,8 @@ public class ParentStudentLink {
     @JoinColumn(name = "StudentID", nullable = false)
     private Student student;
 
-    @Column(name = "RelationshipType", nullable = false, length = 50)
-    private RelationshipType relationshipType;
+//    @Column(name = "RelationshipType",\ nullable = false, length = 50)
+//    private RelationshipType relationshipType;
 
     @Column(name = "Status", nullable = false, length = 20)
     private LinkStatus status;

@@ -45,7 +45,7 @@ public class HealthIncidentSpecification {
             if (userName == null || userName.isEmpty()) {
                 return criteriaBuilder.conjunction();
             }
-            return criteriaBuilder.like(criteriaBuilder.lower(root.get("recordedByUser").get("fullName")), "%" + userName.toLowerCase() + "%");
+            return criteriaBuilder.like(criteriaBuilder.lower(root.get("recordedByUser").get("fullName")), "%" + userName.trim().toLowerCase() + "%");
         };
     }
 

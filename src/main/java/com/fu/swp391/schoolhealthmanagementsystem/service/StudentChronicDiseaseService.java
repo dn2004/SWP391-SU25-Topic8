@@ -4,10 +4,12 @@ import com.fu.swp391.schoolhealthmanagementsystem.dto.cloudinary.CloudinaryUploa
 import com.fu.swp391.schoolhealthmanagementsystem.dto.student.disease.ChronicDiseaseStatusUpdateRequestDto;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.student.disease.StudentChronicDiseaseRequestDto;
 import com.fu.swp391.schoolhealthmanagementsystem.dto.student.disease.StudentChronicDiseaseResponseDto;
+import com.fu.swp391.schoolhealthmanagementsystem.dto.student.disease.StudentChronicDiseaseUpdateRequestDto;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.Student;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.StudentChronicDisease;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.User;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentChronicDiseaseStatus;
+import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.StudentStatus;
 import com.fu.swp391.schoolhealthmanagementsystem.entity.enums.UserRole;
 import com.fu.swp391.schoolhealthmanagementsystem.exception.FileStorageException;
 import com.fu.swp391.schoolhealthmanagementsystem.exception.InvalidOperationException;
@@ -43,10 +45,15 @@ public class StudentChronicDiseaseService {
 
     @Transactional
     public StudentChronicDiseaseResponseDto addChronicDisease(Long studentId, StudentChronicDiseaseRequestDto dto) {
-        log.info("Bắt đầu thêm bệnh mãn tính cho học sinh ID: {}", studentId);
+        log.info("[CHRONIC] Bắt đầu thêm bệnh mãn tính cho học sinh ID: {}", studentId);
         User currentUser = authorizationService.getCurrentUserAndValidate();
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy học sinh với ID: " + studentId));
+
+        if (!isStudentActive(student)) {
+            log.warn("[CHRONIC] Học sinh ID: {} không hoạt động, không thể thêm hồ sơ bệnh mãn tính", studentId);
+            throw new InvalidOperationException("Học sinh không hoạt động, không thể thêm hồ sơ");
+        }
 
         if (currentUser.getRole() == UserRole.Parent) {
             authorizationService.authorizeParentAction(currentUser, student, "thêm hồ sơ bệnh mãn tính");
@@ -70,21 +77,25 @@ public class StudentChronicDiseaseService {
         }
 
         StudentChronicDisease savedEntity = chronicDiseaseRepository.save(entity);
-        log.info("Đã tạo thành công hồ sơ bệnh mãn tính ID: {} cho học sinh ID: {}", savedEntity.getId(), studentId);
+        log.info("[CHRONIC] Đã tạo thành công hồ sơ bệnh mãn tính ID: {} cho học sinh ID: {}", savedEntity.getId(), studentId);
 
         if (currentUser.getRole() == UserRole.Parent) {
             String content = String.format("Có hồ sơ bệnh mãn tính mới cho học sinh '%s' cần được duyệt.", student.getFullName());
             String link = "/admin/chronic-diseases/pending";
             notificationService.createAndSendNotificationToRole(UserRole.MedicalStaff, content, link, currentUser.getEmail());
-            log.info("Đã gửi thông báo cho MedicalStaff về hồ sơ bệnh mãn tính mới của học sinh ID: {}", studentId);
+            log.info("[CHRONIC] Đã gửi thông báo cho MedicalStaff về hồ sơ bệnh mãn tính mới của học sinh ID: {}", studentId);
         }
 
         return chronicDiseaseMapper.toDto(savedEntity);
     }
 
+    private boolean isStudentActive(Student student) {
+        return student.getStatus() == StudentStatus.ACTIVE;
+    }
+
     @Transactional
-    public StudentChronicDiseaseResponseDto updateChronicDiseaseForCurrentUser(Long chronicDiseaseId, StudentChronicDiseaseRequestDto dto) {
-        log.info("Bắt đầu cập nhật hồ sơ bệnh mãn tính ID: {}", chronicDiseaseId);
+    public StudentChronicDiseaseResponseDto updateChronicDiseaseForCurrentUser(Long chronicDiseaseId, StudentChronicDiseaseUpdateRequestDto dto) {
+        log.info("[CHRONIC] Bắt đầu cập nhật hồ sơ bệnh mãn tính ID: {}", chronicDiseaseId);
         User currentUser = authorizationService.getCurrentUserAndValidate();
         StudentChronicDisease existingEntity = chronicDiseaseRepository.findById(chronicDiseaseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ bệnh mãn tính với ID: " + chronicDiseaseId));
@@ -97,10 +108,12 @@ public class StudentChronicDiseaseService {
         if (currentUser.getRole() == UserRole.Parent) {
             authorizationService.authorizeParentAction(currentUser, student, "cập nhật hồ sơ bệnh mãn tính");
             if (existingEntity.getStatus() != StudentChronicDiseaseStatus.PENDING) {
+                log.warn("[CHRONIC] Phụ huynh cố gắng cập nhật hồ sơ ID: {} khi không ở trạng thái PENDING", chronicDiseaseId);
                 throw new AccessDeniedException("Bạn chỉ có thể cập nhật hồ sơ khi đang ở trạng thái 'Chờ xử lý'.");
             }
         } else {
             if (existingEntity.getStatus() == StudentChronicDiseaseStatus.PENDING) {
+                log.warn("[CHRONIC] Nhân viên cố gắng cập nhật hồ sơ ID: {} khi đang ở trạng thái PENDING", chronicDiseaseId);
                 throw new AccessDeniedException("Nhân viên không thể cập nhật hồ sơ đang 'Chờ xử lý'. Vui lòng dùng chức năng duyệt.");
             }
         }
@@ -126,14 +139,25 @@ public class StudentChronicDiseaseService {
         }
 
         StudentChronicDisease updatedEntity = chronicDiseaseRepository.save(existingEntity);
-        log.info("Đã cập nhật thành công hồ sơ bệnh mãn tính ID: {}", updatedEntity.getId());
+        log.info("[CHRONIC] Đã cập nhật thành công hồ sơ bệnh mãn tính ID: {}", updatedEntity.getId());
 
-        // Gửi thông báo cho nhân viên y tế nếu phụ huynh cập nhật
         if (currentUser.getRole() == UserRole.Parent) {
             String content = String.format("Phụ huynh vừa cập nhật hồ sơ bệnh mãn tính cho học sinh '%s'. Hồ sơ cần được duyệt lại.", student.getFullName());
-            String link = "/admin/chronic-diseases/pending"; // Link tới trang duyệt của admin/staff
+            String link = "/admin/chronic-diseases/pending";
             notificationService.createAndSendNotificationToRole(UserRole.MedicalStaff, content, link, currentUser.getEmail());
-            log.info("Đã gửi thông báo cho MedicalStaff về việc cập nhật hồ sơ bệnh mãn tính của học sinh ID: {}", student.getId());
+            log.info("[CHRONIC] Đã gửi thông báo cho MedicalStaff về việc cập nhật hồ sơ bệnh mãn tính của học sinh ID: {}", student.getId());
+        } else if (currentUser.getRole() == UserRole.MedicalStaff) {
+            String content = String.format("Hồ sơ bệnh mãn tính của học sinh '%s' vừa được cập nhật và duyệt bởi nhân viên y tế.", student.getFullName());
+            String link = "/chronic-diseases/" + updatedEntity.getId();
+            if (student.getParentLinks() != null) {
+                student.getParentLinks().forEach(parentLink -> {
+                    User parent = parentLink.getParent();
+                    if (parent != null && parent.getEmail() != null) {
+                        notificationService.createAndSendNotification(parent.getEmail(), content, link, currentUser.getEmail());
+                        log.info("[CHRONIC] Đã gửi thông báo cập nhật hồ sơ bệnh mãn tính ID {} tới phụ huynh: {}", updatedEntity.getId(), parent.getEmail());
+                    }
+                });
+            }
         }
 
         return chronicDiseaseMapper.toDto(updatedEntity);
@@ -141,17 +165,19 @@ public class StudentChronicDiseaseService {
 
     @Transactional
     public StudentChronicDiseaseResponseDto mediateChronicDiseaseStatus(Long chronicDiseaseId, ChronicDiseaseStatusUpdateRequestDto dto) {
-        log.info("Bắt đầu duyệt hồ sơ bệnh mãn tính ID: {}", chronicDiseaseId);
+        log.info("[CHRONIC] Bắt đầu duyệt hồ sơ bệnh mãn tính ID: {}", chronicDiseaseId);
         User currentUser = authorizationService.getCurrentUserAndValidate();
         StudentChronicDisease entity = chronicDiseaseRepository.findById(chronicDiseaseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ bệnh mãn tính với ID: " + chronicDiseaseId));
 
         if (entity.getStatus() != StudentChronicDiseaseStatus.PENDING) {
+            log.warn("[CHRONIC] Cố gắng duyệt hồ sơ ID: {} khi không ở trạng thái PENDING", chronicDiseaseId);
             throw new IllegalArgumentException("Chỉ có thể duyệt các hồ sơ đang ở trạng thái 'Chờ xử lý'.");
         }
 
         StudentChronicDiseaseStatus newStatus = dto.newStatus();
         if (newStatus != StudentChronicDiseaseStatus.APPROVE && newStatus != StudentChronicDiseaseStatus.REJECTED) {
+            log.warn("[CHRONIC] Trạng thái duyệt không hợp lệ cho hồ sơ ID: {}: {}", chronicDiseaseId, newStatus);
             throw new IllegalArgumentException("Trạng thái mới không hợp lệ. Chỉ chấp nhận APPROVE hoặc REJECTED.");
         }
 
@@ -162,16 +188,16 @@ public class StudentChronicDiseaseService {
         entity.setUpdatedByUser(currentUser);
 
         StudentChronicDisease updatedEntity = chronicDiseaseRepository.save(entity);
-        log.info("Đã duyệt hồ sơ bệnh mãn tính ID: {}, trạng thái mới: {}", updatedEntity.getId(), updatedEntity.getStatus());
+        log.info("[CHRONIC] Đã duyệt hồ sơ bệnh mãn tính ID: {}, trạng thái mới: {}", updatedEntity.getId(), updatedEntity.getStatus());
 
-        sendMediationNotificationToParent(updatedEntity);
+        sendMediationNotificationToParent(updatedEntity, dto.approverNotes());
 
         return chronicDiseaseMapper.toDto(updatedEntity);
     }
 
     @Transactional
     public void deleteChronicDiseaseForCurrentUser(Long chronicDiseaseId) {
-        log.info("Bắt đầu xóa hồ sơ bệnh mãn tính ID: {}", chronicDiseaseId);
+        log.info("[CHRONIC] Bắt đầu xóa hồ sơ bệnh mãn tính ID: {}", chronicDiseaseId);
         User currentUser = authorizationService.getCurrentUserAndValidate();
         StudentChronicDisease entity = chronicDiseaseRepository.findById(chronicDiseaseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ bệnh mãn tính với ID: " + chronicDiseaseId));
@@ -184,6 +210,7 @@ public class StudentChronicDiseaseService {
         if (currentUser.getRole() == UserRole.Parent) {
             authorizationService.authorizeParentAction(currentUser, student, "xóa hồ sơ bệnh mãn tính");
             if (entity.getStatus() != StudentChronicDiseaseStatus.PENDING) {
+                log.warn("[CHRONIC] Phụ huynh cố gắng xóa hồ sơ ID: {} khi không ở trạng thái PENDING", chronicDiseaseId);
                 throw new AccessDeniedException("Bạn chỉ có thể xóa hồ sơ đang ở trạng thái 'Chờ xử lý'.");
             }
         }
@@ -192,17 +219,32 @@ public class StudentChronicDiseaseService {
             try {
                 fileStorageService.deleteFile(entity.getAttachmentPublicId(), entity.getAttachmentResourceType());
             } catch (Exception e) {
-                log.error("Lỗi xóa file đính kèm từ Cloudinary cho hồ sơ ID {}: {}", chronicDiseaseId, e.getMessage());
+                log.error("[CHRONIC] Lỗi xóa file đính kèm từ Cloudinary cho hồ sơ ID {}: {}", chronicDiseaseId, e.getMessage());
             }
         }
 
         chronicDiseaseRepository.delete(entity);
-        log.info("Đã xóa thành công hồ sơ bệnh mãn tính ID: {}", chronicDiseaseId);
+
+        if (student.getParentLinks() != null && !student.getParentLinks().isEmpty()) {
+            String content = String.format("Hồ sơ bệnh mãn tính '%s' của học sinh %s đã được xóa khỏi hệ thống.",
+                    entity.getDiseaseName(), student.getFullName());
+            String link = "/chronic-diseases";
+            String sender = currentUser.getEmail();
+            student.getParentLinks().forEach(parentLink -> {
+                User parent = parentLink.getParent();
+                if (parent != null && parent.getEmail() != null) {
+                    notificationService.createAndSendNotification(parent.getEmail(), content, link, sender);
+                    log.info("[CHRONIC] Đã gửi thông báo xóa hồ sơ bệnh mãn tính ID {} tới phụ huynh: {}", chronicDiseaseId, parent.getEmail());
+                }
+            });
+        }
+
+        log.info("[CHRONIC] Đã xóa thành công hồ sơ bệnh mãn tính ID: {}", chronicDiseaseId);
     }
 
     @Transactional(readOnly = true)
     public StudentChronicDiseaseResponseDto getChronicDiseaseById(Long chronicDiseaseId) {
-        log.info("Lấy thông tin hồ sơ bệnh mãn tính ID: {}", chronicDiseaseId);
+        log.info("[CHRONIC] Lấy thông tin hồ sơ bệnh mãn tính ID: {}", chronicDiseaseId);
         User currentUser = authorizationService.getCurrentUserAndValidate();
         StudentChronicDisease entity = chronicDiseaseRepository.findById(chronicDiseaseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ bệnh mãn tính với ID: " + chronicDiseaseId));
@@ -221,19 +263,20 @@ public class StudentChronicDiseaseService {
 
     @Transactional(readOnly = true)
     public Page<StudentChronicDiseaseResponseDto> getAllChronicDiseases(String studentName, String diseaseName, StudentChronicDiseaseStatus status, Pageable pageable) {
-        log.info("Lấy danh sách tất cả bệnh mãn tính với bộ lọc");
+        log.info("[CHRONIC] Lấy danh sách tất cả bệnh mãn tính với bộ lọc: studentName='{}', diseaseName='{}', status='{}'", studentName, diseaseName, status);
         Specification<StudentChronicDisease> spec = Specification.allOf(
                 chronicDiseaseSpecification.hasStudentNameContaining(studentName),
                 chronicDiseaseSpecification.hasDiseaseNameContaining(diseaseName),
                 chronicDiseaseSpecification.hasStatus(status)
         );
         Page<StudentChronicDisease> page = chronicDiseaseRepository.findAll(spec, pageable);
+        log.info("[CHRONIC] Đã trả về {} hồ sơ bệnh mãn tính theo tiêu chí tìm kiếm.", page.getTotalElements());
         return page.map(chronicDiseaseMapper::toDto);
     }
 
     @Transactional(readOnly = true)
     public Page<StudentChronicDiseaseResponseDto> getAllChronicDiseasesByStudentId(Long studentId, String diseaseName, StudentChronicDiseaseStatus status, Pageable pageable) {
-        log.info("Lấy danh sách bệnh mãn tính cho học sinh ID: {}", studentId);
+        log.info("[CHRONIC] Lấy danh sách bệnh mãn tính cho học sinh ID: {} với bộ lọc diseaseName='{}', status='{}'", studentId, diseaseName, status);
         User currentUser = authorizationService.getCurrentUserAndValidate();
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy học sinh với ID: " + studentId));
@@ -248,12 +291,13 @@ public class StudentChronicDiseaseService {
                 chronicDiseaseSpecification.hasStatus(status)
         );
         Page<StudentChronicDisease> page = chronicDiseaseRepository.findAll(spec, pageable);
+        log.info("[CHRONIC] Đã trả về {} hồ sơ bệnh mãn tính cho học sinh ID: {}.", page.getTotalElements(), studentId);
         return page.map(chronicDiseaseMapper::toDto);
     }
 
     @Transactional(readOnly = true)
     public String getSignedUrlForAttachment(Long chronicDiseaseId) {
-        log.info("Yêu cầu URL đã ký cho file đính kèm của hồ sơ bệnh mãn tính ID: {}", chronicDiseaseId);
+        log.info("[CHRONIC] Yêu cầu URL đã ký cho file đính kèm của hồ sơ bệnh mãn tính ID: {}", chronicDiseaseId);
         User currentUser = authorizationService.getCurrentUserAndValidate();
         StudentChronicDisease entity = chronicDiseaseRepository.findById(chronicDiseaseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ bệnh mãn tính với ID: " + chronicDiseaseId));
@@ -268,15 +312,17 @@ public class StudentChronicDiseaseService {
         }
 
         if (entity.getAttachmentPublicId() == null || entity.getAttachmentPublicId().isBlank()) {
-            log.warn("Hồ sơ bệnh mãn tính ID: {} không có file đính kèm.", chronicDiseaseId);
+            log.warn("[CHRONIC] Hồ sơ bệnh mãn tính ID: {} không có file đính kèm.", chronicDiseaseId);
             return null;
         }
 
         try {
             int urlDurationSeconds = 300;
-            return fileStorageService.generateSignedUrl(entity.getAttachmentPublicId(), entity.getAttachmentResourceType(), urlDurationSeconds);
+            String signedUrl = fileStorageService.generateSignedUrl(entity.getAttachmentPublicId(), entity.getAttachmentResourceType(), urlDurationSeconds);
+            log.info("[CHRONIC] Đã tạo signed URL cho file đính kèm hồ sơ ID: {}", chronicDiseaseId);
+            return signedUrl;
         } catch (Exception e) {
-            log.error("Không thể tạo URL đã ký cho file đính kèm của hồ sơ ID {}: {}", chronicDiseaseId, e.getMessage(), e);
+            log.error("[CHRONIC] Không thể tạo URL đã ký cho file đính kèm của hồ sơ ID {}: {}", chronicDiseaseId, e.getMessage(), e);
             throw new FileStorageException("Lỗi khi tạo URL truy cập file.", e);
         }
     }
@@ -286,7 +332,7 @@ public class StudentChronicDiseaseService {
             try {
                 fileStorageService.deleteFile(entity.getAttachmentPublicId(), entity.getAttachmentResourceType());
             } catch (Exception e) {
-                log.error("Lỗi xóa file đính kèm cũ từ Cloudinary: {}", e.getMessage());
+                log.error("[CHRONIC] Lỗi xóa file đính kèm cũ từ Cloudinary: {}", e.getMessage());
             }
         }
         try {
@@ -296,23 +342,24 @@ public class StudentChronicDiseaseService {
             chronicDiseaseMapper.updateAttachmentFileDetailsFromUploadResult(uploadResult, entity);
             entity.setAttachmentFileOriginalName(file.getOriginalFilename());
             entity.setAttachmentFileType(file.getContentType());
+            log.info("[CHRONIC] Đã upload file đính kèm mới cho học sinh ID: {}", studentId);
         } catch (Exception e) {
-            log.error("Lỗi tải file đính kèm mới cho học sinh ID {}: {}", studentId, e.getMessage(), e);
+            log.error("[CHRONIC] Lỗi tải file đính kèm mới cho học sinh ID {}: {}", studentId, e.getMessage(), e);
             throw new FileStorageException("Lỗi tải file đính kèm: " + e.getMessage(), e);
         }
     }
 
-    private void sendMediationNotificationToParent(StudentChronicDisease chronicDisease) {
+    private void sendMediationNotificationToParent(StudentChronicDisease chronicDisease, String reason) {
         try {
             Student student = chronicDisease.getStudent();
             if (student == null || student.getParentLinks() == null || student.getParentLinks().isEmpty()) {
-                log.warn("Không thể gửi thông báo duyệt. Không có thông tin phụ huynh cho học sinh ID: {}", student != null ? student.getId() : "null");
+                log.warn("[CHRONIC] Không thể gửi thông báo duyệt. Không có thông tin phụ huynh cho học sinh ID: {}", student != null ? student.getId() : "null");
                 return;
             }
 
             String statusMessage = switch (chronicDisease.getStatus()) {
                 case APPROVE -> "đã được duyệt";
-                case REJECTED -> "đã bị từ chối";
+                case REJECTED -> "đã bị từ chối với lí do " + reason + ".";
                 default -> null;
             };
 
@@ -326,12 +373,12 @@ public class StudentChronicDiseaseService {
                     User parent = parentLink.getParent();
                     if (parent != null && parent.getEmail() != null) {
                         notificationService.createAndSendNotification(parent.getEmail(), content, link, sender);
-                        log.info("Đã yêu cầu gửi thông báo duyệt hồ sơ bệnh mãn tính ID {} tới phụ huynh: {}", chronicDisease.getId(), parent.getEmail());
+                        log.info("[CHRONIC] Đã yêu cầu gửi thông báo duyệt hồ sơ bệnh mãn tính ID {} tới phụ huynh: {}", chronicDisease.getId(), parent.getEmail());
                     }
                 });
             }
         } catch (Exception e) {
-            log.error("Lỗi khi gửi thông báo duyệt hồ sơ bệnh mãn tính ID {}: {}", chronicDisease.getId(), e.getMessage(), e);
+            log.error("[CHRONIC] Lỗi khi gửi thông báo duyệt hồ sơ bệnh mãn tính ID {}: {}", chronicDisease.getId(), e.getMessage(), e);
         }
     }
 }

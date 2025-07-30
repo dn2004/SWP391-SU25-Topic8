@@ -413,21 +413,6 @@ public record DashboardAdminDto(
     )
     Map<LinkStatus, Long> parentStudentLinksByStatus,
 
-    @Schema(
-        description = "Số liên kết phụ huynh-học sinh theo mối quan hệ",
-        example = """
-        {
-          "Cha": 600,
-          "Mẹ": 500,
-          "Người giám hộ": 200,
-          "Ông": 50,
-          "Bà": 50,
-          "Khác": 100
-        }
-        """
-    )
-    Map<RelationshipType, Long> parentStudentLinksByRelationship,
-
     // Theo dõi sau tiêm chủng
     @Schema(
         description = "Tổng số lượt theo dõi sau tiêm chủng",

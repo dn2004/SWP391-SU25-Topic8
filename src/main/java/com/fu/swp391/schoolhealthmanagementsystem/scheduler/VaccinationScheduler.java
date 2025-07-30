@@ -93,14 +93,14 @@ public class VaccinationScheduler {
             log.info("Bộ lập lịch: Đang cập nhật trạng thái chiến dịch ID {} từ IN_PROGRESS sang COMPLETED.", campaign.getCampaignId());
             campaign.setStatus(VaccinationCampaignStatus.COMPLETED);
 
-            List<SchoolVaccination> scheduledVaccination = campaign.getVaccinations().stream()
-                    .filter(sv -> sv.getStatus() == SchoolVaccinationStatus.SCHEDULED)
-                    .toList();
-            scheduledVaccination.forEach(schoolVaccination -> {
-                log.info("Bộ lập lịch: Cập nhật trạng thái tiêm chủng ID {} từ SCHEDULED sang ABSENT.", schoolVaccination.getSchoolVaccinationId());
-                schoolVaccination.setStatus(SchoolVaccinationStatus.ABSENT);
-            });
-            campaignRepository.save(campaign);
+                List<SchoolVaccination> scheduledVaccination = campaign.getVaccinations().stream()
+                        .filter(sv -> sv.getStatus() == SchoolVaccinationStatus.SCHEDULED)
+                        .toList();
+                scheduledVaccination.forEach(schoolVaccination -> {
+                    log.info("Bộ lập lịch: Cập nhật trạng thái tiêm chủng ID {} từ SCHEDULED sang ABSENT.", schoolVaccination.getSchoolVaccinationId());
+                    schoolVaccination.setStatus(SchoolVaccinationStatus.ABSENT);
+                });
+                campaignRepository.save(campaign);
         }
 
         log.info("Bộ lập lịch: Đã hoàn thành tự động cập nhật trạng thái các chiến dịch.");
