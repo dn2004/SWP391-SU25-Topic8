@@ -79,10 +79,7 @@ restart_services() {
         echo -e "${GREEN}Services started/restarted successfully!${NC}"
         echo -e "${GREEN}--------------------------------------------------${NC}"
         echo -e "${GREEN}Application Access Points:${NC}"
-        echo -e "- Backend API: http://$(curl -s ifconfig.me):${SERVER_PORT:-8080}  (hoặc domain của bạn)"
-        if [ "${SPRINGDOC_SWAGGER_UI_ENABLED}" != "false" ]; then
-            echo -e "- Swagger UI:  http://$(curl -s ifconfig.me):${SERVER_PORT:-8080}${SPRINGDOC_SWAGGER_UI_PATH:-/swagger-ui.html}"
-        fi
+
         echo -e "${GREEN}--------------------------------------------------${NC}"
         echo -e "${YELLOW}To view logs: run 'docker-compose -f ${COMPOSE_FILE} logs -f ${APP_SERVICE_NAME}'${NC}"
     else

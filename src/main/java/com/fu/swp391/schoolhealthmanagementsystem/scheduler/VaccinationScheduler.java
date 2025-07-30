@@ -70,7 +70,6 @@ public class VaccinationScheduler {
     }
 
     /**
-     * Chạy vào 2 giờ sáng mỗi ngày.
      * - Tự động hoàn thành các chiến dịch đã qua ngày tiêm chủng.
      * - Đối với những tiêm chủng tại trường có trạng thái là đã lên lịch -> cập nhật trạng thái thành vắng mặt.
      */
@@ -107,7 +106,6 @@ public class VaccinationScheduler {
     }
 
     /**
-     * Chạy vào 9 giờ sáng mỗi ngày.
      * Gửi thông báo nhắc nhở cho các phụ huynh chưa phản hồi khi gần đến hạn chót.
      */
     @Scheduled(cron = "0 * * * * *")

@@ -32,7 +32,7 @@ public class MedicalSupplyScheduler {
     private final UserRepository userRepository;
 
 
-    @Scheduled(cron = "0 0 0 * * ?") // Chạy lúc 00:00:00 mỗi ngày
+    @Scheduled(cron = "0 * * * * *")
     @Transactional
     public void checkAndUpdateExpiredSupplies() {
         log.info("Bắt đầu kiểm tra vật tư y tế hết hạn...");
